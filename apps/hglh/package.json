@@ -29,6 +29,8 @@
     "flv.js": "catalog:",
     "js-md5": "catalog:",
     "jsencrypt": "catalog:",
+    "lodash": "catalog:",
+    "lodash-es": "catalog:",
     "mediasoup-client": "catalog:",
     "mitt": "catalog:",
     "nprogress": "catalog:",
@@ -46,6 +48,8 @@
   },
   "devDependencies": {
     "@types/fabric": "catalog:",
+    "@types/lodash": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/sortablejs": "catalog:",
     "@vitejs/plugin-vue": "catalog:",

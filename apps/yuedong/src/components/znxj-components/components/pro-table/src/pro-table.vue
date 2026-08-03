@@ -155,9 +155,10 @@ const tableRef = ref<TableInstance>();
 // 是否显示搜索模块
 const isShowSearch = ref<boolean>(true);
 
-interface ProTableProps extends Partial<Omit<TableProps<any>, 'data'>> {
+interface ProTableProps extends /* @vue-ignore */ Partial<Omit<TableProps<any>, 'data'>> {
   columns: any[]; // 列配置项
   requestApi: (params: any) => Promise<any>; // 请求表格数据的api ==> 必传
+  height?: string | number; // 表格高度
   dataCallback?: (data: any) => any; // 返回数据的回调函数，可以对数据进行处理 ==> 非必传
   title?: string; // 表格标题， ==> 非必传
   titleBorder?: boolean; // 标题是否有下边框

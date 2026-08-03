@@ -80,7 +80,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         symbolId: 'icon-[dir]-[name]',
       }),
       // * EsLint 报错信息显示在浏览器界面上
-      eslintPlugin(),
+      eslintPlugin({ ignorePath: resolve(__dirname, '../../.eslintignore') }),
       // * vite 可以使用 jsx/tsx 语法
       vueJsx(),
       // * DefineOptions
