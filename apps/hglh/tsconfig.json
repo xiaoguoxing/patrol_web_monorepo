@@ -5,6 +5,7 @@
     "paths": {
       "@": ["src"],
       "@/*": ["src/*"],
+      "@patrol/shared/*": ["../../packages/shared/src/*"],
       "@patrol/ui": ["../../packages/ui/src/znxj-ui/index.ts"],
       "@patrol/ui/*": ["../../packages/ui/src/*"],
       "@appCenter": ["src/views/appCenter/src"],

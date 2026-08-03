@@ -132,7 +132,7 @@ async function runPlay() {
     zeroChannel: false,
     rtspPort: rtspPort.value,
     streamType: 1,
-    proxy: false,
+    proxy: true,
   });
   emit('loading', false);
   emit('success', message.value);
