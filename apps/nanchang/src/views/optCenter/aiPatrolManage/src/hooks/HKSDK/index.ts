@@ -255,6 +255,9 @@ export class HikvisionWebSdk {
       });
     });
   }
+  async stopAll(): Promise<void> {
+    await this.api.I_StopAll();
+  }
 
   async resume(windowIndex = this.selectedWindowIndex): Promise<void> {
     if (!this.initialized || !this.api.I_GetWindowStatus(windowIndex)) return;

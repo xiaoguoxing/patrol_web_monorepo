@@ -61,9 +61,12 @@ const cameraData = computed<Partial<UserApi2>>(
   () => cameraList.value[selectedWindowIndex.value] ?? { cameraType: 'tube' }
 );
 type SendData = { ip: string; port: string; userName: string; password: string; channelNum: number };
-const loginSendData = computed<Partial<SendData>>(() => {
+const loginSendData = computed<SendData>(() => {
   return {
     id: props.cameraId,
+    ip: '1',
+    userName: '1',
+    password: '1',
     port: cameraData.value.cameraPort!,
     channelNum: cameraData.value.channelNum!,
   };
@@ -79,7 +82,7 @@ async function init() {
 async function initialize(): Promise<void> {
   if (!videoRef.value) return;
   sdk = new HikvisionWebSdk({
-    assetBaseUrl: '/hik',
+    assetBaseUrl: 'hik',
     onPlaybackEnded: () => {
       message.value = '回放结束';
     },
@@ -132,7 +135,7 @@ async function runPlay() {
     zeroChannel: false,
     rtspPort: rtspPort.value,
     streamType: 1,
-    proxy: true,
+    proxy: false,
   });
   emit('loading', false);
   emit('success', message.value);
@@ -178,7 +181,7 @@ defineExpose({
     sdk?.stop();
   },
   closeAll() {
-    sdk?.api.I_StopAll();
+    sdk?.stopAll();
   },
 });
 </script>
