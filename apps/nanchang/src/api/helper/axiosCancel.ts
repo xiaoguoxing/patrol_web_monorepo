@@ -1,6 +1,6 @@
 // ? 暂时没使用取消请求，目前全局 loading 已经能控制重复请求了
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
-import { isFunction } from '@/utils/is/index';
+import { isFunction } from '@patrol/shared/utils/is';
 import qs from 'qs';
 
 // * 声明一个 Map 用于存储每个请求的标识 和 取消函数

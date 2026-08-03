@@ -51,8 +51,8 @@
 <script setup lang="ts" name="AlarmDrawer">
 import { ref } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
-import { useHandleData } from '@/hooks/useHandleData';
+import { ColumnProps } from '@patrol/ui';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 
 import {
   getIndexListApi,

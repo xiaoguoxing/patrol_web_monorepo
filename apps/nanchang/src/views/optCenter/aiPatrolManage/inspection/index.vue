@@ -78,7 +78,7 @@
 <script setup lang="tsx">
 import { ref, reactive, computed, onMounted } from 'vue';
 import addPage from './add.vue';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import {
   deleteInspectionApi,
   getInspectionListApi,

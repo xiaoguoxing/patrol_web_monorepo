@@ -29,7 +29,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import KrCard from '@/components/znxj-components/components/card';
+import KrCard from '@patrol/ui/components/card';
 import myCalendar from './components/calendar.vue';
 import icon1 from '@/assets/images/schedule/doing.png';
 import { getListApi } from '@/api/modules/appCenter/task/schedule';

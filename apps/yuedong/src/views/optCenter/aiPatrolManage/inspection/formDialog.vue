@@ -30,7 +30,7 @@
 </template>
 <script setup lang="tsx" name="UserDialog">
 import { ref, computed, onUnmounted } from 'vue';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import myTabs from '@/components/Tabs/index.vue';
 import cameraTreeTemp from '@optCenter/components/cameraTreeTemp/index.vue';
 import {

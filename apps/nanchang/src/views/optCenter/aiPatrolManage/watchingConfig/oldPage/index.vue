@@ -61,7 +61,7 @@ import { ref, reactive } from 'vue';
 import addPage from './add.vue';
 import { Id, PageType, searchForm, rows } from '@/api/modules/optCenter/aiPatrolManage/watching';
 import { getWatchingListApi, deleteWatchingApi } from '@/api/modules/optCenter/aiPatrolManage/watching';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { treeFirst } from '@/api/modules/optCenter/aiPatrolManage/position';
 import { getCameraTreeApi, Tree } from '@/api/modules/camera';

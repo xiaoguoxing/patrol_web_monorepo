@@ -96,7 +96,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { getTreeApi } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { ReportListRows } from '@/api/modules/appCenter/task/report';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
 import selectHeaderSearch from '@/views/appCenter/alarm/selectHeaderSearch.vue';
 import { getTodayRange } from '@/utils/util';

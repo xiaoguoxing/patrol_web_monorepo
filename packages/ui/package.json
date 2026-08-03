@@ -1,0 +1,22 @@
+{
+  "name": "@patrol/ui",
+  "private": true,
+  "type": "module",
+  "main": "./src/znxj-ui/index.ts",
+  "module": "./src/znxj-ui/index.ts",
+  "types": "./src/znxj-ui/index.ts",
+  "exports": {
+    ".": "./src/znxj-ui/index.ts",
+    "./components": "./src/components/index.ts",
+    "./components/*": "./src/components/*/index.ts"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "catalog:",
+    "@vueuse/core": "catalog:",
+    "element-plus": "catalog:",
+    "lodash-es": "catalog:",
+    "print-js": "catalog:",
+    "recorder-core": "catalog:",
+    "vue": "catalog:"
+  }
+}

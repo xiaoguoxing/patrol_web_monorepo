@@ -5,12 +5,25 @@
     "paths": {
       "@": ["src"],
       "@/*": ["src/*"],
+      "@patrol/ui": ["../../packages/ui/src/znxj-ui/index.ts"],
+      "@patrol/ui/*": ["../../packages/ui/src/*"],
       "@appCenter": ["src/views/appCenter/src"],
       "@appCenter/*": ["src/views/appCenter/src/*"],
       "@optCenter": ["src/views/optCenter/aiPatrolManage/src"],
       "@optCenter/*": ["src/views/optCenter/aiPatrolManage/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "vite.config.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "../../packages/shared/src/**/*.ts",
+    "../../packages/shared/src/**/*.d.ts",
+    "../../packages/ui/src/**/*.ts",
+    "../../packages/ui/src/**/*.d.ts",
+    "../../packages/ui/src/**/*.vue",
+    "vite.config.ts"
+  ],
   "exclude": ["node_modules", "dist", "**/*.js"]
 }

@@ -48,7 +48,7 @@
 </template>
 <script setup lang="tsx">
 import { ref, reactive } from 'vue';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 
 // import type {} from 'element-plus'
 interface listProp {

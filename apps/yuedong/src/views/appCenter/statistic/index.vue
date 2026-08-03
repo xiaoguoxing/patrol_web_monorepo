@@ -105,13 +105,13 @@ import icon1 from '@/assets/images/statistic/icon1.png';
 import myTabs from '@/components/Tabs/index.vue';
 import chart from '@/views/home/components/chart.vue';
 import { MonitorItem, Tabs } from '@/api/modules/appCenter/inspectionMonitor/watchingMonitor';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import * as ChartsConfig from '@/views/appCenter/statistic/config/chart.js';
 import { getListApi, getChartApi } from '@/api/modules/appCenter/statistic';
 
 import SvgIcon from '@/components/SvgIcon/index.vue';
 import { getDict, DefaultDict } from '@/utils/serviceDict';
-import { isJSON } from '@/utils/is';
+import { isJSON } from '@patrol/shared/utils/is';
 // const ChartsConfig = createRequire('@/views/appCenter/statistic/config/chart.js');
 // const ChartsConfig = require('@/views/appCenter/statistic/config/chart.js');
 

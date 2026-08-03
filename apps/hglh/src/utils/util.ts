@@ -1,4 +1,4 @@
-import { isArray } from '@/utils/is';
+import { isArray } from '@patrol/shared/utils/is';
 import { cloneDeep } from 'lodash';
 import { RouteRecordRaw } from 'vue-router';
 /**

@@ -118,7 +118,7 @@ import {
 } from '@/api/modules/optCenter/Almanagement/SMCollect';
 import { getCameraTreeApi } from '@/api/modules/camera';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { getDataURL } from '@/utils/util';
 import { algorithmList } from '@/api/modules/optCenter/Almanagement/AIModelManagement';
 

@@ -22,7 +22,7 @@
 <script setup lang="ts" name="areaSeldialog">
 import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import { getSelTreeApi, getSelListApi } from '@/api/modules/optCenter/inspectionSet/area';
 
 // 弹窗状态

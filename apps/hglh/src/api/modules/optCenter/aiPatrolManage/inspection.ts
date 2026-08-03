@@ -15,7 +15,7 @@ export enum pageTypeTitle {
 }
 export type Id = string;
 export type PageType = keyof typeof pageTypeTitle;
-import type { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import type { ColumnProps } from '@patrol/ui';
 /**
  * @name 巡检项配置
  */

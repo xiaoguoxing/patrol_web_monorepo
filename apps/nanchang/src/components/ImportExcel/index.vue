@@ -42,7 +42,7 @@
 
 <script setup lang="ts" name="ImportExcel">
 import { ref } from 'vue';
-import { useDownload } from '@/hooks/useDownload';
+import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { Download } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
 

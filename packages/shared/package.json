@@ -1,0 +1,28 @@
+{
+  "name": "@patrol/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./hooks/useDownload": "./src/hooks/useDownload.ts",
+    "./hooks/useEcharts": "./src/hooks/useEcharts.ts",
+    "./hooks/useHandleData": "./src/hooks/useHandleData.ts",
+    "./hooks/useOnline": "./src/hooks/useOnline.ts",
+    "./hooks/useSelection": "./src/hooks/useSelection.ts",
+    "./hooks/useTable": "./src/hooks/useTable.ts",
+    "./hooks/useTime": "./src/hooks/useTime.ts",
+    "./utils/echarts": "./src/utils/echarts/index.ts",
+    "./utils/eleValidate": "./src/utils/eleValidate.ts",
+    "./utils/errorHandler": "./src/utils/errorHandler.ts",
+    "./utils/is": "./src/utils/is/index.ts",
+    "./utils/mittBus": "./src/utils/mittBus.ts",
+    "./utils/svg": "./src/utils/svg.ts",
+    "./utils/theme/tool": "./src/utils/theme/tool.ts"
+  },
+  "dependencies": {
+    "echarts": "catalog:",
+    "element-plus": "catalog:",
+    "mitt": "catalog:",
+    "vue": "catalog:"
+  }
+}

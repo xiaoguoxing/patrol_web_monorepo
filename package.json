@@ -20,9 +20,9 @@
     "build:yuedong": "pnpm --filter @patrol/yuedong build:pro",
     "build:test": "pnpm --recursive --if-present build:test",
     "lint": "pnpm run lint:eslint && pnpm run lint:prettier && pnpm run lint:stylelint",
-    "lint:eslint": "eslint --fix --ext .js,.ts,.vue apps/*/src",
-    "lint:prettier": "prettier --write --loglevel warn \"apps/*/src/**/*.{js,ts,json,tsx,css,less,scss,vue,html,md}\"",
-    "lint:stylelint": "stylelint --cache --fix \"apps/**/*.{vue,less,postcss,css,scss}\" --cache-location node_modules/.cache/stylelint/",
+    "lint:eslint": "eslint --fix --ext .js,.ts,.vue apps/*/src packages/*/src",
+    "lint:prettier": "prettier --write --loglevel warn \"{apps/*/src,packages/*/src}/**/*.{js,ts,json,tsx,css,less,scss,vue,html,md}\"",
+    "lint:stylelint": "stylelint --cache --fix \"{apps/*/src,packages/*/src}/**/*.{vue,less,postcss,css,scss}\" --cache-location node_modules/.cache/stylelint/",
     "lint:staged": "lint-staged",
     "prepare": "husky install"
   },

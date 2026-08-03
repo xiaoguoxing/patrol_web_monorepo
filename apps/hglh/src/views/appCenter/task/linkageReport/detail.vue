@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import detailList from '@/views/appCenter/task/report/detail/detailList.vue';
 import detailExpandList from '@/views/appCenter/task/report/detail/detailExpandList.vue';
 import detailDialog from '@/views/appCenter/task/report/detail/detailDialog.vue';
-import type { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import type { ColumnProps } from '@patrol/ui';
 import {
   getReportDetailApi,
   ReportListRows,

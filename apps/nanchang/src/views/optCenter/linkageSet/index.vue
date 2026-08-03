@@ -101,8 +101,8 @@ import { ElMessage, ElNotification } from 'element-plus';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
 import type { DefaultDict, FilterDict } from '@/utils/serviceDict';
 
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
-import { useHandleData } from '@/hooks/useHandleData';
+import { ColumnProps } from '@patrol/ui';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import SignalFormDialog from './SignalFormDialog.vue';
 import formDialog from './formDialog.vue';
 import sortDialog from './sortDialog.vue';

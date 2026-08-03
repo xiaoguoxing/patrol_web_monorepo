@@ -80,7 +80,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { GlobalStore } from '@/stores';
 import { DEFAULT_PRIMARY } from '@/config/config';
 import SwitchDark from '@/components/SwitchDark/index.vue';
-import mittBus from '@/utils/mittBus';
+import mittBus from '@patrol/shared/utils/mittBus';
 
 const { changePrimary, changeGreyOrWeak } = useTheme();
 

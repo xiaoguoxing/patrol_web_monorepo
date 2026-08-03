@@ -72,7 +72,7 @@ import { getTreeApi } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
 import { GlobalStore } from '@/stores';
 import { getTodayRange } from '@/utils/util';
-import { useDownload } from '@/hooks/useDownload';
+import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { ElMessage } from 'element-plus';
 const globalStore = GlobalStore();
 const route = useRoute();

@@ -1,5 +1,6 @@
 packages:
   - 'apps/*'
+  - 'packages/*'
 
 catalog:
   '@commitlint/cli': 17.8.1

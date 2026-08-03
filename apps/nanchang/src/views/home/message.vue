@@ -32,7 +32,7 @@
 import { reactive, ref } from 'vue';
 import myTabs from '@/components/Tabs/index.vue';
 import { getMessageList, getDeleteList, getUpdateList } from '@/api/modules/workstand';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { useRouter } from 'vue-router';
 const router = useRouter();
 const proTable = ref();

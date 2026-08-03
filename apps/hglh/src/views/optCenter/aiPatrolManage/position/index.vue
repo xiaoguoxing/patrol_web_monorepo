@@ -86,7 +86,7 @@ import {
   getPositionListApi,
 } from '@/api/modules/optCenter/aiPatrolManage/position';
 import addPage from './add.vue';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { getCameraTreeApi, Tree } from '@/api/modules/camera';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';

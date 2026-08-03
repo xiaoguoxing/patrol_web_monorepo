@@ -114,8 +114,8 @@
 <script setup lang="tsx" name="areaManage">
 import { ref, reactive, onBeforeMount, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
-import { useHandleData } from '@/hooks/useHandleData';
+import { ColumnProps } from '@patrol/ui';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 
 import TreeFormDialog from './treeFormDialog.vue';
 import formDialog from './formDialog.vue';

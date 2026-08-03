@@ -22,7 +22,7 @@
 </template>
 <script setup lang="ts" name="UserDialog">
 import { ref, computed, onUnmounted, onBeforeMount } from 'vue';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import { getAreaListApi, getListApi, Area } from '@/api/modules/optCenter/inspectionSet/area';
 
 interface DialogProps {

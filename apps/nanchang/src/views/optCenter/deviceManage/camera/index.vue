@@ -81,8 +81,8 @@
 <script setup lang="tsx">
 import { ref, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
-import { useHandleData } from '@/hooks/useHandleData';
+import { ColumnProps } from '@patrol/ui';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
 import type { DefaultDict } from '@/utils/serviceDict';
 

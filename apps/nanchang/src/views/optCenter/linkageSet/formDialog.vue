@@ -21,7 +21,7 @@
 <script setup lang="ts" name="LinkageDialog">
 import { ref, reactive, nextTick, onMounted } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import { getObjTreeApi } from '@/api/modules/optCenter/inspectionSet/area';
 import type { InspectionObj } from '@/api/modules/optCenter/inspectionSet/area';
 import { getInspectionListAllApi } from '@/api/modules/optCenter/aiPatrolManage/inspection';

@@ -33,8 +33,8 @@
 </template>
 <script setup lang="tsx" name="TaskType">
 import { ref } from 'vue';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
-import { useHandleData } from '@/hooks/useHandleData';
+import { ColumnProps } from '@patrol/ui';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import formDialog from './formDialog.vue';
 import { getListApi, deleteApi, editApi, addApi, TaskType } from '@/api/modules/optCenter/inspectionSet/taskType';
 import { Warning } from '@element-plus/icons-vue';

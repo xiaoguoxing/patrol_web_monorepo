@@ -87,7 +87,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { getTreeApi } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { ReportListRows } from '@/api/modules/appCenter/task/report';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 let alarm_level: Dict = [];
 let alarm_type: Dict = [];
 let alarm_status: Dict = [];

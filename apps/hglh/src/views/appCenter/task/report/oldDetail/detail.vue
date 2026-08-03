@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import detailList from '../detail/detailList.vue';
 import detailDialog from '../detail/detailDialog.vue';
-import type { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import type { ColumnProps } from '@patrol/ui';
 import { getReportDetailApi, ReportListRows, PageType, getReportCheckApi } from '@/api/modules/appCenter/task/report';
 import { Clock } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';

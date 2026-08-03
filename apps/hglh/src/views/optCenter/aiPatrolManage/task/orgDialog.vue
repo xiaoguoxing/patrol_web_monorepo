@@ -22,7 +22,7 @@
 </template>
 <script setup lang="ts" name="UserDialog">
 import { ref, computed, onUnmounted, onMounted, onBeforeMount } from 'vue';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import { orgTree, OrgTree, orgTreeList } from '@/api/modules/optCenter/aiPatrolManage/task';
 
 interface DialogProps {

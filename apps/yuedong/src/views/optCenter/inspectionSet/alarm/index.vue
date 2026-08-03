@@ -62,8 +62,8 @@
 <script setup lang="tsx" name="AlarmIndex">
 import { ref, reactive, onBeforeMount } from 'vue';
 import { ElMessage } from 'element-plus';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
-import { useHandleData } from '@/hooks/useHandleData';
+import { ColumnProps } from '@patrol/ui';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import {
   getDict,
   getDictObj,
@@ -76,7 +76,7 @@ import alarmDrawer from '../../aiPatrolManage/inspection/alarmDrawer.vue';
 import { getListApi, deleteApi, turnApi, editApi, addApi } from '@/api/modules/optCenter/inspectionSet/alarm';
 import type { Alarm } from '@/api/modules/optCenter/inspectionSet/alarm';
 import { Warning } from '@element-plus/icons-vue';
-import { isJSON } from '@/utils/is';
+import { isJSON } from '@patrol/shared/utils/is';
 /*
   告警配置功能
 

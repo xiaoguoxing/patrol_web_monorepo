@@ -26,7 +26,7 @@
 <script setup lang="tsx">
 import { ref, reactive } from 'vue';
 import { KeepAliveStore } from '@/stores/modules/keepAlive';
-import { ColumnProps } from '@/components/znxj-components/znxj-ui';
+import { ColumnProps } from '@patrol/ui';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
 import type { DefaultDict } from '@/utils/serviceDict';
 import { getListApi, getStatisticsApi } from '@/api/modules/appCenter/inspectionMonitor/aiInspection';

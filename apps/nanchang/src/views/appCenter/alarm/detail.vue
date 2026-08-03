@@ -11,7 +11,7 @@ import {
 import myTab from '@/components/Tabs/index.vue';
 import videoControls from '@optCenter/videoRealTime.vue';
 import { onMounted, ref, watch } from 'vue';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { useRouter } from 'vue-router';
 import { GlobalStore } from '@/stores';

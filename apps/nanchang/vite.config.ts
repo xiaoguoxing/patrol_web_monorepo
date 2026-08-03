@@ -59,7 +59,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           rewrite: (path) => path.replace(/^\/stream/, ''),
         },
         '/ISAPI': {
-          target: 'http://127.0.0.1/ISAPI', //测试环境
+          target: 'http://10.11.0.160/ISAPI', //测试环境
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/ISAPI/, ''),
         },

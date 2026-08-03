@@ -103,7 +103,7 @@ import {
   taskTypeSelectApi,
   PageTypeTitle,
 } from '@/api/modules/optCenter/aiPatrolManage/task';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { ElMessage } from 'element-plus';

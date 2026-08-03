@@ -106,11 +106,11 @@ import reportingDeficienciesPage from './reportingDeficienciesPage.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { ReportListRows } from '@/api/modules/appCenter/task/report';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
 import { getTodayRange } from '@/utils/util';
 import { useDebounceFn } from '@vueuse/core';
-import { useDownload } from '@/hooks/useDownload';
+import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { ElMessage } from 'element-plus';
 
 let alarm_level: Dict = [];

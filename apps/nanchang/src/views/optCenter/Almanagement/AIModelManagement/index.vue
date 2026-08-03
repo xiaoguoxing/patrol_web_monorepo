@@ -42,7 +42,7 @@
 </template>
 <script setup lang="ts">
 import { ref, reactive, computed, nextTick } from 'vue';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { useRoute } from 'vue-router';
 import ImportExcel from '@/components/ImportExcel/index.vue';

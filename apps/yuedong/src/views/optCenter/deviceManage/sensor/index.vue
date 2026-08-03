@@ -82,7 +82,7 @@
 import { ref, reactive, ComputedRef, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
-import { useHandleData } from '@/hooks/useHandleData';
+import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { getDict, getDictForColumnFilters as dictForFilters, DefaultDict } from '@/utils/serviceDict';
 import { sensorList, sensorDelete, sensorUpdate, sensorAdd, Row } from '@/api/modules/optCenter/deviceManage/sensor';
 import { getAreaListApi } from '@/api/modules/optCenter/inspectionSet/area';
