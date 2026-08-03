@@ -8,10 +8,7 @@
     "serve": "vite",
     "build:dev": "vue-tsc --noEmit && vite build --mode development",
     "build:test": "vite build --mode test",
-    "build:lhPro": "vite build --mode lhProduction",
-    "build:hgPro": "vite build --mode hgProduction",
-    "build:ncPro": "vite build --mode ncProduction",
-    "build:lhorhg": "vite build --mode lhProduction && vite build --mode hgProduction",
+    "build:pro": "vite build --mode production",
     "preview": "vite preview"
   },
   "dependencies": {
