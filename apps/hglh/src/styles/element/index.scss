@@ -1,0 +1,134 @@
+/* element-plus 自定义主题 */
+
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'primary': (
+      'base': #0d60b4,
+      'light': #dfeffd,
+    ),
+    'success': (
+      'base': #2ebc5d,
+      'light': #defce8,
+    ),
+    'warning': (
+      'base': #fa802f,
+      'light': #ffebde,
+    ),
+    'warning2': (
+      'base': #f1b000,
+      'light': #fcf4de,
+    ),
+    'danger': (
+      'base': #ea3939,
+      'light': #ffe2e2,
+    ),
+    'danger2': (
+      'base': #e3007b,
+      'light': #fcdeee,
+    ),
+    'error': (
+      'base': #ea3939,
+      'light': #ffe2e2,
+    ),
+  ),
+  $text-color: (
+    'primary': #333333,
+    'regular': #666666,
+    'secondary': #999999,
+    'placeholder': #cccccc,
+  ),
+  $border-color: (
+    '': #cccccc,
+    'light': #e4e7ed,
+    'light2': #e6e6e6,
+    'lighter': #ebeef5,
+    'extra-light': #f2f6fc,
+    'dark': #d4d7de,
+    'darker': #cdd0d6,
+  ),
+  $border-color-hover: #b2b2b2,
+  $fill-color: (
+    'light': #f8f8f8,
+  ),
+  $disabled: (
+    'border-color': #cccccc,
+  ),
+  // 定义table
+  $table:
+    (
+      'header-bg-color': #efefef,
+      'current-row-bg-color': var(--el-fill-color-light),
+      'border-color': var(--el-border-color-light2),
+      'header-text-color': var(--el-text-color-primary),
+    ),
+  $table-padding: (
+    'large': 12px 0,
+    'default': 13px 0,
+    'small': 4px 0,
+  ),
+  $pagination: (
+    'border-radius': 4px,
+    'button-bg-color': #f4f4f4,
+    'button-color': var(--el-text-color-regular),
+  ),
+  // 树
+  $tree:
+    (
+      'node-content-height': 34px,
+    ),
+  // 大小
+  $common-component-size:
+    (
+      'large': 40px,
+      'default': 36px,
+      'small': 24px,
+    ),
+  // 默认按钮
+  $button:
+    (
+      'border-color': var(--el-border-color-hover),
+      'hover-border-color': var(--el-color-primary),
+      'hover-bg-color': var(--el-color-white),
+      'new-primary-color': #0c56a2,
+      'new-primary2-hover-bg-color': #dfeffd,
+      'item-gap': 16px,
+      'padding': 0 12px,
+      'icon-size': 18px,
+      'icon-span-gap': 4px,
+    ),
+  // 弹窗
+  $dialog:
+    (
+      'margin-top': 100px,
+      'padding-primary': 0,
+    ),
+  $radio: (
+    'text-color': var(--el-text-color-primary),
+  ),
+  $date-editor: (
+    'width': 100%,
+    'daterange-width': 100%,
+    'monthrange-width': 100%,
+    'datetimerange-width': 100%,
+  )
+  // $menu: (
+//   'active-color': #007FFF,
+//   'text-color': #FFFFFF,
+//   'hover-text-color': #FFFFFF,
+//   'bg-color': var(--el-color-primary),
+//   'hover-bg-color':rgb(0 0 0 / 90%),
+//   'item-height': 44px,
+//   'sub-item-height': var(--el-menu-item-height),
+//   'horizontal-height': 60px,
+//   'horizontal-sub-item-height': var(--el-menu-horizontal-height),
+//   'item-font-size': getCssVar('font-size-base'),
+//   'item-hover-fill': getCssVar('color-primary-light-9'),
+//   'border-color': getCssVar('border-color'),
+//   'base-level-padding': 20px,
+//   'level-padding': 20px,
+//   'icon-width': 24px,
+// )
+);
+
+// 如果你想导入所有样式:
+@use 'element-plus/theme-chalk/src/index.scss' as *;

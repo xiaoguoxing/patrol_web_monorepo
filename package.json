@@ -1,0 +1,54 @@
+{
+  "name": "patrol-inspection-web-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "智能巡检多版本前端工作区",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.12.2",
+    "pnpm": ">=10.28.0"
+  },
+  "volta": {
+    "node": "20.12.2"
+  },
+  "scripts": {
+    "dev:hglh": "pnpm --filter @patrol/hglh dev",
+    "dev:nanchang": "pnpm --filter @patrol/nanchang dev",
+    "dev:yuedong": "pnpm --filter @patrol/yuedong dev",
+    "build:dev": "pnpm --recursive --if-present build:dev",
+    "build:test": "pnpm --recursive --if-present build:test",
+    "lint": "pnpm run lint:eslint && pnpm run lint:prettier && pnpm run lint:stylelint",
+    "lint:eslint": "eslint --fix --ext .js,.ts,.vue apps/*/src",
+    "lint:prettier": "prettier --write --loglevel warn \"apps/*/src/**/*.{js,ts,json,tsx,css,less,scss,vue,html,md}\"",
+    "lint:stylelint": "stylelint --cache --fix \"apps/**/*.{vue,less,postcss,css,scss}\" --cache-location node_modules/.cache/stylelint/",
+    "lint:staged": "lint-staged",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "catalog:",
+    "@commitlint/config-conventional": "catalog:",
+    "@rushstack/eslint-patch": "catalog:",
+    "@vue/eslint-config-prettier": "catalog:",
+    "@vue/eslint-config-typescript": "catalog:",
+    "autoprefixer": "catalog:",
+    "commitizen": "catalog:",
+    "cz-git": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-vue": "catalog:",
+    "husky": "catalog:",
+    "lint-staged": "catalog:",
+    "postcss": "catalog:",
+    "postcss-html": "catalog:",
+    "prettier": "catalog:",
+    "pretty-quick": "catalog:",
+    "standard-version": "catalog:",
+    "stylelint": "catalog:",
+    "stylelint-config-html": "catalog:",
+    "stylelint-config-prettier": "catalog:",
+    "stylelint-config-recess-order": "catalog:",
+    "stylelint-config-recommended-scss": "catalog:",
+    "stylelint-config-recommended-vue": "catalog:",
+    "stylelint-config-standard": "catalog:",
+    "stylelint-config-standard-scss": "catalog:"
+  }
+}

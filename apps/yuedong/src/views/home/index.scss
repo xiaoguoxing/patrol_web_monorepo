@@ -1,0 +1,178 @@
+.home {
+  width: 100%;
+  height: 100%;
+  font-family: SourceHanSansCN-Regular;
+  .home-welcome {
+    height: 64px;
+    line-height: 64px;
+  }
+  .home-box {
+    display: flex;
+    width: 100%;
+    height: calc(100% - 64px);
+    .flex-left {
+      width: calc(58.5% - 8px);
+      .card-equipment {
+        width: 100%;
+        height: 50%;
+        :deep(.kr-card__body) {
+          flex-direction: row;
+          justify-content: space-between;
+          padding: 10px 24px 12px;
+        }
+        .equipment {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-evenly;
+          width: 20%;
+          cursor: pointer;
+          .equip-title {
+            color: #666666;
+          }
+          .equip-num {
+            display: flex;
+            margin-top: 10px;
+            img {
+              width: 48px;
+              height: 36px;
+              margin-top: 8px;
+            }
+            .value {
+              font-size: 20px;
+              color: #333333;
+            }
+            .value-online {
+              font-size: 28px;
+              font-weight: 500;
+              line-height: 28px;
+              color: #0d60b4;
+            }
+            .label {
+              font-size: 14px;
+              line-height: 29px;
+              color: #999999;
+            }
+            .value-label {
+              line-height: 33px;
+            }
+          }
+          .equip-item {
+            margin-left: 10px;
+          }
+          .equip-item1 {
+            margin-left: 30px;
+          }
+        }
+      }
+      .left-bottom {
+        display: flex;
+        height: calc(50% - 16px);
+        margin-top: 16px;
+        .card-alarm,
+        .card-linkage {
+          width: 50%;
+          :deep(.kr-card__body) {
+            display: flex;
+            flex-direction: row;
+            .alarm {
+              display: flex;
+              align-items: center;
+              width: 50%;
+              cursor: pointer;
+              img {
+                width: 60px;
+                height: 60px;
+                margin-right: 15px;
+              }
+              .name {
+                margin-top: -5px;
+                font-size: 16px;
+                line-height: 30px;
+                color: #666666;
+              }
+              .value {
+                font-size: 28px;
+                font-weight: 500;
+              }
+            }
+          }
+        }
+        .card-linkage {
+          margin-left: 16px;
+        }
+      }
+    }
+    .flex-right {
+      width: calc(41.5% - 8px);
+      margin-left: 16px;
+      .flex-top {
+        .kr-card {
+          height: 100%;
+        }
+        :deep(.kr-card__body) {
+          // flex-direction:row;
+          // flex-wrap: wrap;
+
+          flex-flow: row wrap;
+          .apps {
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            width: 33%;
+            height: 35%;
+            padding-left: 20px;
+            img {
+              width: 64px;
+              height: 64px;
+              vertical-align: middle;
+            }
+            span {
+              margin-left: 16px;
+              color: #666666;
+            }
+          }
+        }
+      }
+      .flex-bottom {
+        :deep(.kr-card__body) {
+          overflow-y: auto !important;
+          .message {
+            height: 64px;
+            line-height: 64px;
+            color: #666666;
+            cursor: pointer;
+            border-bottom: 1px solid #e6e6e6;
+            .floatRight {
+              float: right;
+              color: #999999;
+            }
+            .messageCon {
+              display: inline-block;
+              width: calc(100% - 170px);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
+          .message:hover,
+          .message.active {
+            color: #0d60b4;
+            background: #f8f8f8;
+          }
+        }
+      }
+    }
+    .flex-left,
+    .flex-right {
+      height: 100%;
+      .flex-top {
+        // height: calc(39.5% - 8px);
+        height: calc(39.5% - 8px);
+      }
+      .flex-bottom {
+        height: calc(60.5% - 8px);
+        margin-top: 16px;
+      }
+    }
+  }
+}

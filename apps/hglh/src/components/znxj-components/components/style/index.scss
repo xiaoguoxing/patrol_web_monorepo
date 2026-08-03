@@ -1,0 +1,30 @@
+// * card 卡片样式
+
+// * 不需要 card 卡片样式（在组件内使用 proTable 会使用到）
+.kr-no-card {
+  .kr-card {
+    --kr-card-horizen-padding: 0;
+    --kr-card-vertical-padding: 0;
+
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* flex */
+.flx-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flx-justify-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.flx-align-center {
+  display: flex;
+  align-items: center;
+}

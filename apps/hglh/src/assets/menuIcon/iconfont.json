@@ -1,0 +1,163 @@
+{
+  "id": "4450278",
+  "name": "智能巡检管理平台",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "PC端特色图标",
+  "glyphs": [
+    {
+      "icon_id": "39886575",
+      "name": "向下箭头",
+      "font_class": "a-5xiangxiajiantou",
+      "unicode": "e747",
+      "unicode_decimal": 59207
+    },
+    {
+      "icon_id": "39886573",
+      "name": "增长",
+      "font_class": "a-6zengchang",
+      "unicode": "e748",
+      "unicode_decimal": 59208
+    },
+    {
+      "icon_id": "39886571",
+      "name": "总览布局",
+      "font_class": "a-1zonglanbuju",
+      "unicode": "e749",
+      "unicode_decimal": 59209
+    },
+    {
+      "icon_id": "39886574",
+      "name": "下跌",
+      "font_class": "a-7xiadie",
+      "unicode": "e74a",
+      "unicode_decimal": 59210
+    },
+    {
+      "icon_id": "39886570",
+      "name": "列表布局",
+      "font_class": "a-3liebiaobuju",
+      "unicode": "e74b",
+      "unicode_decimal": 59211
+    },
+    {
+      "icon_id": "39886572",
+      "name": "向上箭头",
+      "font_class": "a-4xiangshangjiantou",
+      "unicode": "e74c",
+      "unicode_decimal": 59212
+    },
+    {
+      "icon_id": "39886569",
+      "name": "卡片布局",
+      "font_class": "a-2kapianbuju",
+      "unicode": "e74d",
+      "unicode_decimal": 59213
+    },
+    {
+      "icon_id": "39407087",
+      "name": "11_智能巡检管理",
+      "font_class": "a-11_zhinengxunjianguanli",
+      "unicode": "e739",
+      "unicode_decimal": 59193
+    },
+    {
+      "icon_id": "39407088",
+      "name": "12_巡检配置",
+      "font_class": "a-12_xunjianpeizhi",
+      "unicode": "e73a",
+      "unicode_decimal": 59194
+    },
+    {
+      "icon_id": "39407083",
+      "name": "10_统计分析",
+      "font_class": "a-10_tongjifenxi",
+      "unicode": "e738",
+      "unicode_decimal": 59192
+    },
+    {
+      "icon_id": "39407086",
+      "name": "6_巡检监控",
+      "font_class": "a-6_xunjianjiankong",
+      "unicode": "e73b",
+      "unicode_decimal": 59195
+    },
+    {
+      "icon_id": "39407085",
+      "name": "14_智能联动配置",
+      "font_class": "a-14_zhinengliandongpeizhi",
+      "unicode": "e73c",
+      "unicode_decimal": 59196
+    },
+    {
+      "icon_id": "39407084",
+      "name": "7_任务管理",
+      "font_class": "a-7_renwuguanli",
+      "unicode": "e73d",
+      "unicode_decimal": 59197
+    },
+    {
+      "icon_id": "39407082",
+      "name": "13_算法管理",
+      "font_class": "a-13_suanfaguanli",
+      "unicode": "e73e",
+      "unicode_decimal": 59198
+    },
+    {
+      "icon_id": "39407081",
+      "name": "9_告警管理",
+      "font_class": "a-9_gaojingguanli",
+      "unicode": "e73f",
+      "unicode_decimal": 59199
+    },
+    {
+      "icon_id": "39407080",
+      "name": "8_智能联动",
+      "font_class": "a-8_zhinengliandong",
+      "unicode": "e740",
+      "unicode_decimal": 59200
+    },
+    {
+      "icon_id": "39407079",
+      "name": "2_应用中心",
+      "font_class": "a-2_yingyongzhongxin",
+      "unicode": "e741",
+      "unicode_decimal": 59201
+    },
+    {
+      "icon_id": "39407078",
+      "name": "5_AR实景",
+      "font_class": "a-5_ARshijing",
+      "unicode": "e742",
+      "unicode_decimal": 59202
+    },
+    {
+      "icon_id": "39407077",
+      "name": "15_设备管理",
+      "font_class": "a-15_shebeiguanli",
+      "unicode": "e743",
+      "unicode_decimal": 59203
+    },
+    {
+      "icon_id": "39407076",
+      "name": "4_可视化看板",
+      "font_class": "a-4_keshihuakanban",
+      "unicode": "e744",
+      "unicode_decimal": 59204
+    },
+    {
+      "icon_id": "39407075",
+      "name": "3_运管中心",
+      "font_class": "a-3_yunguanzhongxin",
+      "unicode": "e745",
+      "unicode_decimal": 59205
+    },
+    {
+      "icon_id": "39407074",
+      "name": "1_工作台",
+      "font_class": "a-1_gongzuotai",
+      "unicode": "e746",
+      "unicode_decimal": 59206
+    }
+  ]
+}

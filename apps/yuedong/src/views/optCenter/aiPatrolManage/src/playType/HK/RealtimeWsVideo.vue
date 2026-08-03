@@ -1,0 +1,145 @@
+<script setup lang="ts">
+import { PlayType, Quality } from '@optCenter/videoType';
+import { nextTick, onUnmounted, ref, watch } from 'vue';
+import { capturePic, cameraRotate } from '@/api/modules/HKcamera';
+import { useIsTask } from '@optCenter/hooks/use-video';
+import { ElMessage } from 'element-plus';
+import CreateHKWsVideo, { VideoPlayBackSettings } from '@optCenter/hooks/useHKWsVideo';
+interface props {
+  playType: PlayType;
+  cameraId: string;
+  showControls?: boolean;
+  isCanvas?: boolean;
+  dataIndex?: string | number;
+  startTime?: number | string;
+  endTime?: string;
+  businessId?: string;
+  quality?: Quality;
+  scrollDom?: HTMLDivElement;
+  buttonType?: 1 | 2;
+}
+const props = withDefaults(defineProps<props>(), {
+  playType: 1,
+  showControls: true,
+  buttonType: 1,
+});
+
+interface Emit {
+  (e: 'err', str: string): void;
+  (e: 'success', str?: string): void;
+  (e: 'loading', isLoading: boolean): void;
+  (e: 'toggle'): void;
+}
+const emit = defineEmits<Emit>();
+
+let play: CreateHKWsVideo;
+const videoRef = ref<HTMLDivElement>();
+let currentCamera = ref<string>();
+
+async function init() {
+  //
+  try {
+    await nextTick();
+    await setPlay();
+    await runPlay(props.cameraId);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+async function setPlay() {
+  return new Promise((resolve, reject) => {
+    play = new CreateHKWsVideo(videoRef.value!, 0, { scrollDom: props.scrollDom!, buttonType: props.buttonType });
+    play.on('success', () => {
+      resolve('1');
+      emit('success');
+    });
+    play.on('error', (m: string) => {
+      ElMessage.error(m);
+      emit('err', m);
+      reject();
+    });
+    play.on('message', (m: string) => {
+      ElMessage.info(m);
+    });
+    // play.on('cameraChange', (code: string) => {
+    //   currentCamera.value = code;
+    // });
+    // play.on('videoPlay', (code: string) => {
+    //   emit('success', code);
+    // });
+  });
+}
+
+async function runPlay(cameraId: string) {
+  try {
+    await play.startPlay({
+      url: cameraId,
+      config: {
+        playURL: cameraId,
+        mode: 0,
+        PlayBackMode: 1,
+        keepDecoder: 0,
+      },
+    } as VideoPlayBackSettings);
+    emit('loading', false);
+  } catch (e: any) {
+    emit('err', '播放失败');
+    unFlv();
+  }
+}
+
+//抓图
+async function pic() {
+  return await capturePic({ cameraIndexCode: props.cameraId });
+}
+//转动预置位
+async function rotate(presetPositionInfo: number) {
+  try {
+    await useIsTask(props.cameraId);
+    return await cameraRotate(presetPositionInfo, props.cameraId);
+  } catch (e: any) {
+    ElMessage.warning(e as string);
+  }
+}
+
+onUnmounted(() => {
+  unFlv();
+});
+function unFlv() {
+  if (play != null) {
+    console.log('视频实例销毁');
+    play?.disconnect?.();
+    play = {} as CreateHKWsVideo;
+  }
+}
+
+defineExpose({
+  init,
+  pic,
+  rotate,
+  videoRef,
+  runPlay,
+  currentCamera,
+  get play() {
+    return play;
+  },
+});
+</script>
+
+<template>
+  <div ref="videoRef" id="HKVideoControl" class="videoRef" />
+  <template v-if="showControls">
+    <div class="Controls">
+      <!--      <videoCloud :camera-id="cameraId" :loginData="cameraData" :login-send-data="loginSendData"></videoCloud>-->
+    </div>
+    <div class="openScreen"></div>
+  </template>
+</template>
+
+<style lang="scss" scoped>
+@use '../../style/index';
+.loading-rotate {
+  animation: loading-rotate 2s linear infinite;
+}
+</style>

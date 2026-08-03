@@ -1,0 +1,351 @@
+@use '@/styles/var' as *;
+
+// 占满父元素剩余位置
+%flex-1 {
+  flex: 1;
+  overflow: hidden;
+}
+
+// 侧边栏背景为主题色的侧边栏样式
+%aside-primary {
+  background-color: var(--el-color-primary);
+  border-right: 1px solid var(--el-color-primary);
+  :deep(.el-menu) {
+    --el-menu-bg-color: var(--el-color-primary);
+    --el-menu-text-color: #ffffff;
+    --el-menu-hover-text-color: #ffffff;
+    --el-menu-hover-bg-color: var(--kr-color-primary-dark-15);
+    --el-menu-active-color: #ffffff;
+    & > .el-sub-menu,
+    & > .el-menu-item {
+      --el-menu-item-font-size: var(--el-font-size-medium);
+      .el-sub-menu,
+      .el-menu-item {
+        --el-menu-item-font-size: var(--el-font-size-base);
+      }
+    }
+    .el-menu-item {
+      &.is-active {
+        // 在src/hooks/useTheme.ts中通过主色计算得来的
+        background: var(--kr-color-primary-brighter);
+      }
+    }
+  }
+  :deep(.collapse-box) {
+    .collapse-icon {
+      color: rgb(255 255 255 / 80%);
+    }
+    .driver-highlighted-element.collapse-icon {
+      color: var(--el-text-color-primary);
+    }
+
+    // border-top: 1px solid var(--el-color-primary-light-1);
+  }
+}
+
+// 侧边栏背景为白色的侧边栏样式
+%aside-white {
+  background-color: #ffffff;
+
+  // border-right: 1px solid #f1f1f1;
+  :deep(.el-menu) {
+    --el-menu-text-color: var(--el-text-color-primary);
+    --el-menu-hover-bg-color: #{$kr-menu-hover-bg-color};
+    --el-menu-item-height: #{$kr-menu-item-height};
+    --el-menu-sub-item-height: var(--el-menu-item-height);
+    --el-menu-base-level-padding: 16px;
+    .el-menu-item {
+      &.is-active {
+        background: var(--kr-color-primary-lighter);
+      }
+    }
+    .el-sub-menu {
+      &.is-active {
+        --el-menu-text-color: var(--el-color-primary);
+      }
+    }
+    & > .el-sub-menu,
+    & > .el-menu-item {
+      --el-menu-item-font-size: var(--el-font-size-medium);
+      .el-sub-menu,
+      .el-menu-item {
+        --el-menu-text-color: var(--el-text-color-regular);
+        --el-menu-item-font-size: var(--el-font-size-base);
+      }
+    }
+  }
+  :deep(.collapse-box) {
+    // border-top: 1px solid var(--el-border-color);
+    .collapse-icon {
+      color: var(--el-text-color-regular);
+    }
+    .driver-highlighted-element.collapse-icon {
+      color: rgb(255 255 255 / 80%);
+    }
+  }
+}
+.el-container {
+  width: 100%;
+  height: 100%;
+  .el-header {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: $kr-header-height;
+    padding: 0;
+    overflow: hidden;
+    border-bottom: 1px solid #f1f1f1;
+    :deep(.tool-bar-ri) {
+      // 导航右侧字体颜色
+      --kr-tool-bar-ri-color: var(--el-text-color-regular);
+      --kr-tool-bar-ri-hover-color: var(--el-text-color-primary);
+
+      // 右侧导航字体大小
+      --kr-tool-bar-ri-icon-size: 21px;
+      --kr-tool-bar-ri-text-size: var(--el-font-size-medium);
+      .toolBar-icon {
+        font-size: var(--kr-tool-bar-ri-icon-size);
+      }
+      .toolBar-icon,
+      .header-link,
+      .user-name {
+        color: var(--kr-tool-bar-ri-color);
+        &:hover {
+          color: var(--kr-tool-bar-ri-hover-color);
+        }
+      }
+    }
+  }
+
+  // img {
+  //   margin-right: 10px;
+  // }
+  // .logo {
+  //   margin-right: 55px;
+  //   margin-left: 10px;
+  // }
+  .logo {
+    box-sizing: border-box;
+    height: $kr-header-height;
+    margin-right: 55px;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+    img {
+      width: 200px;
+      margin-right: 10px;
+      object-fit: contain;
+    }
+  }
+  .el-aside {
+    width: auto;
+    overflow: inherit;
+    .split-item {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 70px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      .el-icon {
+        font-size: 21px;
+      }
+      .title {
+        margin-top: 6px;
+        font-size: 12px;
+        line-height: normal;
+        transform: scale(0.96);
+      }
+    }
+    .menu {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: all 0.3s ease;
+    }
+    :deep(.el-scrollbar) {
+      flex: 1;
+    }
+    :deep(.el-menu) {
+      overflow-x: hidden;
+      border-right: none;
+
+      // .el-menu-item {
+      //   &.is-active {
+      //     &::before {
+      //       position: absolute;
+      //       top: 0;
+      //       bottom: 0;
+      //       left: 0;
+      //       width: 2px;
+      //       content: '';
+      //     }
+      //   }
+      // }
+    }
+    :deep(.collapse-box) {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      height: 50px;
+
+      // padding: 10px var(--el-menu-base-level-padding);
+    }
+  }
+}
+
+// 经典和横向布局下的特殊样式
+.classic,
+.transverse {
+  // 横向顶部导航+右边侧边栏就是classic
+  .classic-content {
+    height: calc(100% - $kr-header-height); // 减去头部高度
+    .classic-main {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+  .el-header {
+    --el-menu-bg-color: var(--el-color-primary);
+    --el-menu-text-color: #ffffff;
+    --el-menu-hover-text-color: #ffffff;
+    --el-menu-hover-bg-color: var(--kr-color-primary-dark-15);
+    --el-menu-active-color: #ffffff;
+    --el-menu-item-font-size: var(--el-font-size-medium);
+    --el-menu-base-level-padding: 20px;
+
+    background-color: var(--el-color-primary);
+    img {
+      margin-right: 10px;
+    }
+    .logo {
+      margin-right: 55px;
+      margin-left: 10px;
+    }
+    :deep(.el-menu) {
+      @extend %flex-1;
+      & > .el-menu-item,
+      & > .el-sub-menu {
+        height: $kr-header-height;
+        &.is-active {
+          position: relative;
+          font-family: SourceHanSansCN-Medium;
+
+          // 在src/hooks/useTheme.ts中通过主色计算得来的
+          background: var(--kr-color-primary-brighter);
+          border-bottom: unset;
+          &::after {
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            width: 32px;
+            height: 2px;
+            content: '';
+            background-color: #ffffff;
+            transform: translateX(-50%);
+          }
+          .el-sub-menu__title,
+          .el-sub-menu__title:hover {
+            background-color: var(--kr-color-primary-brighter);
+            border-bottom: unset;
+          }
+        }
+        .el-sub-menu__title {
+          &:hover {
+            background-color: var(--el-menu-hover-bg-color);
+          }
+        }
+      }
+
+      border-bottom: none;
+    }
+    :deep(.tool-bar-ri) {
+      // 导航右侧字体颜色
+      --kr-tool-bar-ri-color: #ffffff;
+      --kr-tool-bar-ri-hover-color: #ffffff;
+    }
+  }
+  .el-aside {
+    @extend %aside-white;
+  }
+
+  // guide
+  #driver-highlighted-element-stage {
+    background-color: #606266 !important;
+  }
+}
+
+// 纵向布局下的特殊样式
+.vertical {
+  .logo {
+    border-bottom: 1px solid var(--el-color-primary-light-1);
+  }
+  .el-header {
+    padding-left: $kr-body-padding;
+    background-color: #ffffff;
+  }
+  .el-aside {
+    @extend %aside-primary;
+  }
+}
+
+// 分栏布局下的特殊样式
+.columns {
+  .el-header {
+    padding-left: $kr-body-padding;
+  }
+  .el-aside:first-child {
+    .logo {
+      border-bottom: 1px solid var(--el-color-primary-light-1);
+    }
+    @extend %aside-primary;
+    .menu {
+      .el-menu-item {
+        height: 70px;
+        padding: 0;
+      }
+    }
+  }
+  .el-aside:nth-child(2) {
+    @extend %aside-white;
+    :deep(.collapse-box) {
+      .driver-highlighted-element.collapse-icon {
+        color: var(--el-text-color-primary);
+      }
+    }
+    .logo {
+      border-bottom: 1px solid #f1f1f1;
+    }
+    :deep(.logo-title) {
+      color: var(--el-text-color-primary);
+    }
+    :deep(.el-menu) {
+      .el-menu-item {
+        &.is-active {
+          &::before {
+            right: 0;
+            left: unset;
+            width: 3px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// logo左侧距离
+// .classic,
+// .vertical,
+// .columns {
+//   .logo {
+//     padding-left: var(--el-menu-base-level-padding);
+//   }
+// }
+// .transverse {
+//   .logo {
+//     padding-left: 12px;
+//   }
+// }

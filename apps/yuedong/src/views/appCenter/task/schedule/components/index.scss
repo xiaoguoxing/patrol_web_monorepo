@@ -1,0 +1,181 @@
+/* @media screen and (min-height: 1000px) {
+  .calendar-wrapper {
+    // background: #fa7268;
+    .week {
+      height: 17px !important;
+      margin-bottom: 16px !important;
+      line-height: 17px !important;
+    }
+    .content .days .item {
+      margin-bottom: 6px !important;
+    }
+    .content .days .item .day {
+      height: 130px !important;
+      .day-num {
+        height: 17px;
+        font-size: 16px;
+        line-height: 17px;
+      }
+    }
+    .day-none {
+      height: 94px !important;
+    }
+  }
+} */
+.calendar-wrapper {
+  flex: 1;
+
+  --box-height: 120px;
+
+  overflow: hidden;
+  .week {
+    display: flex;
+    font-size: 18px;
+    .week-day {
+      flex: 1;
+      color: var(--el-text-color-regular);
+      text-align: center;
+    }
+  }
+  .content {
+    box-sizing: border-box;
+    height: calc(100% - 28px);
+    padding-top: 11px;
+    transition: height 0.4s ease;
+    :deep(.days) {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: calc(5% / 6);
+      height: 100%;
+      transition: top 0.4s;
+      .day {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        color: #333333;
+        .day-num {
+          font-size: 16px;
+        }
+        .day-infos {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          gap: 2px;
+          border: 1px solid transparent;
+        }
+        .day-more {
+          display: flex;
+          align-items: center;
+          height: 15px;
+          font-size: 12px;
+          color: var(--el-color-primary);
+          cursor: pointer;
+        }
+        .day-none {
+          display: flex;
+          flex: 1;
+          align-items: center;
+          justify-content: center;
+          color: #999999;
+          border: 1px solid #e6e6e6;
+        }
+        &.nolm {
+          color: #cccccc;
+          background-color: #ffffff;
+          opacity: 0.6;
+        }
+        .markDay {
+          position: absolute;
+          bottom: 10px;
+          left: 50%;
+          width: 10px;
+          height: 10px;
+          pointer-events: none;
+          border-radius: 50%;
+          transform: translateX(-50%);
+          &.done {
+            background-color: #cccccc;
+          }
+          &.wait {
+            background-color: orange;
+
+            //    $text-color-red;
+          }
+        }
+      }
+    }
+  }
+  .content-info {
+    flex: 1;
+  }
+  :deep(.calendar-popover-other) {
+    .list-all {
+      max-height: 500px;
+      overflow: auto;
+      .list-title {
+        margin-bottom: 5px;
+        font-size: 16px;
+        text-align: left;
+      }
+      .list-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        height: 100%;
+        border: 1px solid transparent;
+        .content-info {
+          flex: calc((var(--box-height) - (24px + 15px + 4px)) / 3);
+        }
+      }
+    }
+  }
+  :deep(.calendar-popover) {
+    padding: 0 !important;
+    .detail-div {
+      .div-title {
+        min-height: 50px;
+        padding: 12px;
+        color: #ffffff;
+        cursor: pointer;
+        background: #0d60b4;
+        .title-1,
+        .title-2 {
+          display: flex;
+          align-content: center;
+          justify-content: space-between;
+          font-size: 16px;
+        }
+        .title-2 {
+          margin-top: 5px;
+          span {
+            font-family: SourceHanSansCN-Medium;
+          }
+        }
+      }
+      .div-end-title {
+        color: #333333;
+        background: #cccccc;
+      }
+      .div-content {
+        min-height: 100px;
+        max-height: 450px;
+        overflow: auto;
+        .item-div {
+          margin: 12px;
+          text-align: left;
+          border-bottom: 1px solid #e6e6e6;
+          .item-title {
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-style: italic;
+            color: #333333;
+          }
+          .item-content {
+            margin-bottom: 6px;
+            color: #999999;
+          }
+        }
+      }
+    }
+  }
+}

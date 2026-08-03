@@ -1,0 +1,442 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "path": "/home",
+      "name": "home",
+      "component": "/home/index",
+      "meta": {
+        "icon": "DataAnalysis",
+        "title": "工作台",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false,
+        "isKeepAlive": true
+      },
+      "children": [
+        {
+          "path": "/home/message",
+          "name": "message",
+          "component": "/home/message",
+          "meta": {
+            "icon": "Menu",
+            "title": "消息",
+            "isLink": "",
+            "isHide": true,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          }
+        }
+      ]
+    },
+    {
+      "path": "/appCenter",
+      "name": "appCenter",
+      "redirect": "/appCenter/inspectionMonitor/watchingMonitor",
+      "meta": {
+        "icon": "Briefcase",
+        "title": "应用中心",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false,
+        "isKeepAlive": true
+      },
+      "children": [
+        {
+          "path": "/appCenter/inspectionMonitor",
+          "name": "inspectionMonitor",
+          "redirect": "/appCenter/inspectionMonitor/watchingMonitor",
+          "meta": {
+            "icon": "Menu",
+            "title": "巡检监控",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          },
+          "children": [
+            {
+              "path": "/appCenter/inspectionMonitor/watchingMonitor",
+              "name": "watchingMonitor",
+              "component": "/appCenter/inspectionMonitor/watchingMonitor/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "实时监控",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/appCenter/inspectionMonitor/aiInspection",
+              "name": "aiInspection",
+              "component": "/appCenter/inspectionMonitor/aiInspection/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "智能巡检",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/appCenter/inspectionMonitor/trackInspection",
+              "name": "trackInspection",
+              "component": "/appCenter/inspectionMonitor/trackInspection/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "轨道机巡检",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            }
+          ]
+        },
+        {
+          "path": "/appCenter/task",
+          "name": "appCenterTask",
+          "redirect": "/appCenter/task/report",
+          "meta": {
+            "icon": "Menu",
+            "title": "任务管理",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          },
+          "children": [
+            {
+              "path": "/appCenter/task/report",
+              "name": "taskReport",
+              "component": "/appCenter/task/report/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "任务报告",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/appCenter/task/schedule",
+              "name": "taskSchedule",
+              "component": "/appCenter/task/schedule/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "任务日程",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            }
+          ]
+        },
+        {
+          "path": "/appCenter/linkage",
+          "name": "linkage",
+          "component": "/appCenter/linkage/index",
+          "meta": {
+            "icon": "Menu",
+            "title": "智能联动",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          }
+        },
+        {
+          "path": "/appCenter/alarm",
+          "name": "appCenterAlarm",
+          "component": "/appCenter/alarm/index",
+          "meta": {
+            "icon": "Menu",
+            "title": "告警管理",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          }
+        },
+        {
+          "path": "/appCenter/statistic",
+          "name": "statistic",
+          "component": "/appCenter/statistic/index",
+          "meta": {
+            "icon": "Menu",
+            "title": "统计分析",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          }
+        }
+      ]
+    },
+    {
+      "path": "/test",
+      "name": "test",
+      "component": "/test",
+      "meta": {
+        "icon": "Briefcase",
+        "title": "测试",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false,
+        "isKeepAlive": true
+      }
+    },
+    {
+      "path": "/optCenter",
+      "name": "optCenter",
+      "redirect": "/optCenter/aiPatrolManage/position",
+      "meta": {
+        "icon": "Briefcase",
+        "title": "运管中心",
+        "isLink": "",
+        "isHide": false,
+        "isFull": false,
+        "isAffix": false,
+        "isKeepAlive": true
+      },
+      "children": [
+        {
+          "path": "/optCenter/aiPatrolManage",
+          "name": "aiPatrolManage",
+          "redirect": "/optCenter/aiPatrolManage/position",
+          "meta": {
+            "icon": "Menu",
+            "title": "智能巡检管理",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          },
+          "children": [
+            {
+              "path": "/optCenter/aiPatrolManage/position",
+              "name": "position",
+              "component": "/optCenter/aiPatrolManage/position/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "预置位配置",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/aiPatrolManage/inspection",
+              "name": "inspection",
+              "component": "/optCenter/aiPatrolManage/inspection/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "巡检项配置",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/aiPatrolManage/task",
+              "name": "taskSet",
+              "component": "/optCenter/aiPatrolManage/task/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "巡检任务配置",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/aiPatrolManage/watchingConfig",
+              "name": "watchingConfig",
+              "component": "/optCenter/aiPatrolManage/watchingConfig/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "实时监控配置",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            }
+          ]
+        },
+        {
+          "path": "/optCenter/inspectionSet",
+          "name": "inspectionSet",
+          "redirect": "/optCenter/inspectionSet/area",
+          "meta": {
+            "icon": "Menu",
+            "title": "巡检配置",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          },
+          "children": [
+            {
+              "path": "/optCenter/inspectionSet/area",
+              "name": "area",
+              "component": "/optCenter/inspectionSet/area/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "巡检区域管理",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/inspectionSet/taskType",
+              "name": "taskType",
+              "component": "/optCenter/inspectionSet/taskType/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "巡检任务类型配置",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/inspectionSet/alarm",
+              "name": "alarm",
+              "component": "/optCenter/inspectionSet/alarm/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "告警配置",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            }
+          ]
+        },
+        {
+          "path": "/optCenter/linkageSet",
+          "name": "linkageSet",
+          "component": "/optCenter/linkageSet/index",
+          "meta": {
+            "icon": "Menu",
+            "title": "智能联动配置",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          }
+        },
+        {
+          "path": "/optCenter/deviceManage",
+          "name": "deviceManage",
+          "redirect": "/optCenter/deviceManage/camera",
+          "meta": {
+            "icon": "Menu",
+            "title": "设备管理",
+            "isLink": "",
+            "isHide": false,
+            "isFull": false,
+            "isAffix": false,
+            "isKeepAlive": true
+          },
+          "children": [
+            {
+              "path": "/optCenter/deviceManage/camera",
+              "name": "cameraMng",
+              "component": "/optCenter/deviceManage/camera/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "摄像头",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/deviceManage/track",
+              "name": "trackMng",
+              "component": "/optCenter/deviceManage/track/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "轨道机",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/deviceManage/sensor",
+              "name": "sensorMng",
+              "component": "/optCenter/deviceManage/sensor/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "传感器",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            },
+            {
+              "path": "/optCenter/deviceManage/videoStorage",
+              "name": "videoStorageMng",
+              "component": "/optCenter/deviceManage/videoStorage/index",
+              "meta": {
+                "icon": "Menu",
+                "title": "视频存储设备",
+                "isLink": "",
+                "isHide": false,
+                "isFull": false,
+                "isAffix": false,
+                "isKeepAlive": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "msg": "成功"
+}

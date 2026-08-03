@@ -1,0 +1,14 @@
+@use '@/styles/var' as *;
+.el-main {
+  box-sizing: border-box;
+  padding: 10px $kr-body-padding;
+  overflow-x: hidden;
+  background-color: $kr-body-bg-color;
+  &::-webkit-scrollbar {
+    background-color: #f8f8f8;
+  }
+}
+.el-footer {
+  height: auto;
+  padding: 0;
+}

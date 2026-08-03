@@ -1,0 +1,15 @@
+/* 自定义全局 sass 变量 */
+$primary-color: var(--el-color-primary);
+$kr-body-padding: 20px; // el-main,el-header
+$kr-body-bg-color: #f2f4fa; // el-main,classic-content/el-header
+
+/* 侧边栏和下拉菜单 */
+// 悬停背景色
+$kr-menu-hover-bg-color: #f4f4f4;
+$kr-menu-item-height: 44px;
+
+// 顶部导航高度
+$kr-header-height: 60px;
+
+// 顶部导航下方的面包屑高度
+$kr-breadcrumb-height: 56px;

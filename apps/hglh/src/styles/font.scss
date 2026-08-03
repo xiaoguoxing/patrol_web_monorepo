@@ -1,0 +1,88 @@
+/* Element Chalk Variables */
+@use 'sass:math';
+@use 'sass:map';
+@use 'mixins' as *;
+
+// Typography
+$font-family: () !default;
+/* stylelint-disable-next-line function-no-unknown */
+$font-family: map.merge(
+  (
+    'extraLight': 'SourceHanSansCN-ExtraLight',
+    'light': 'SourceHanSansCN-Light',
+    'normal': 'SourceHanSansCN-Normal',
+    'regular': 'SourceHanSansCN-Regular',
+    'medium': 'SourceHanSansCN-Medium',
+    'bold': 'SourceHanSansCN-Bold',
+    'heavy': 'SourceHanSansCN-Heavy',
+  ),
+  $font-family
+);
+$font-base-url: var(--kr-font-baseurl, '');
+@each $fontcssname, $fontname in $font-family {
+  @include b(font-#{$fontcssname}) {
+    font-family: $fontname !important;
+  }
+  :root {
+    --kr-font-#{$fontcssname}: #{$fontname};
+  }
+}
+
+/*
+@font-face {
+  font-family: '思源黑体 Bold';
+  src: url('#{$font-base-url}/SourceHanSansCN-Bold.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: '思源黑体 ExtraLight';
+  src: url('#{$font-base-url}/SourceHanSansCN-ExtraLight.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-ExtraLight.ttf') format('truetype');
+}
+@font-face {
+  font-family: '思源黑体 Heavy';
+  src: url('#{$font-base-url}/SourceHanSansCN-Heavy.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-Heavy.ttf') format('truetype');
+}
+@font-face {
+  font-family: '思源黑体 Light';
+  src: url('#{$font-base-url}/SourceHanSansCN-Light.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: '思源黑体 Medium';
+  src: url('#{$font-base-url}/SourceHanSansCN-Medium.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: '思源黑体 Normal';
+  src: url('#{$font-base-url}/SourceHanSansCN-Normal.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-Normal.ttf') format('truetype');
+}
+@font-face {
+  font-family: '思源黑体 Regular';
+  src: url('#{$font-base-url}/SourceHanSansCN-Regular.otf') format('truetype'),
+    url('#{$font-base-url}/SourceHanSansCN-Regular.ttf') format('truetype');
+}
+*/
+// .kr-font-extraLight {
+//   font-family: '思源黑体 ExtraLight' !important;
+// }
+// .kr-font-light {
+//   font-family: '思源黑体 Light' !important;
+// }
+// .kr-font-normal {
+//   font-family: '思源黑体 Normal' !important;
+// }
+// .kr-font-regular {
+//   font-family: '思源黑体 Regular' !important;
+// }
+// .kr-font-medium {
+//   font-family: '思源黑体 Medium' !important;
+// }
+// .kr-font-bold {
+//   font-family: '思源黑体 Bold' !important;
+// }
+// .kr-font-heavy {
+//   font-family: '思源黑体 Heavy' !important;
+// }
