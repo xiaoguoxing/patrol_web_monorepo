@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.6",
   "description": "智能巡检海光龙华版本",
+  "volta": {
+    "extends": "../../package.json"
+  },
   "scripts": {
     "dev": "vite",
     "serve": "vite",

@@ -1,6 +1,4 @@
-import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
 type Recordable<T = any> = Record<string, T>;
 interface ViteEnv {
   VITE_API_URL: string;
@@ -48,31 +46,6 @@ export function wrapperEnv(envConf: Recordable): ViteEnv {
     process.env[envName] = realName;
   }
   return ret;
-}
-
-/**
- * Get the environment variables starting with the specified prefix
- * @param match prefix
- * @param confFiles ext
- */
-export function getEnvConfig(match = 'VITE_GLOB_', confFiles = ['.env', '.env.production']) {
-  let envConfig = {};
-  confFiles.forEach((item) => {
-    try {
-      const env = dotenv.parse(fs.readFileSync(path.resolve(process.cwd(), item)));
-      envConfig = { ...envConfig, ...env };
-    } catch (error) {
-      console.error(`Error in parsing ${item}`, error);
-    }
-  });
-
-  Object.keys(envConfig).forEach((key) => {
-    const reg = new RegExp(`^(${match})`);
-    if (!reg.test(key)) {
-      Reflect.deleteProperty(envConfig, key);
-    }
-  });
-  return envConfig;
 }
 
 /**
