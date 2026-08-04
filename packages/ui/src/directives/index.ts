@@ -7,7 +7,6 @@ import draggable from './modules/draggable';
 import debounce from './modules/debounce';
 import throttle from './modules/throttle';
 import longpress from './modules/longpress';
-import auth from './modules/auth';
 
 const directivesList: any = {
   // Custom directives
@@ -17,7 +16,6 @@ const directivesList: any = {
   debounce,
   throttle,
   longpress,
-  auth,
   dragLine: dragLine(),
 };
 

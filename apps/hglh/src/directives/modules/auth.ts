@@ -3,12 +3,14 @@
  * 按钮权限指令
  */
 import type { Directive, DirectiveBinding } from 'vue';
-import { getUiAdapter } from '../../adapter';
+import { AuthStore } from '@/stores/modules/auth';
 
 const auth: Directive = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
     const { value } = binding;
-    const currentPageRoles = getUiAdapter().getCurrentPermissions();
+    const authStore = AuthStore();
+    const currentPageRoles = authStore.authButtonListGet[authStore.routeName] ?? [];
+
     if (value instanceof Array && value.length) {
       const hasPermission = value.every((item) => currentPageRoles.includes(item));
       if (!hasPermission) el.remove();

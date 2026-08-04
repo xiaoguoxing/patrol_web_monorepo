@@ -7,7 +7,6 @@ export interface TableColConfig {
 }
 
 export interface UiAdapter {
-  getCurrentPermissions(): string[];
   getCurrentUserId(): string | undefined;
   getCurrentPage(): string | symbol | undefined;
   getTableCol(params: TableColConfig): Promise<{ data: TableColConfig[] }>;
@@ -15,7 +14,6 @@ export interface UiAdapter {
 }
 
 const defaultAdapter: UiAdapter = {
-  getCurrentPermissions: () => [],
   getCurrentUserId: () => undefined,
   getCurrentPage: () => undefined,
   getTableCol: async () => ({ data: [] }),

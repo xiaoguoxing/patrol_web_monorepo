@@ -113,6 +113,7 @@ const rtspPort = ref<number>();
 const channels = ref<HikChannel[]>([]);
 async function onLogin() {
   if (!sdk) throw new Error('播放器尚未初始化');
+  console.log(await decryptPassword(cameraData.value.cameraHost!));
   currentDevice.value = await sdk.login({
     username: (await decryptPassword(cameraData.value.cameraAccount!)) as string,
     ip: (await decryptPassword(cameraData.value.cameraHost!)) as string,
@@ -135,7 +136,7 @@ async function runPlay() {
     zeroChannel: false,
     rtspPort: rtspPort.value,
     streamType: 1,
-    proxy: false,
+    proxy: import.meta.env.VITE_SYS_DIST_NAME !== 'DEV',
   });
   emit('loading', false);
   emit('success', message.value);
@@ -167,7 +168,9 @@ function unFlv() {
   resizeObserver?.disconnect();
   void sdk?.destroy();
 }
-
+watch(message, (value) => {
+  console.log(value);
+});
 defineExpose({
   init,
   pic,
