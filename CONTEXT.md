@@ -2,28 +2,30 @@
 
 ## 项目定位
 
-本仓库使用 pnpm workspace（pnpm 工作区）统一管理多个智能巡检版本。所有安装、构建和质量检查均从仓库根目录执行，各应用不保证脱离仓库独立安装。
+本仓库使用 pnpm workspace（pnpm 工作区）统一管理多个智能巡检版本和共享包。安装、构建及质量检查统一从仓库根目录执行，各应用不保证脱离仓库独立安装。
 
-## 当前应用
+## 工作区结构
 
-| 目录            | 包名               | 说明                                                                 |
-| --------------- | ------------------ | -------------------------------------------------------------------- |
-| `apps/hglh`     | `@patrol/hglh`     | 黄阁、榄核共用同一套源码，通过不同 Vite mode（构建模式）生成两个版本 |
-| `apps/nanchang` | `@patrol/nanchang` | 南昌版本                                                             |
-| `apps/yuedong`  | `@patrol/yuedong`  | 粤东版本                                                             |
+| 目录              | 包名               | 说明                                                           |
+| ----------------- | ------------------ | -------------------------------------------------------------- |
+| `apps/hglh`       | `@patrol/hglh`     | 黄阁、榄核共用源码，通过不同 Vite mode（构建模式）生成两个版本 |
+| `apps/nanchang`   | `@patrol/nanchang` | 南昌版本                                                       |
+| `apps/yuedong`    | `@patrol/yuedong`  | 粤东版本                                                       |
+| `packages/shared` | `@patrol/shared`   | 三端共用 hooks、utils 和 typings 的单一源码                    |
+| `packages/ui`     | `@patrol/ui`       | 三端共用基础组件、指令及 UI 能力的单一源码                     |
 
 黄阁使用 `hgProduction`，榄核使用 `lhProduction`；必须继续保留两套环境文件、构建命令和产物，不应拆成两个应用。
 
 ## 工程约定
 
-- Node.js 基准版本：`20.12.2`。
-- pnpm 版本：`10.28.0`。
-- 工作区入口：`pnpm-workspace.yaml`，当前包含 `apps/*`。
-- 依赖版本由 pnpm catalog（依赖版本目录）统一维护，各应用仍显式声明自己使用的依赖。
+- Node.js 基准版本：`20.12.2`；pnpm 版本：`10.28.0`。
+- `pnpm-workspace.yaml` 包含 `apps/*` 和 `packages/*`。
+- 依赖版本由 pnpm catalog（依赖版本目录）统一维护，各应用和共享包仍显式声明自己使用的依赖。
 - ESLint、Prettier、Stylelint、PostCSS、EditorConfig、lint-staged 和 Husky 配置位于根目录。
-- TypeScript 公共选项位于 `tsconfig.base.json`，应用保留路径别名和 include 配置。
+- TypeScript 公共选项位于 `tsconfig.base.json`，各项目保留路径别名和 include 配置。
 - Vite 配置、环境变量、代理地址和版本专属构建脚本保留在各应用内。
-- 统一锁文件为根目录 `pnpm-lock.yaml`，不再使用应用内 `package-lock.json`。
+- 根目录 `pnpm-lock.yaml` 是唯一锁文件，不使用应用内 `package-lock.json`。
+- 共享包采用单一源码策略，修改 `packages/shared` 或 `packages/ui` 会同时影响三个应用，必须执行三端验证。
 
 ## 常用命令
 
@@ -39,21 +41,58 @@ pnpm build:test
 pnpm lint
 ```
 
+## 共享包现状
+
+### `@patrol/shared`
+
+公共 hooks、utils 和 typings 已从三个应用迁入 `packages/shared`。应用通过显式子路径导入，例如：
+
+```ts
+import { isArray } from '@patrol/shared/utils/is';
+```
+
+应用专属 Store、Router、API 和业务逻辑继续留在各应用内。
+
+### `@patrol/ui`
+
+原三个应用的 `znxj-components` 已整合为 `packages/ui`，业务代码统一从 `@patrol/ui` 引用。共享 UI 不应反向导入任何应用的 Store、Router 或 API。
+
+宿主能力通过 Vue `provide/inject`（依赖提供/注入）传递，并在安装插件时注入：
+
+```ts
+app.use(znxjUi, {
+  getCurrentUserId: () => AuthStore().userInfo.account,
+  getCurrentPage: () => router.currentRoute.value.name,
+  getTableCol,
+  setTableCol,
+});
+```
+
+当前注入能力只服务于 ProTable 的用户列配置。`v-auth` 按钮权限指令已移回三个应用，由应用直接读取各自 `AuthStore`，不再通过共享 UI 适配器读取权限。
+
 ## 已处理问题
 
-- 三个应用补充了直接依赖 `lodash`、`lodash-es` 及对应类型声明，修复 pnpm 严格依赖隔离下的模块解析失败。
+- 三个应用显式声明 `lodash`、`lodash-es` 及对应类型，修复 pnpm 严格依赖隔离下的模块解析失败。
 - 三个 Vite 配置显式使用根目录 `.eslintignore`，避免构建时检查字体图标生成文件。
-- `ProTableProps` 对 Element Plus `TableProps` 的复杂类型继承使用 `/* @vue-ignore */`，并显式声明 `height`；其余表格属性仍通过 `$attrs` 透传。
-- `hglh`、`nanchang`、`yuedong` 的 `build:test` 均已实际执行并通过。
+- `ProTableProps` 对 Element Plus `TableProps` 的复杂类型继承使用 `/* @vue-ignore */`，其余表格属性继续通过 `$attrs` 透传。
+- `packages/ui/src/env.d.ts` 提供 `*.vue` 模块声明，解决共享组件入口的 TS2307 模块解析错误。
+- ProTable 保留现有列配置 `get/set` 接口和数据格式；宿主与 `@patrol/ui` 通过 Vite `resolve.dedupe`（模块去重）统一 Vue、Element Plus 和图标包运行时，避免正式构建中组件注入上下文分离。
+- 三个应用中未使用的 `getEnvConfig()` 及其 `dotenv`、`fs` 导入已移除。
 
-## 已知警告
+## 验证状态
 
-安装和构建仍会提示旧版 peer dependency（对等依赖）、`NODE_ENV=test`、TypeScript 版本、`eval` 使用及大包体积警告。它们当前不阻断构建，但后续升级工具链时需单独处理，不能与共享包抽取混在一次改造中。
+- `@patrol/shared` 和 `@patrol/ui` 初次抽取后，三个应用的 `build:test` 曾实际执行并通过。
+- 最近的应用级 `v-auth`、UI 依赖注入和 ProTable 首屏布局修改已通过相关文件语义诊断，未发现 TypeScript/Vue 错误。
+- 最近修改后的三端 `build:test` 尚未执行：构建命令未获执行许可。后续声明该批修改通过前，必须重新运行三个应用构建并检查退出码。
 
-## 下一阶段：共享 packages
+## 已知问题与待办
 
-三个应用约有 359 个文件逐字相同，其中 `hooks`、`stores`、基础组件和多数静态资源重合度较高；`views`、`public`、API 端点和 Vite 配置已有明显版本差异。抽取前需确认共享策略：单一源码、模板复制或混合模式。建议优先采用混合模式，将稳定的基础组件、hooks 和 utils 抽到 `packages`，业务页面继续留在应用内。抽取后修改共享包会同时影响所有版本，必须逐包迁移并验证三个应用。
+- Node 24 运行旧 Vite 4 开发代理时仍可能出现 `DEP0060`；应用中的 `volta.extends` 未能约束 `pnpm --filter ... exec node` 的实际 Node 版本，该项尚未解决。
+- 根 TypeScript 已固定为 `4.9.5`，消除了 `@typescript-eslint` 对 TypeScript 5.9.3 的兼容警告；Commitizen 间接依赖仍可能提示要求 TypeScript 5 以上的 peer dependency（对等依赖）警告。
+- 安装和构建仍可能提示旧版 Stylelint/Vite 插件对等依赖、`NODE_ENV=test`、`eval` 使用及大包体积警告，目前均为非阻断项。
+- `aiPatrolManage` 单一 package 尚处于设计阶段。已确认 hglh、yuedong、nanchang 的视频能力递增及多处实现分叉，在范围方案确定前不得迁移或删除应用源码。
+- ProTable 列配置目前按列 `label` 保存。若改为更稳定的 `prop`，必须兼容已有用户配置，不能直接替换。
 
 ## Git 状态
 
-远程仓库为 `https://github.com/xiaoguoxing/patrol_web_monorepo.git`。首次 monorepo 提交为 `4a63260`；当前依赖修复、锁文件和本文档尚未提交。
+远程仓库为 `https://github.com/xiaoguoxing/patrol_web_monorepo.git`，首次 Monorepo 提交为 `4a63260`。当前工作区仍有未提交改动；不要假定本文列出的所有调整已进入 Git 历史。远程 push、PR 和 MR 默认由用户执行。

@@ -23,6 +23,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   return {
     base: './',
     resolve: {
+      dedupe: ['vue', 'element-plus', '@element-plus/icons-vue'],
       alias: {
         '@': resolve(__dirname, './src'),
         '@appCenter': resolve(__dirname, './src/views/appCenter/src'),
