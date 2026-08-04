@@ -70,20 +70,25 @@ app.use(znxjUi, {
 
 当前注入能力只服务于 ProTable 的用户列配置。`v-auth` 按钮权限指令已移回三个应用，由应用直接读取各自 `AuthStore`，不再通过共享 UI 适配器读取权限。
 
+`@patrol/ui` 将 `vue`、`element-plus`、`@element-plus/icons-vue` 和 `@vueuse/core` 声明为 `peerDependencies`（对等依赖），运行时复用宿主提供的实例；相同依赖同时保留在 `devDependencies`（开发依赖），只供 UI 包自身开发和类型检查。三个应用的 Vite 配置同时使用 `resolve.dedupe`（模块去重）作为构建侧保障，避免同一运行时被重复打包。
+
 ## 已处理问题
 
 - 三个应用显式声明 `lodash`、`lodash-es` 及对应类型，修复 pnpm 严格依赖隔离下的模块解析失败。
 - 三个 Vite 配置显式使用根目录 `.eslintignore`，避免构建时检查字体图标生成文件。
 - `ProTableProps` 对 Element Plus `TableProps` 的复杂类型继承使用 `/* @vue-ignore */`，其余表格属性继续通过 `$attrs` 透传。
 - `packages/ui/src/env.d.ts` 提供 `*.vue` 模块声明，解决共享组件入口的 TS2307 模块解析错误。
-- ProTable 保留现有列配置 `get/set` 接口和数据格式；宿主与 `@patrol/ui` 通过 Vite `resolve.dedupe`（模块去重）统一 Vue、Element Plus 和图标包运行时，避免正式构建中组件注入上下文分离。
+- ProTable 保留现有列配置 `get/set` 接口和数据格式。正式构建中的列宽异常和 Element Plus 空数据英文问题，根因是宿主与 `@patrol/ui` 曾解析到不同物理实例，导致组件注入上下文和布局状态分离；现已通过 `peerDependencies`、宿主显式依赖及 Vite `resolve.dedupe` 统一 Vue、Element Plus、图标包和 VueUse 运行时。
+- ProTable 不使用 `ResizeObserver`（尺寸观察器）、`requestAnimationFrame`（浏览器逐帧回调）或额外 `doLayout()` 监听。该临时方案已移除，统一运行时后不再需要尺寸补偿。
+- 三个应用的 Element Plus 语言配置默认使用中文，仅在应用语言显式为 `en` 时切换英文。
 - 三个应用中未使用的 `getEnvConfig()` 及其 `dotenv`、`fs` 导入已移除。
 
 ## 验证状态
 
 - `@patrol/shared` 和 `@patrol/ui` 初次抽取后，三个应用的 `build:test` 曾实际执行并通过。
-- 最近的应用级 `v-auth`、UI 依赖注入和 ProTable 首屏布局修改已通过相关文件语义诊断，未发现 TypeScript/Vue 错误。
-- 最近修改后的三端 `build:test` 尚未执行：构建命令未获执行许可。后续声明该批修改通过前，必须重新运行三个应用构建并检查退出码。
+- 安装后已核对宿主与 `@patrol/ui` 的 Vue、Element Plus、图标包和 VueUse 物理解析路径，确认共享同一套运行时实例并绑定 TypeScript `4.9.5`。
+- 粤东最新 `pnpm --filter @patrol/yuedong build:pro` 已实际执行，退出码为 0；用户已验证统一运行时后的正式包表格列宽及空数据文案显示正常。
+- 黄阁/榄核和南昌尚未在最新对等依赖状态下重新执行正式构建；声明三端全部通过前，仍需补跑对应构建并检查退出码。
 
 ## 已知问题与待办
 
