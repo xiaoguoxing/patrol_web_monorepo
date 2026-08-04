@@ -17,16 +17,9 @@ import { AuthStore } from '@/stores/modules/auth';
 import auth from '@/directives/modules/auth';
 import { getTableCol, setTableCol } from '@/api/modules/common';
 import 'virtual:svg-icons-register';
-import znxjUi, { configureUiAdapter } from '@patrol/ui';
+import znxjUi from '@patrol/ui';
 
 const app = createApp(App);
-
-configureUiAdapter({
-  getCurrentUserId: () => AuthStore().userInfo.account,
-  getCurrentPage: () => router.currentRoute.value.name,
-  getTableCol,
-  setTableCol,
-});
 
 // 注册 Element Plus 图标组件
 Object.keys(Icons).forEach((key) => {
@@ -34,4 +27,15 @@ Object.keys(Icons).forEach((key) => {
 });
 
 app.directive('auth', auth);
-app.use(router).use(I18n).use(pinia).use(ElementPlus).use(znxjUi).mount('#app');
+app
+  .use(router)
+  .use(I18n)
+  .use(pinia)
+  .use(ElementPlus)
+  .use(znxjUi, {
+    getCurrentUserId: () => AuthStore().userInfo.account,
+    getCurrentPage: () => router.currentRoute.value.name,
+    getTableCol,
+    setTableCol,
+  })
+  .mount('#app');

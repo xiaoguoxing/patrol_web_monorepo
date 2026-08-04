@@ -1,9 +1,9 @@
 import { computed, nextTick, ref } from 'vue';
-import { getUiAdapter, type TableColConfig } from '../../../../../adapter';
+import { useUiAdapter, type TableColConfig } from '../../../../../adapter';
 import type { ColumnProps } from '../../pro-table';
 
 export default function (colSetting: ColumnProps[]) {
-  const adapter = getUiAdapter();
+  const adapter = useUiAdapter();
   const userConfigList = ref<TableColConfig[]>([]);
   const currentUserConfig = computed(() =>
     userConfigList.value.find((item) => item.userId === adapter.getCurrentUserId())

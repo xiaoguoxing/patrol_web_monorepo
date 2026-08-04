@@ -52,6 +52,7 @@
     <!-- 表格主体 -->
     <slot name="table" :tableData="tableData" :total="pageable.total">
       <el-table
+        v-if="columnConfigReady"
         ref="tableRef"
         v-bind="$attrs"
         :height="height"
@@ -398,13 +399,29 @@ const colSetting = tableColumns.value!.filter((item) => {
     item.prop !== 'operation'
   );
 });
-const { setConfig, getConfig } = useTableColSet(colSetting);
-if (props.colSetAble) {
+const { setConfig: saveConfig, getConfig } = useTableColSet(colSetting);
+const columnConfigReady = ref(!props.colSetAble);
+
+const setConfig = async () => {
+  await saveConfig();
+  await nextTick();
+  tableRef.value?.doLayout();
+};
+
+const initColumnConfig = async () => {
   try {
-    getConfig();
-  } catch (e) {
-    console.log(e);
+    await getConfig();
+  } catch (error) {
+    console.error('加载表格列配置失败', error);
+  } finally {
+    columnConfigReady.value = true;
+    await nextTick();
+    tableRef.value?.doLayout();
   }
+};
+
+if (props.colSetAble) {
+  void initColumnConfig();
 }
 const openColSetting = () => {
   colRef.value.openColSetting();

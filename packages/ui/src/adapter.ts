@@ -1,3 +1,6 @@
+import type { App, InjectionKey } from 'vue';
+import { inject } from 'vue';
+
 export interface TableColConfig {
   page?: string | symbol;
   userId?: string;
@@ -20,12 +23,12 @@ const defaultAdapter: UiAdapter = {
   setTableCol: async () => undefined,
 };
 
-let uiAdapter: UiAdapter = defaultAdapter;
+const UI_ADAPTER_KEY: InjectionKey<UiAdapter> = Symbol('UI_ADAPTER_KEY');
 
-export function configureUiAdapter(adapter: Partial<UiAdapter>): void {
-  uiAdapter = { ...defaultAdapter, ...adapter };
+export function provideUiAdapter(app: App, adapter: Partial<UiAdapter> = {}): void {
+  app.provide(UI_ADAPTER_KEY, { ...defaultAdapter, ...adapter });
 }
 
-export function getUiAdapter(): UiAdapter {
-  return uiAdapter;
+export function useUiAdapter(): UiAdapter {
+  return inject(UI_ADAPTER_KEY, defaultAdapter);
 }

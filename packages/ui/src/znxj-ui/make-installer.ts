@@ -1,19 +1,19 @@
-import type { /* App, */ Plugin } from 'vue';
+import type { App, Plugin } from 'vue';
+import { provideUiAdapter, type UiAdapter } from '../adapter';
 
 // 是否已安装标识
 const INSTALLED_KEY = Symbol('INSTALLED_KEY');
-export const makeInstaller = (components: Plugin[] = []) => {
-  //TODO:暂且app类型改为any,找到解决办法再改
-  const install = (app: any) => {
-    if (app[INSTALLED_KEY]) return;
 
-    app[INSTALLED_KEY] = true;
-    components.forEach((c) => {
-      app.use(c);
+export const makeInstaller = (components: Plugin[] = []) => {
+  const install = (app: App, adapter: Partial<UiAdapter> = {}) => {
+    if ((app as any)[INSTALLED_KEY]) return;
+
+    (app as any)[INSTALLED_KEY] = true;
+    provideUiAdapter(app, adapter);
+    components.forEach((component) => {
+      app.use(component);
     });
   };
 
-  return {
-    install,
-  };
+  return { install };
 };
