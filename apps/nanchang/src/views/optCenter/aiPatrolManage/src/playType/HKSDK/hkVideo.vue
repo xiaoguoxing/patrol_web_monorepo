@@ -17,17 +17,10 @@ interface props {
   endTime?: number | string;
   businessId?: string;
   quality?: Quality;
-  scrollDom?: HTMLDivElement;
-  buttonType?: 1 | 2;
-  playMode?: 1 | 0;
-  recordLocation?: '1' | '0' | '0_1';
 }
 const props = withDefaults(defineProps<props>(), {
   playType: 1,
   showControls: true,
-  buttonType: 1,
-  playMode: 0,
-  recordLocation: '0',
 });
 
 interface Emit {

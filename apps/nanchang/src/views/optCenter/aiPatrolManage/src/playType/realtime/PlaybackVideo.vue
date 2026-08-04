@@ -18,10 +18,6 @@ interface props {
   endTime?: string;
   businessId?: string;
   quality?: Quality;
-  scrollDom?: HTMLDivElement;
-  buttonType?: 1 | 2;
-  playMode?: 1 | 0;
-  recordLocation?: '1' | '0' | '0_1';
 }
 const props = withDefaults(defineProps<props>(), {
   playType: 1,

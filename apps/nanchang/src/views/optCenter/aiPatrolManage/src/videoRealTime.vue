@@ -3,8 +3,6 @@ import RealtimeVideo from '@optCenter/playType/realtime/RealtimeVideo.vue';
 import PlaybackVideo from '@optCenter/playType/realtime/PlaybackVideo.vue';
 import AlarmVideo from '@optCenter/playType/realtime/AlarmVideo.vue';
 import RobotVideo from '@optCenter/playType/robot/RobotVideo.vue';
-import HKRealtimeVideo from '@optCenter/playType/HK/RealtimeVideo.vue';
-import HKWsRealtime from '@optCenter/playType/HK/RealtimeWsVideo.vue';
 import HKSDKVideo from '@optCenter/playType/HKSDK/hkVideo.vue';
 import HKSDKPlayback from '@optCenter/playType/HKSDK/hkPlayback.vue';
 
@@ -23,10 +21,6 @@ export interface Props {
   endTime?: string;
   businessId?: string;
   quality?: Quality;
-  scrollDom?: HTMLDivElement;
-  buttonType?: 1 | 2;
-  playMode?: 1 | 0;
-  recordLocation?: '1' | '0' | '0_1';
 }
 const props = withDefaults(defineProps<Props>(), {
   playType: 1,
@@ -44,8 +38,6 @@ const componentMap: { [key in PlayKey]?: DefineComponent<{}, {}, any> } = {
   playback: PlaybackVideo,
   alarm: AlarmVideo,
   robot: RobotVideo,
-  HKRealtime: HKRealtimeVideo,
-  HKWsRealtime: HKWsRealtime,
   HKSDKVideo: HKSDKVideo,
   HKSDKPlayback: HKSDKPlayback,
 };
