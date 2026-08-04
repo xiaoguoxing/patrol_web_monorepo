@@ -4,7 +4,7 @@ import { watch, WatchHandle } from 'vue';
 import { JSEncrypt } from 'jsencrypt';
 import { RtcEvent } from '@/assets/js/webrtc';
 import { getDict } from '@/utils/serviceDict';
-import { getOS } from '@optCenter/hooks/useHKWsVideo';
+import { getOS } from './useAFWsVideo';
 type playMode = 1 | 0;
 interface VideoSettings {
   appkey: string;

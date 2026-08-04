@@ -3,8 +3,8 @@ import RealtimeVideo from '@optCenter/playType/realtime/RealtimeVideo.vue';
 import PlaybackVideo from '@optCenter/playType/realtime/PlaybackVideo.vue';
 import AlarmVideo from '@optCenter/playType/realtime/AlarmVideo.vue';
 import RobotVideo from '@optCenter/playType/robot/RobotVideo.vue';
-import HKRealtimeVideo from '@optCenter/playType/HK/RealtimeVideo.vue';
-import HKWsRealtime from '@optCenter/playType/HK/RealtimeWsVideo.vue';
+import AFRealtime from '@optCenter/playType/AF/RealtimeVideo.vue';
+import AFWsRealtime from '@optCenter/playType/AF/RealtimeWsVideo.vue';
 
 import { computed, DefineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { PlayType, Quality } from './videoType';
@@ -42,8 +42,8 @@ const componentMap: { [key in PlayKey]?: DefineComponent<{}, {}, any> } = {
   playback: PlaybackVideo,
   alarm: AlarmVideo,
   robot: RobotVideo,
-  HKRealtime: HKRealtimeVideo,
-  HKWsRealtime: HKWsRealtime,
+  AFRealtime: AFRealtime,
+  AFWsRealtime: AFWsRealtime,
 };
 const currentComponent = computed(() => componentMap[PlayType[props.playType] as PlayKey]);
 const passThroughProps = computed(() => ({ ...props }));

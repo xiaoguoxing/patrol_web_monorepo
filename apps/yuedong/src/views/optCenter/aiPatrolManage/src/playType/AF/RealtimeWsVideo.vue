@@ -4,7 +4,7 @@ import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { capturePic, cameraRotate } from '@/api/modules/HKcamera';
 import { useIsTask } from '@optCenter/hooks/use-video';
 import { ElMessage } from 'element-plus';
-import CreateHKVideo, { VideoPlayBackSettings } from '@optCenter/hooks/useHKVideo';
+import CreateHKWsVideo, { VideoPlayBackSettings } from '../../hooks/useAFWsVideo';
 interface props {
   playType: PlayType;
   cameraId: string;
@@ -12,31 +12,27 @@ interface props {
   isCanvas?: boolean;
   dataIndex?: string | number;
   startTime?: number | string;
-  endTime?: number | string;
+  endTime?: string;
   businessId?: string;
   quality?: Quality;
   scrollDom?: HTMLDivElement;
   buttonType?: 1 | 2;
-  playMode?: 1 | 0;
-  recordLocation?: '1' | '0' | '0_1';
 }
 const props = withDefaults(defineProps<props>(), {
   playType: 1,
   showControls: true,
   buttonType: 1,
-  playMode: 0,
-  recordLocation: '0',
 });
 
 interface Emit {
   (e: 'err', str: string): void;
-  (e: 'success', str: string): void;
+  (e: 'success', str?: string): void;
   (e: 'loading', isLoading: boolean): void;
   (e: 'toggle'): void;
 }
 const emit = defineEmits<Emit>();
 
-let play: CreateHKVideo;
+let play: CreateHKWsVideo;
 const videoRef = ref<HTMLDivElement>();
 let currentCamera = ref<string>();
 
@@ -45,18 +41,18 @@ async function init() {
   try {
     await nextTick();
     await setPlay();
-    await runPlay(props.cameraId, props.recordLocation);
-  } catch (e) {}
+    await runPlay(props.cameraId);
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 async function setPlay() {
   return new Promise((resolve, reject) => {
-    play = new CreateHKVideo(videoRef.value!, props.playMode, {
-      scrollDom: props.scrollDom!,
-      buttonType: props.buttonType,
-    });
+    play = new CreateHKWsVideo(videoRef.value!, 0, { scrollDom: props.scrollDom!, buttonType: props.buttonType });
     play.on('success', () => {
       resolve('1');
+      emit('success');
     });
     play.on('error', (m: string) => {
       ElMessage.error(m);
@@ -66,55 +62,42 @@ async function setPlay() {
     play.on('message', (m: string) => {
       ElMessage.info(m);
     });
-    play.on('cameraChange', (code: string) => {
-      currentCamera.value = code;
-    });
-    play.on('cameraChangeFinl', (data: any) => {
-      // data;
-      if (props.playMode === 1 && recordLocationStr) {
-        runPlay(data.cameraIndexCode, recordLocationStr);
-      }
-    });
-    play.on('videoPlay', (code: string) => {
-      emit('success', code);
-    });
+    // play.on('cameraChange', (code: string) => {
+    //   currentCamera.value = code;
+    // });
+    // play.on('videoPlay', (code: string) => {
+    //   emit('success', code);
+    // });
   });
 }
-let recordLocationStr = '';
-async function runPlay(cameraId: string, recordLocation: string = '') {
+
+async function runPlay(cameraId: string) {
   try {
-    let recordLocationArr = recordLocation?.split('_') ?? [''];
     await play.startPlay({
-      cameraIndexCode: cameraId,
-      startTimeStamp: props.startTime,
-      endTimeStamp: props.endTime,
-      streamMode: 0,
-      transMode: 1,
-      gpuMode: 1,
-      recordLocation: parseInt(recordLocationArr[0]),
-    } as unknown as VideoPlayBackSettings);
+      url: cameraId,
+      config: {
+        playURL: cameraId,
+        mode: 0,
+        PlayBackMode: 1,
+        keepDecoder: 0,
+      },
+    } as VideoPlayBackSettings);
     emit('loading', false);
-    if (recordLocationArr[1]) {
-      recordLocationStr = recordLocationArr[1];
-    } else {
-      recordLocationStr = '';
-    }
-    console.log(recordLocationStr);
   } catch (e: any) {
-    emit('err', (e as TypeError).message);
+    emit('err', '播放失败');
     unFlv();
   }
 }
 
 //抓图
 async function pic() {
-  return await capturePic({ cameraIndexCode: play.cameraIndexCode || props.cameraId });
+  return await capturePic({ cameraIndexCode: props.cameraId });
 }
 //转动预置位
 async function rotate(presetPositionInfo: number) {
   try {
-    await useIsTask(play.cameraIndexCode || props.cameraId);
-    return await cameraRotate(presetPositionInfo, play.cameraIndexCode || props.cameraId);
+    await useIsTask(props.cameraId);
+    return await cameraRotate(presetPositionInfo, props.cameraId);
   } catch (e: any) {
     ElMessage.warning(e as string);
   }
@@ -126,8 +109,8 @@ onUnmounted(() => {
 function unFlv() {
   if (play != null) {
     console.log('视频实例销毁');
-    play.disconnect();
-    play = {} as CreateHKVideo;
+    play?.disconnect?.();
+    play = {} as CreateHKWsVideo;
   }
 }
 
