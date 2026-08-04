@@ -10,13 +10,22 @@
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*/index.ts"
   },
+  "peerDependencies": {
+    "@element-plus/icons-vue": "1.1.4",
+    "@vueuse/core": "13.0.0",
+    "element-plus": "2.9.5",
+    "vue": "3.5.13"
+  },
   "dependencies": {
+    "lodash-es": "catalog:",
+    "print-js": "catalog:",
+    "recorder-core": "catalog:"
+  },
+  "devDependencies": {
     "@element-plus/icons-vue": "catalog:",
     "@vueuse/core": "catalog:",
     "element-plus": "catalog:",
-    "lodash-es": "catalog:",
-    "print-js": "catalog:",
-    "recorder-core": "catalog:",
+    "typescript": "catalog:",
     "vue": "catalog:"
   }
 }
