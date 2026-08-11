@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { PlayType, Quality } from '@optCenter/videoType';
-import videoCloud from '@optCenter/components/videocloud/HKSDKvideocloud.vue';
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
-import { HikvisionWebSdk, type HikChannel, type HikProtocol } from '@optCenter/hooks/HKSDK';
+import videoCloud from '@optCenter/components/videocloud/videocloud.vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
+import { HikvisionWebSdk } from '@optCenter/hooks/HKSDK';
 import { ElMessage } from 'element-plus';
 import { cameraInfoApi, cameraRotate, capturePic, UserApi2 } from '@/api/modules/camera';
 import { useIsTask } from '@optCenter/hooks/use-video';
 import { decryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+
 interface props {
   playType: PlayType;
   cameraId: string;
@@ -31,6 +32,15 @@ interface Emit {
 }
 const emit = defineEmits<Emit>();
 
+interface PreviewSession {
+  deviceIdentify: string;
+  channelId: number;
+  rtspPort?: number;
+  proxy: boolean;
+  streamType: 1 | 2;
+  isPlaying: boolean;
+}
+
 const busy = ref(false);
 async function run(action: () => Promise<void>, successMessage: string): Promise<void> {
   busy.value = true;
@@ -39,6 +49,7 @@ async function run(action: () => Promise<void>, successMessage: string): Promise
     message.value = successMessage;
   } catch (error) {
     message.value = error instanceof Error ? error.message : String(error);
+    throw error;
   } finally {
     busy.value = false;
   }
@@ -46,32 +57,36 @@ async function run(action: () => Promise<void>, successMessage: string): Promise
 
 let sdk: HikvisionWebSdk | undefined;
 const videoRef = ref<HTMLDivElement>();
-const selectedWindowIndex = ref<number>(0);
+const selectedWindowIndex = ref(0);
 let resizeObserver: ResizeObserver | undefined;
+let layoutQueue: Promise<void> = Promise.resolve();
+let currentLayout = 1;
 const message = ref('正在初始化播放器…');
 const cameraList = ref<{ [key: number]: Partial<UserApi2> }>({});
+const previewSessions = new Map<number, PreviewSession>();
 const cameraData = computed<Partial<UserApi2>>(
   () => cameraList.value[selectedWindowIndex.value] ?? { cameraType: 'tube' }
 );
+const cameraDataId = computed<string>(() => cameraData.value.id ?? '');
 type SendData = { ip: string; port: string; userName: string; password: string; channelNum: number };
-const loginSendData = computed<SendData>(() => {
-  return {
-    id: props.cameraId,
-    ip: '1',
-    userName: '1',
-    password: '1',
-    port: cameraData.value.cameraPort!,
-    channelNum: cameraData.value.channelNum!,
-  };
-});
+const loginSendData = computed<SendData>(() => ({
+  id: props.cameraId,
+  ip: '1',
+  userName: '1',
+  password: '1',
+  port: cameraData.value.cameraPort!,
+  channelNum: cameraData.value.channelNum!,
+}));
+
 async function init() {
   try {
     await run(initialize, '播放器已就绪');
     await setCamera(props.cameraId);
-  } catch (e) {
+  } catch {
     emit('err', message.value);
   }
 }
+
 async function initialize(): Promise<void> {
   if (!videoRef.value) return;
   sdk = new HikvisionWebSdk({
@@ -79,10 +94,10 @@ async function initialize(): Promise<void> {
     onPlaybackEnded: () => {
       message.value = '回放结束';
     },
-    onWindowSelected: (sWindowIndex) => {
-      selectedWindowIndex.value = sWindowIndex;
+    onWindowSelected: (windowIndex: number) => {
+      selectedWindowIndex.value = windowIndex;
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       message.value = error.message;
     },
   });
@@ -95,52 +110,110 @@ async function initialize(): Promise<void> {
 }
 
 async function setCamera(id: string) {
-  let { data } = await cameraInfoApi({ id });
-  cameraList.value[selectedWindowIndex.value] = data;
-  await run(onLogin, '登录成功，通道已加载');
-  await run(runPlay, '预览已开始');
+  const windowIndex = selectedWindowIndex.value;
+  const { data } = await cameraInfoApi({ id });
+  cameraList.value[windowIndex] = data;
+
+  let session: PreviewSession | undefined;
+  await run(async () => {
+    session = await createPreviewSession(data);
+    previewSessions.set(windowIndex, session);
+  }, '登录成功，通道已加载');
+  await run(() => runPlay(windowIndex, session), '预览已开始');
 }
 
-const currentDevice = ref('');
-const rtspPort = ref<number>();
-const channels = ref<HikChannel[]>([]);
-async function onLogin() {
+async function createPreviewSession(camera: Partial<UserApi2>): Promise<PreviewSession> {
   if (!sdk) throw new Error('播放器尚未初始化');
-  console.log(await decryptPassword(cameraData.value.cameraHost!));
-  currentDevice.value = await sdk.login({
-    username: (await decryptPassword(cameraData.value.cameraAccount!)) as string,
-    ip: (await decryptPassword(cameraData.value.cameraHost!)) as string,
-    password: (await decryptPassword(cameraData.value.cameraPassword!)) as string,
-    port: 80 || cameraData.value.cameraPort!,
+  if (camera.channelNum == null) throw new Error('摄像头通道号不存在');
+  const [username, ip, password] = await Promise.all([
+    decryptPassword(camera.cameraAccount!),
+    decryptPassword(camera.cameraHost!),
+    decryptPassword(camera.cameraPassword!),
+  ]);
+  const deviceIdentify = await sdk.login({
+    username: username as string,
+    ip: ip as string,
+    password: password as string,
+    port: 80,
     protocol: 1,
   });
-  const ports = sdk.getDevicePorts(currentDevice.value);
-  rtspPort.value = ports.iRtspPort;
-  channels.value = await sdk.getChannels(currentDevice.value);
-  // selectedChannelId.value = channels.value[0]?.id;
-  // if (!channels.value.length) throw new Error('登录成功，但未发现在线通道');
+  const { iRtspPort } = sdk.getDevicePorts(deviceIdentify);
+  await sdk.getChannels(deviceIdentify);
+  return {
+    deviceIdentify,
+    channelId: camera.channelNum,
+    rtspPort: iRtspPort,
+    proxy: import.meta.env.VITE_SYS_DIST_NAME !== 'DEV',
+    streamType: getLayoutStreamType(currentLayout),
+    isPlaying: false,
+  };
 }
 
-async function runPlay() {
-  await sdk!.startPreview({
-    windowIndex: selectedWindowIndex.value,
-    deviceIdentify: currentDevice.value,
-    channelId: cameraData.value.channelNum!,
+function getLayoutStreamType(layout: number): PreviewSession['streamType'] {
+  return layout <= 2 ? 1 : 2;
+}
+
+async function runPlay(
+  windowIndex: number,
+  session = previewSessions.get(windowIndex),
+  streamType = getLayoutStreamType(currentLayout)
+) {
+  if (!sdk) throw new Error('播放器尚未初始化');
+  if (!session) throw new Error(`窗口 ${windowIndex} 尚未加载摄像头`);
+
+  await sdk.startPreview({
+    windowIndex,
+    deviceIdentify: session.deviceIdentify,
+    channelId: session.channelId,
     zeroChannel: false,
-    rtspPort: rtspPort.value,
-    streamType: 1,
-    proxy: import.meta.env.VITE_SYS_DIST_NAME !== 'DEV',
+    rtspPort: session.rtspPort,
+    streamType,
+    proxy: session.proxy,
   });
+  session.streamType = streamType;
+  session.isPlaying = true;
   emit('loading', false);
   emit('success', message.value);
 }
-//抓图
+
+function changeWindowLayout(layout: number): Promise<void> {
+  const next = layoutQueue.catch(() => undefined).then(() => applyWindowLayout(layout));
+  layoutQueue = next;
+  return next;
+}
+
+async function applyWindowLayout(layout: number): Promise<void> {
+  if (!sdk) throw new Error('播放器尚未初始化');
+  if (!Number.isInteger(layout) || layout < 1 || layout > 4) {
+    throw new Error('画面分割类型只支持 1、2、3、4');
+  }
+
+  const visibleWindowCount = layout * layout;
+  const hiddenSessions = [...previewSessions.entries()].filter(([windowIndex]) => windowIndex >= visibleWindowCount);
+  const deleteResults = await Promise.allSettled(
+    hiddenSessions.map(async ([windowIndex, session]) => {
+      if (session.isPlaying) await sdk!.stop(windowIndex);
+      previewSessions.delete(windowIndex);
+      delete cameraList.value[windowIndex];
+    })
+  );
+
+  await sdk.changeWindowLayout(layout);
+  currentLayout = layout;
+  if (selectedWindowIndex.value >= visibleWindowCount) selectedWindowIndex.value = 0;
+
+  const failedResult = deleteResults.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+  if (failedResult) throw failedResult.reason;
+}
+
+// 抓图
 async function pic() {
   return await capturePic({
     ...loginSendData.value,
   });
 }
-//转动预置位
+
+// 转动预置位
 async function rotate(presetPositionInfo: number) {
   try {
     await useIsTask(props.cameraId);
@@ -154,13 +227,25 @@ async function rotate(presetPositionInfo: number) {
   }
 }
 
-onUnmounted(() => {
-  unFlv();
-});
-function unFlv() {
-  resizeObserver?.disconnect();
-  void sdk?.destroy();
+async function close() {
+  const windowIndex = selectedWindowIndex.value;
+  await sdk?.stop(windowIndex);
+  const session = previewSessions.get(windowIndex);
+  if (session) session.isPlaying = false;
 }
+
+async function closeAll() {
+  await sdk?.stopAll();
+  previewSessions.forEach((session) => {
+    session.isPlaying = false;
+  });
+}
+
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+  previewSessions.clear();
+  void sdk?.destroy();
+});
 watch(message, (value) => {
   console.log(value);
 });
@@ -169,16 +254,10 @@ defineExpose({
   pic,
   rotate,
   videoRef,
-  changeWindowLayout(i: number) {
-    sdk?.changeWindowLayout(i);
-  },
+  changeWindowLayout,
   setCamera,
-  close() {
-    sdk?.stop();
-  },
-  closeAll() {
-    sdk?.stopAll();
-  },
+  close,
+  closeAll,
 });
 </script>
 
@@ -186,12 +265,7 @@ defineExpose({
   <div ref="videoRef" class="videoRef" id="HKSDK" />
   <template v-if="showControls">
     <div class="Controls">
-      <videoCloud
-        :camera-id="cameraId"
-        :loginData="cameraData"
-        :sdk="sdk"
-        :login-send-data="loginSendData"
-      ></videoCloud>
+      <videoCloud :camera-id="cameraDataId" :loginData="cameraData" :login-send-data="loginSendData"></videoCloud>
     </div>
     <div class="openScreen">
       <!--      <el-icon @click="emit('toggle')" size="18" title="全屏"><FullScreen /></el-icon>

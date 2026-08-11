@@ -8,7 +8,7 @@ function useMouseDelayCloud(
   callBack: (a: any, b: boolean) => any,
   option: { timeOut?: number; cameraId?: string; isCancelTask?: boolean }
 ) {
-  const { cameraId = '', isCancelTask = true } = option;
+  const { isCancelTask = true } = option;
   type btn = btnStr | btnStr2;
   let inTask = ref(true);
   let isTrueSent = false; // true是否成功发送并响应
@@ -45,7 +45,7 @@ function useMouseDelayCloud(
       return Promise.resolve();
     }
     try {
-      await useIsTask(cameraId);
+      await useIsTask(option.cameraId);
       inTask.value = false;
       return Promise.resolve();
     } catch (e) {

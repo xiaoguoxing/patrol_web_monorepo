@@ -86,7 +86,7 @@ interface WebVideoCtrlApi {
   I_StartPlayback(deviceIdentify: string, options: Record<string, unknown>): void;
   I_Stop(options: HikCallbackOptions & { iWndIndex?: number }): void;
   I_Resume(options: HikCallbackOptions & { iWndIndex?: number }): void;
-  I_ChangeWndNum(iWndType: number): void;
+  I_ChangeWndNum(iWndType: number): Promise<unknown>;
   I_StopAll(): Promise<void>;
   I_PTZControl(
     iPTZIndex: number,
@@ -288,7 +288,7 @@ export class HikvisionWebSdk {
   }
 
   async changeWindowLayout(iWndType: number): Promise<void> {
-    this.api.I_ChangeWndNum(iWndType);
+    await this.api.I_ChangeWndNum(iWndType);
   }
 
   resize(width: number, height: number): void {

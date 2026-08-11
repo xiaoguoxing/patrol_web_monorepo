@@ -16,7 +16,11 @@ const props = defineProps<Props>();
 const isTube = computed(() => props.loginData?.cameraType === 'tube');
 
 //方位接口
-let { start, end, isTask, inTask } = useMouseDelayCloud(btn1, { cameraId: props.cameraId });
+let { start, end, isTask, inTask } = useMouseDelayCloud(btn1, {
+  get cameraId() {
+    return props.cameraId;
+  },
+});
 async function btn1(btnT: btnStrhk, is: boolean) {
   return props.sdk?.PTZControl(btnTypehk[btnT], !is, seven.value);
 }
@@ -33,7 +37,11 @@ async function zq(btnT: btnStrhk) {
   }
 }
 //功能按钮
-let { start: bottomBtnStart, end: bottomBtnEnd } = useMouseDelayCloud(btn2, { cameraId: props.cameraId });
+let { start: bottomBtnStart, end: bottomBtnEnd } = useMouseDelayCloud(btn2, {
+  get cameraId() {
+    return props.cameraId;
+  },
+});
 async function btn2(btnT: btnStr2hk, is: boolean) {
   return props.sdk?.PTZControl(btnType2hk[btnT], !is, seven.value);
 }
