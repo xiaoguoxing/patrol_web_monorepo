@@ -70,7 +70,7 @@ const cameraData = computed<Partial<UserApi2>>(
 const cameraDataId = computed<string>(() => cameraData.value.id ?? '');
 type SendData = { ip: string; port: string; userName: string; password: string; channelNum: number };
 const loginSendData = computed<SendData>(() => ({
-  id: props.cameraId,
+  id: cameraDataId.value,
   ip: '1',
   userName: '1',
   password: '1',
