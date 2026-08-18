@@ -17,7 +17,6 @@ export class WaterPlantScene {
   private readonly followTarget = new THREE.Vector3();
   private readonly pickables: THREE.Object3D[];
   private readonly patrol: PatrolController;
-  private animationFrame = 0;
   private lastTime = performance.now() / 1000;
   private theta = -55;
   private phi = 62;
@@ -36,7 +35,10 @@ export class WaterPlantScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
     this.renderer.domElement.className = 'three-water-plant__canvas';
     container.appendChild(this.renderer.domElement);
     this.addLights();
@@ -53,7 +55,8 @@ export class WaterPlantScene {
     });
     this.bindEvents();
     this.resize();
-    this.animate();
+    this.renderer.shadowMap.needsUpdate = true;
+    this.renderer.setAnimationLoop(this.animate);
   }
 
   public resize() {
@@ -85,7 +88,7 @@ export class WaterPlantScene {
   public dispose() {
     if (this.disposed) return;
     this.disposed = true;
-    cancelAnimationFrame(this.animationFrame);
+    this.renderer.setAnimationLoop(null);
     const canvas = this.renderer.domElement;
     canvas.removeEventListener('mousedown', this.handlePointerDown);
     canvas.removeEventListener('click', this.handleClick);
@@ -244,6 +247,5 @@ export class WaterPlantScene {
     this.patrol.tick(delta, now);
     this.updateCamera();
     this.renderer.render(this.scene, this.camera);
-    this.animationFrame = requestAnimationFrame(this.animate);
   };
 }

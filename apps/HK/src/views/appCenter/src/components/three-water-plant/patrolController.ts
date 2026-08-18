@@ -67,11 +67,12 @@ export class PatrolController {
         this.detectArrival();
       }
     }
-    const position =
-      this.dwellRemaining > 0 && this.currentIndex >= 0
-        ? new THREE.Vector3(this.devices[this.currentIndex].x, 0.6, this.devices[this.currentIndex].z)
-        : this.path.getPoint(this.progress);
-    this.cursor.position.copy(position);
+    if (this.dwellRemaining > 0 && this.currentIndex >= 0) {
+      const device = this.devices[this.currentIndex];
+      this.cursor.position.set(device.x, 0.6, device.z);
+    } else {
+      this.path.getPoint(this.progress, this.cursor.position);
+    }
     this.cursor.position.y = 7 + Math.sin(elapsed * 4) * 1.5;
     this.cursor.scale.setScalar(1 + Math.sin(elapsed * 6) * 0.12);
   }

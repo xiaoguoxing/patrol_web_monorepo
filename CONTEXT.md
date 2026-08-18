@@ -99,7 +99,7 @@ HK 的执行中任务页面已使用 `ThreeRectangle` 替换原 `PicRes`，当�
 - `@patrol/shared` 和 `@patrol/ui` 初次从原三个应用抽取后，hglh、nanchang、yuedong 的 `build:test` 曾实际执行并通过。
 - HK 已通过 `apps/*` 自动纳入 pnpm workspace，包名统一为 `@patrol/hk`，依赖使用 catalog（依赖版本目录）和 `workspace:*`；HK 由现有应用复制后接入，共享配置保持一致。使用仅对当前进程生效的 `HTTP_PROXY`/`HTTPS_PROXY=http://127.0.0.1:7890` 执行 `pnpm install --frozen-lockfile` 已成功，根锁文件包含 `apps/HK` importer（项目依赖入口）且无需更新。
 - HK 的 `package.json`、`tsconfig.json`、Vite 配置、`main.ts` 和 `App.vue` 已通过语义诊断，未发现错误；其 `tsconfig.json` 已继承根配置并包含共享包源码，无需额外调整。
-- `three@0.160.0` 和 `@types/three@0.160.0` 已由 catalog 管理并由 HK 显式声明。水厂场景 8 个目标文件已通过语义诊断；`pnpm build:hk` 已实际执行成功，退出码为 0，转换 3057 个模块并生成 `apps/HK/dist_HK_production`。Three.js 场景 chunk 约 `494.58 kB`，gzip 后约 `128.63 kB`。
+- `three@0.185.0` 和 `@types/three@0.185.0` 已由 catalog 管理并由 HK 显式声明，HK 实际解析版本已核对为 `0.185.0`，`pnpm install --frozen-lockfile --ignore-scripts` 验证锁文件一致。水厂场景 8 个目标文件已通过语义诊断。升级前的 `pnpm build:hk` 曾成功生成 `apps/HK/dist_HK_production`；升级 r185 后的正式构建因当前执行权限未获许可而未运行，不能沿用旧构建结果声明新版构建通过。
 - HK 构建仍有原有非阻断警告，包括 `.env` 中的 `NODE_ENV=production` 提示，以及 `jsencrypt` 和部分旧业务代码使用 `eval`。尚未执行浏览器人工视觉验收，不能据此确认布局、交互、镜头动画和页面切换后的 WebGL 资源重建效果。
 - 安装后已核对宿主与 `@patrol/ui` 的 Vue、Element Plus、图标包和 VueUse 物理解析路径，确认共享同一套运行时实例并绑定 TypeScript `4.9.5`。
 - 粤东最新 `pnpm --filter @patrol/yuedong build:pro` 已实际执行，退出码为 0；用户已验证统一运行时后的正式包表格列宽及空数据文案显示正常。
