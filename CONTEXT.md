@@ -86,14 +86,24 @@ app.use(znxjUi, {
 - 四个应用的 Element Plus 语言配置默认使用中文，仅在应用语言显式为 `en` 时切换英文。
 - 四个应用中未使用的 `getEnvConfig()` 及其 `dotenv`、`fs` 导入已移除。
 
+## HK Three.js 水厂巡检场景
+
+HK 的执行中任务页面已使用 `ThreeRectangle` 替换原 `PicRes`，当前组件实际展示模块化水厂巡检场景，不再是简单长方体。场景包含 28 台前端写死的模拟设备，覆盖水泵、电机柜、仪表盘、指示灯、加药装置和鼓风机；不与真实巡检项名称或编号映射，`activeItem.itemId` 每次变为新的非空值时只触发固定顺序中的下一台设备特写。
+
+场景源码拆分在 `three-water-plant` 目录：`plantFactory.ts` 负责厂区环境，`deviceFactory.ts` 负责设备几何体，`patrolController.ts` 负责路径、停留、高亮和结果状态，`WaterPlantScene.ts` 负责渲染、相机、鼠标交互及资源释放，`mockData.ts` 和 `types.ts` 分别维护模拟数据与类型。当前支持自动循环巡检、暂停/继续、路径显隐、跟随/自由视角、旋转/平移/缩放、设备点击信息和模拟 AI 巡检结果。
+
+组件卸载时会清理动画帧、事件、几何体、材质、纹理和 WebGL（网页图形渲染）上下文。该场景使用 `ResizeObserver`（尺寸观察器）适配画布容器，与已废弃的 ProTable 尺寸补偿方案无关。当前仍是 Three.js 程序化几何体，不包含 RVT/GLB 实际模型、原 Demo 的画中画识别浮层或楼层过滤。
+
 ## 验证状态
 
 - `@patrol/shared` 和 `@patrol/ui` 初次从原三个应用抽取后，hglh、nanchang、yuedong 的 `build:test` 曾实际执行并通过。
 - HK 已通过 `apps/*` 自动纳入 pnpm workspace，包名统一为 `@patrol/hk`，依赖使用 catalog（依赖版本目录）和 `workspace:*`；HK 由现有应用复制后接入，共享配置保持一致。使用仅对当前进程生效的 `HTTP_PROXY`/`HTTPS_PROXY=http://127.0.0.1:7890` 执行 `pnpm install --frozen-lockfile` 已成功，根锁文件包含 `apps/HK` importer（项目依赖入口）且无需更新。
 - HK 的 `package.json`、`tsconfig.json`、Vite 配置、`main.ts` 和 `App.vue` 已通过语义诊断，未发现错误；其 `tsconfig.json` 已继承根配置并包含共享包源码，无需额外调整。
+- `three@0.160.0` 和 `@types/three@0.160.0` 已由 catalog 管理并由 HK 显式声明。水厂场景 8 个目标文件已通过语义诊断；`pnpm build:hk` 已实际执行成功，退出码为 0，转换 3057 个模块并生成 `apps/HK/dist_HK_production`。Three.js 场景 chunk 约 `494.58 kB`，gzip 后约 `128.63 kB`。
+- HK 构建仍有原有非阻断警告，包括 `.env` 中的 `NODE_ENV=production` 提示，以及 `jsencrypt` 和部分旧业务代码使用 `eval`。尚未执行浏览器人工视觉验收，不能据此确认布局、交互、镜头动画和页面切换后的 WebGL 资源重建效果。
 - 安装后已核对宿主与 `@patrol/ui` 的 Vue、Element Plus、图标包和 VueUse 物理解析路径，确认共享同一套运行时实例并绑定 TypeScript `4.9.5`。
 - 粤东最新 `pnpm --filter @patrol/yuedong build:pro` 已实际执行，退出码为 0；用户已验证统一运行时后的正式包表格列宽及空数据文案显示正常。
-- HK 正式构建命令 `pnpm build:hk` 未获执行许可；黄阁/榄核和南昌也尚未在最新对等依赖状态下重新执行正式构建。声明四端全部通过前，仍需补跑对应构建并检查退出码。
+- 黄阁/榄核和南昌尚未在最新对等依赖状态下重新执行正式构建。声明四端全部通过前，仍需补跑对应构建并检查退出码。
 
 ## 已知问题与待办
 

@@ -32,7 +32,7 @@
       </el-scrollbar>
     </div>
     <div class="two-col-page-rt flex-1-column">
-      <PicRes :active-item="activeItem"> </PicRes>
+      <ThreeRectangle :active-item="activeItem" />
     </div>
 
     <kr-public-dialog
@@ -65,7 +65,7 @@ import {
 import type { AITask } from '@/api/modules/appCenter/inspectionMonitor/aiInspection';
 
 import ListObj from '@appCenter/components/listObj.vue';
-import PicRes from '@appCenter/components/picRes.vue';
+import ThreeRectangle from '@appCenter/components/threeRectangle.vue';
 import PicVideo from '@appCenter/components/picVideo.vue';
 import { getPercentNum } from '@/utils/util';
 import { useWebSocket } from '@appCenter/hooks/useWebSocket';
