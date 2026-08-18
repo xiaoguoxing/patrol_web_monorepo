@@ -13,9 +13,11 @@
   },
   "scripts": {
     "dev:hglh": "pnpm --filter @patrol/hglh dev",
+    "dev:hk": "pnpm --filter @patrol/hk dev",
     "dev:nanchang": "pnpm --filter @patrol/nanchang dev",
     "dev:yuedong": "pnpm --filter @patrol/yuedong dev",
     "build:hglh": "pnpm --filter @patrol/hglh build:lhorhg",
+    "build:hk": "pnpm --filter @patrol/hk build:pro",
     "build:nanchang": "pnpm --filter @patrol/nanchang build:pro",
     "build:yuedong": "pnpm --filter @patrol/yuedong build:pro",
     "build:test": "pnpm --recursive --if-present build:test",

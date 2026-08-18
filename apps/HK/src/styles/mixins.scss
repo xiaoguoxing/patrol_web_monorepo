@@ -1,0 +1,12 @@
+$namespace: 'kr' !default;
+$b: null;
+
+// 定义 Block
+@mixin b($block) {
+  /* stylelint-disable-next-line scss/dollar-variable-pattern */
+  $b: $namespace + '-' + $block !global;
+
+  .#{$b} {
+    @content;
+  }
+}
