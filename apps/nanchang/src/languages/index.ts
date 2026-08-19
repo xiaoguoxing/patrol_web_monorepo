@@ -1,15 +1,11 @@
 import { createI18n } from 'vue-i18n';
-import zh from './modules/zh';
-import en from './modules/en';
+import { en, zh, zhHK } from '@patrol/languages';
 
 const i18n = createI18n({
-  legacy: false, // 如果要支持 compositionAPI，此项必须设置为 false
-  locale: 'zh', // 设置语言类型
-  globalInjection: true, // 全局注册$t方法
-  messages: {
-    zh,
-    en,
-  },
+  legacy: false,
+  locale: 'zh',
+  globalInjection: true,
+  messages: { zh, en, 'zh-HK': zhHK },
 });
 
 export default i18n;

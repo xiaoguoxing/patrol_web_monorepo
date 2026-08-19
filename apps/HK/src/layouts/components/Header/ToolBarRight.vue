@@ -1,16 +1,18 @@
 <template>
   <div class="tool-bar-ri">
     <a v-if="system" class="header-link" :href="url" target="_blank">系统管理</a>
-    <!-- <div class="header-icon"> -->
-    <!-- <AssemblySize id="assemblySize" />
-      <Language id="language" />
+    <div class="header-icon">
+      <!--      <AssemblySize id="assemblySize" />
+
       <SearchMenu id="searchMenu" />
 
       <Message id="message" />
 
-      <Fullscreen id="fullscreen" /> -->
-    <!-- <ThemeSetting id="themeSetting" /> -->
-    <!-- </div> -->
+      <Fullscreen id="fullscreen" />
+      <ThemeSetting id="themeSetting" />-->
+      <Language id="language" />
+    </div>
+
     <MessageAlarm id="MessageAlarm" />
     <Help class="mr32" />
     <Avatar />
@@ -25,7 +27,7 @@ import { ref } from 'vue';
 // import Message from './components/Message.vue';
 import MessageAlarm from './components/MessageAlarm.vue';
 import AlarmDialog from './components/AlarmDialog.vue';
-// import Language from './components/Language.vue';
+import Language from './components/Language.vue';
 // import ThemeSetting from './components/ThemeSetting.vue';
 // import AssemblySize from './components/AssemblySize.vue';
 import Help from './components/Help.vue';
@@ -63,13 +65,11 @@ const url =
     margin-right: 32px;
     font-size: var(--el-font-size-medium);
   }
-
-  // .header-icon {
-  //   display: flex;
-  //   align-items: center;
-  //   justify-content: space-between;
-  //   width: 64px;
-  //   margin-right: 32px;
-  // }
+  .header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 24px;
+  }
 }
 </style>

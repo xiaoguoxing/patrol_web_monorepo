@@ -41,7 +41,7 @@ import type { ColumnProps } from '../../pro-table';
 interface SearchFormItem {
   column: ColumnProps; // 具体每一个搜索项的配置
   searchParam: { [key: string]: any }; // 搜索参数
-  clearMethod: () => void;
+  clearMethod: (params?: any) => void;
 }
 
 const props = withDefaults(defineProps<SearchFormItem>(), {

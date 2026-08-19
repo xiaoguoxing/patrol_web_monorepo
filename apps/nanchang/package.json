@@ -17,6 +17,7 @@
   "dependencies": {
     "@ctrl/tinycolor": "catalog:",
     "@element-plus/icons-vue": "catalog:",
+    "@patrol/languages": "workspace:*",
     "@patrol/shared": "workspace:*",
     "@patrol/ui": "workspace:*",
     "@vueuse/core": "catalog:",

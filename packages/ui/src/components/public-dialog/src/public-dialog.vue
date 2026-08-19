@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-dialog
-      :title="title"
+      :title="dialogTitle"
       v-model="visible"
       :draggable="draggable"
       :append-to-body="appendTobody"
@@ -28,9 +28,11 @@
       <template v-if="!noFootBtn" #footer>
         <div class="dialog-footer" ref="addReceptionForm">
           <slot name="footer">
-            <el-button v-if="singleClose" class="dialog-footer__btn" @click="closeDialog">{{ btnText[0] }}</el-button>
+            <el-button v-if="singleClose" class="dialog-footer__btn" @click="closeDialog">
+              {{ dialogBtnText[0] }}
+            </el-button>
             <template v-else>
-              <el-button class="dialog-footer__btn" @click="closeDialog">{{ btnText[0] }}</el-button>
+              <el-button class="dialog-footer__btn" @click="closeDialog">{{ dialogBtnText[0] }}</el-button>
               <el-button
                 type="primary"
                 class="dialog-footer__btn"
@@ -39,7 +41,7 @@
                     $emit('doSubmit');
                   }
                 "
-                >{{ btnText[1] }}</el-button
+                >{{ dialogBtnText[1] }}</el-button
               >
             </template>
           </slot>
@@ -52,7 +54,8 @@
 <script setup lang="ts" name="KrPublicDialog">
 import { debounce as vDebounce } from '../../../directives';
 import { addUnit } from '../../../utils';
-import { computed, onBeforeMount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useLocale } from 'element-plus';
 import '../style/index.scss';
 import type { CSSProperties } from 'vue';
 interface PublicDialog {
@@ -75,7 +78,6 @@ interface PublicDialog {
 // 接受父组件参数，配置默认值
 const props = withDefaults(defineProps<PublicDialog>(), {
   singleClose: false,
-  title: '标题',
   modelValue: false,
   appendTobody: false,
   noFootBtn: false,
@@ -83,7 +85,6 @@ const props = withDefaults(defineProps<PublicDialog>(), {
   showClose: true,
   destroyOnClose: false,
   modal: true,
-  btnText: () => ['取消', '确定'],
   width: '',
   height: '',
   customClass: '',
@@ -92,6 +93,11 @@ const props = withDefaults(defineProps<PublicDialog>(), {
     fn();
   },
 });
+const { t } = useLocale();
+const dialogTitle = computed(() => props.title || t('el.patrol.title'));
+const dialogBtnText = computed<[string, string]>(
+  () => props.btnText || [t('el.patrol.cancel'), t('el.patrol.confirm')]
+);
 const emit = defineEmits(['update:modelValue', 'doSubmit', 'doClose']);
 const visible = ref(false);
 const lockScroll = ref(false);

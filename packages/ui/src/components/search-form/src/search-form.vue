@@ -9,8 +9,8 @@
         </kr-grid-item>
         <kr-grid-item>
           <div class="operation">
-            <el-button type="primary" :icon="Search" @click="search">查询</el-button>
-            <el-button :icon="Delete" v-if="showReset" @click="reset">重置</el-button>
+            <el-button type="primary" :icon="Search" @click="search({})">{{ t('el.patrol.search') }}</el-button>
+            <el-button :icon="Delete" v-if="showReset" @click="reset">{{ t('el.patrol.reset') }}</el-button>
             <el-popover
               v-if="showMicrophone"
               placement="bottom"
@@ -22,13 +22,19 @@
               trigger="click"
             >
               <template #reference>
-                <el-button type="primary" circle title="语音查询" :icon="Microphone" v-if="showMicrophone"></el-button>
+                <el-button
+                  type="primary"
+                  circle
+                  :title="t('el.patrol.voiceSearch')"
+                  :icon="Microphone"
+                  v-if="showMicrophone"
+                ></el-button>
               </template>
               <!--          voiceInput-->
               <microphone v-if="mpShow" v-model="searchParam.voiceInput" @close="mpClose"></microphone>
             </el-popover>
             <el-button v-if="showCollapse" type="primary" link class="search-isOpen" @click="collapsed = !collapsed">
-              {{ collapsed ? '展开' : '合并' }}
+              {{ t(collapsed ? 'el.patrol.expand' : 'el.patrol.collapse') }}
               <el-icon class="el-icon--right">
                 <component :is="collapsed ? ArrowDown : ArrowUp"></component>
               </el-icon>
@@ -45,11 +51,14 @@ import '../../style/index.scss';
 import '../style/index.scss';
 import microphone from './microphone.vue';
 import { computed, nextTick, ref } from 'vue';
+import { useLocale } from 'element-plus';
 import type { ColumnProps } from '../../pro-table';
 import type { BreakPoint } from '../../';
 import { Delete, Search, ArrowDown, ArrowUp, Microphone } from '@element-plus/icons-vue';
 import SearchFormItem from './search-form-item.vue';
 import { KrGrid, KrGridItem } from '../../';
+
+const { t } = useLocale();
 
 interface SearchFormProps {
   columns?: ColumnProps[]; // 搜索配置列

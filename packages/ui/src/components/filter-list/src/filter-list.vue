@@ -8,12 +8,12 @@
     :border="outBorder"
   >
     <template #headerRight>
-      <el-button :icon="Delete" size="small" class="clearBtn" @click="clearAll">清空</el-button>
+      <el-button :icon="Delete" size="small" class="clearBtn" @click="clearAll">{{ t('el.patrol.clear') }}</el-button>
     </template>
 
     <el-input
       v-if="filterable"
-      placeholder="输入关键字过滤"
+      :placeholder="t('el.patrol.filterPlaceholder')"
       class="treeInput"
       v-model="filterText"
       suffix-icon="el-icon-search"
@@ -48,12 +48,12 @@
     :border="outBorder"
   >
     <template #headerRight>
-      <el-button type="primary" @click="clearAll" link>清除全部</el-button>
+      <el-button type="primary" @click="clearAll" link>{{ t('el.patrol.clearAll') }}</el-button>
     </template>
     <kr-pro-table
       ref="proTable"
       v-bind="$attrs"
-      :title="'已选'"
+      :title="t('el.patrol.selected')"
       outBorder
       :operationBtn="filterable"
       titleBorder
@@ -67,7 +67,7 @@
       <template v-if="filterable" #tableHeader>
         <el-input
           v-model="filterText"
-          placeholder="输入关键字过滤"
+          :placeholder="t('el.patrol.filterPlaceholder')"
           suffix-icon="el-icon-search"
           clearable
           style="margin-bottom: 10px"
@@ -75,7 +75,7 @@
       </template>
 
       <template #operation="{ row, index }">
-        <el-button type="primary" @click="delItem(index, row)" link>删除</el-button>
+        <el-button type="primary" @click="delItem(index, row)" link>{{ t('el.patrol.delete') }}</el-button>
       </template>
     </kr-pro-table>
   </kr-card>
@@ -88,6 +88,9 @@ import { computed, ref, watch } from 'vue';
 import KrCard from '../../card';
 import { cloneDeep } from 'lodash-es';
 import { Delete, Close } from '@element-plus/icons-vue';
+import { useLocale } from 'element-plus';
+
+const { t } = useLocale();
 
 // 接收父组件参数并设置默认值
 interface FilterListProps {
@@ -172,7 +175,7 @@ const resColumns = computed(() => [
   {
     prop: 'operation',
     align: 'right',
-    label: '操作',
+    label: t('el.patrol.operation'),
     fixed: 'right',
   },
 ]);
