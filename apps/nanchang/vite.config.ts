@@ -128,7 +128,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     ],
     // * 打包去除 console.log && debugger
     esbuild: {
-      pure: viteEnv.VITE_DROP_CONSOLE ? ['console.log', 'debugger'] : [],
+      pure: viteEnv.VITE_DROP_CONSOLE ? ['debugger'] : [],
     },
     build: {
       outDir: `dist_${viteEnv.VITE_SYS_DIST_NAME}_${viteEnv.VITE_USER_NODE_ENV}`,
