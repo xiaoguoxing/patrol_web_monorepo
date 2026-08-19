@@ -48,7 +48,7 @@ async function run(action: () => Promise<void>, successMessage: string): Promise
 
 let sdk: HikvisionWebSdk | undefined;
 const HKVideoControl = ref<HTMLDivElement>();
-const videoRef = computed<HTMLVideoElement>(() => HKVideoControl.value?.querySelector('#HKVideoControl_playWindow0')!);
+const videoRef = ref<HTMLVideoElement>();
 let resizeObserver: ResizeObserver | undefined;
 const message = ref('正在初始化播放器…');
 let replayVideoRef = ref();
@@ -60,7 +60,7 @@ let isTimeNumber = computed({
     return true;
   },
 });
-let currentStartTime = isTimeNumber.value;
+let currentStartTime = 10;
 const cameraData = ref<Partial<UserApi2>>({});
 const cameraStorageData = ref<Partial<VideoStorage.ResList>>({});
 async function init() {
@@ -77,6 +77,8 @@ async function initialize(): Promise<void> {
     assetBaseUrl: '/hik',
     onPlaybackEnded: () => {
       message.value = '回放结束';
+      replayVideoRef.value?.stopTime();
+      ElMessage.success(message.value);
     },
     onError: (error) => {
       message.value = error.message;
@@ -90,6 +92,7 @@ async function initialize(): Promise<void> {
   message.value = '播放器已就绪';
 }
 async function setCamera(id: string) {
+  currentStartTime = isTimeNumber.value!;
   replayVideoRef.value?.setTime(currentStartTime);
   let { data } = await cameraInfoApi({ id });
   let { data: sd } = await videoStorageDetail({ id: data.storageId });
@@ -117,20 +120,21 @@ async function onLogin() {
 }
 
 async function runPlay() {
-  replayVideoRef.value?.playChange('pause');
-  let st = useDateFormat(currentStartTime, 'YYYY-MM-DD HH:mm:ss');
+  const now = new Date(currentStartTime!);
+  const endOfDay = new Date(now);
+  endOfDay.setHours(23, 59, 59, 999);
   await sdk!.startPlayback({
     deviceIdentify: currentDevice.value,
     channelId: cameraData.value.dwChannel!,
     rtspPort: rtspPort.value,
     streamType: 1,
-    proxy: false,
-    startTime: st.value,
-    // endTime: st.value,
+    proxy: import.meta.env.VITE_SYS_DIST_NAME !== 'DEV',
+    startTime: currentStartTime!,
+    endTime: endOfDay.getTime(),
   });
   emit('loading', false);
   emit('success', message.value);
-  replayVideoRef.value?.playChange('play');
+  videoRef.value = HKVideoControl.value?.querySelector('#HKVideoControl_playWindow0')!;
 }
 
 function videoChange(time: number) {
@@ -158,7 +162,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="HKVideoControl" id="HKVideoControl" class="videoRef hc" />
+  <div ref="HKVideoControl" id="HKVideoControl" class="videoRef hc" :title="message" />
   <!--  <HKreplayVideo class="replayVideo" ref="replayVideoRef" :videoRef="sdk" @change="videoChange"></HKreplayVideo>-->
   <replayVideo class="replayVideo" ref="replayVideoRef" :videoRef="videoRef" @change="videoChange"></replayVideo>
 </template>

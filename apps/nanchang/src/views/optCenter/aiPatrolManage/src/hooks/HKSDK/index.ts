@@ -1,3 +1,5 @@
+import { useDateFormat } from '@vueuse/core';
+
 export type HikProtocol = 1 | 2;
 export type HikStreamType = 1 | 2 | 3;
 
@@ -30,8 +32,8 @@ export interface HikPreviewOptions {
 export interface HikPlaybackOptions {
   deviceIdentify: string;
   channelId: number;
-  startTime: Date | string;
-  endTime?: Date | string;
+  startTime: number;
+  endTime: number;
   streamType?: 1 | 2;
   rtspPort?: number;
   proxy?: boolean;
@@ -229,9 +231,10 @@ export class HikvisionWebSdk {
   async startPlayback(options: HikPlaybackOptions): Promise<void> {
     this.assertLoggedIn(options.deviceIdentify);
     const windowIndex = options.windowIndex ?? 0;
-    const startTime = this.formatTime(options.startTime);
-    // const endTime = this.formatTime(options.endTime);
-    // if (startTime >= endTime) throw new Error('回放结束时间必须晚于开始时间');
+    const startTime = useDateFormat(options.startTime, 'YYYY-MM-DD HH:mm:ss');
+    const endTime = useDateFormat(options.endTime, 'YYYY-MM-DD HH:mm:ss');
+    console.log(startTime.value, endTime.value);
+    if (startTime.value >= endTime.value) throw new Error('回放结束时间必须晚于开始时间');
 
     await this.stopIfPlaying(windowIndex);
     await this.invokePlayback('I_StartPlayback', options.deviceIdentify, {
@@ -239,8 +242,8 @@ export class HikvisionWebSdk {
       iRtspPort: options.rtspPort,
       iStreamType: options.streamType ?? 1,
       iChannelID: options.channelId,
-      szStartTime: startTime,
-      // szEndTime: endTime,
+      szStartTime: startTime.value,
+      szEndTime: endTime.value,
       bProxy: options.proxy ?? false,
     });
   }
@@ -460,15 +463,6 @@ export class HikvisionWebSdk {
   private createSdkError(message: string, status?: number, xml?: XMLDocument): Error {
     const detail = xml?.querySelector('subStatusCode, statusString')?.textContent?.trim();
     return new Error([message, status, detail].filter(Boolean).join('：'));
-  }
-
-  private formatTime(value: Date | string): string {
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) throw new Error('回放时间格式无效');
-    const pad = (part: number) => String(part).padStart(2, '0');
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(
-      date.getMinutes()
-    )}:${pad(date.getSeconds())}`;
   }
 
   private assertInitialized(): void {

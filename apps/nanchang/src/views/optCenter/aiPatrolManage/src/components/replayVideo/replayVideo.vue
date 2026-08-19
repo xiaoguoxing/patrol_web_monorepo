@@ -91,6 +91,10 @@ defineExpose({
     realTime.value = time;
     videoPause();
   },
+  stopTime() {
+    isPlay.value = false;
+    pause();
+  },
 });
 </script>
 
