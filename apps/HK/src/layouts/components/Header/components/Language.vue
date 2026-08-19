@@ -1,6 +1,6 @@
 <template>
   <el-dropdown trigger="click" @command="handleSetLanguage">
-    <i :class="'iconfont icon-zhongyingwen'" class="toolBar-icon" title="语言切换"></i>
+    <i :class="'iconfont icon-zhongyingwen'" class="toolBar-icon" :title="$t('header.langChangeTitle')"></i>
     <template #dropdown>
       <el-dropdown-menu>
         <el-dropdown-item :disabled="language && language === 'zh'" command="zh">简体中文</el-dropdown-item>

@@ -1,5 +1,5 @@
 <template>
-  <el-icon class="toolBar-icon" title="帮助" @click="handleOpen"><QuestionFilled /></el-icon>
+  <el-icon class="toolBar-icon" :title="$t('header.helpChangeTitle')" @click="handleOpen"><QuestionFilled /></el-icon>
 </template>
 <script setup>
 import { getConfigDetailHTML } from '@/api/modules/help';

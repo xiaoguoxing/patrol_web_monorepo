@@ -1,6 +1,6 @@
 <template>
   <div class="tool-bar-ri">
-    <a v-if="system" class="header-link" :href="url" target="_blank">系统管理</a>
+    <a v-if="system" class="header-link" :href="url" target="_blank">{{ $t('header.sysAdmin') }}</a>
     <div class="header-icon">
       <!--      <AssemblySize id="assemblySize" />
 

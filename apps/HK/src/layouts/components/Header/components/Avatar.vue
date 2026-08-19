@@ -16,16 +16,16 @@
       <div class="user-info__item" @click="goSys()">
         <!-- openDialog('infoRef') -->
         <el-icon class="icon"><Position /></el-icon>
-        <div class="text">前往{{ sysName }}</div>
+        <div class="text">{{ $t('header.goFrom') }}{{ sysName }}</div>
       </div>
       <div class="user-info__item" @click="gotoUser()">
         <!-- openDialog('infoRef') -->
         <el-icon class="icon"><User /></el-icon>
-        <div class="text">资料与账号</div>
+        <div class="text">{{ $t('header.zlofuser') }}</div>
       </div>
       <div class="user-info__item" @click="logout">
         <el-icon class="icon"><SwitchButton /></el-icon>
-        <div class="text">退出登录</div>
+        <div class="text">{{ $t('header.logout') }}</div>
       </div>
     </div>
   </el-popover>

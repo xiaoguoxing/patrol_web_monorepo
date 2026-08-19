@@ -1,6 +1,7 @@
 export default {
   home: {
     welcome: '欢迎使用',
+    sysName: '智能巡检管理平台',
   },
   tabs: {
     more: '更多',
@@ -11,6 +12,7 @@ export default {
     closeAll: '关闭所有',
   },
   header: {
+    sysAdmin: '系统管理',
     componentSize: '组件大小',
     language: '国际化',
     theme: '全局主题',
@@ -24,6 +26,10 @@ export default {
     personalData: '个人信息',
     changePassword: '修改密码',
     logout: '退出登录',
+    langChangeTitle: '语言切换',
+    helpChangeTitle: '帮助',
+    goFrom: '前往',
+    zlofuser: '资料与账号',
   },
   ui: {
     search: '查询',

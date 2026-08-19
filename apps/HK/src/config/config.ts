@@ -1,7 +1,7 @@
 // ? 全局不动配置项 只做导出不做修改
 
 // * 项目名称
-export const TITLE: string = '智能巡检管理平台';
+export const TITLE: string = 'home.sysName';
 
 // * 首页地址（默认）
 export const HOME_URL: string = '/patrolInspection/worktop';
