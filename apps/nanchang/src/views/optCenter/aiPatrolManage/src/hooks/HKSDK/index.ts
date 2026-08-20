@@ -153,9 +153,20 @@ export class HikvisionWebSdk {
         cbEvent: (eventType: number, windowIndex: number) => {
           if (eventType === 2) this.options.onPlaybackEnded?.(windowIndex);
         },
-        cbPluginErrorHandler: (windowIndex: number, errorCode: number) => {
-          const error = new Error(`窗口 ${windowIndex} 播放异常，错误码：${errorCode}`);
-          this.options.onError?.(error);
+        cbPluginErrorHandler: (
+          windowIndex: number,
+          errorCode: number,
+          obj?: { type: string; cmd: string; szId: string }
+        ) => {
+          console.log(obj);
+          switch (errorCode) {
+            case 1002:
+              this.options.onPlaybackEnded?.(windowIndex);
+              break;
+            default:
+              const error = new Error(`窗口 ${windowIndex} 播放异常，错误码：${errorCode}`);
+              this.options.onError?.(error);
+          }
         },
         cbInitPluginComplete: () => {
           const result = api.I_InsertOBJECTPlugin(this.containerId);
