@@ -48,4 +48,28 @@ export default {
     selectPlaceholder: '请选择',
     filterPlaceholder: '输入关键字过滤',
   },
+  worktop: {},
+  buttonName: {
+    close: '关闭',
+  },
+  messageTip: {
+    jin: '近',
+    alarmNum: '小时告警数',
+    logoutMsg1: '您是否确认退出登录?',
+    logoutMsg2: '温馨提示',
+    logoutMsg3: '退出登录成功!',
+  },
+  inputPlaceholder: {
+    placeholderEnter: '请输入关键词回车',
+  },
+  alarm: {
+    alarmTime: '告警时间',
+    alarmAreaName: '告警区域',
+    alarmObjectName: '告警对象',
+    alarmItemName: '告警项',
+    recognitionResult: '识别结果',
+    alarmRules: '告警规则',
+    alarmGrade: '告警等级',
+    newAlarmMsg: '新告警信息',
+  },
 };

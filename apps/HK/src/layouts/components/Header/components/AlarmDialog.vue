@@ -7,39 +7,40 @@ import { useRouter } from 'vue-router';
 import { Dict } from '@/api/modules/appCenter/alarm';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { getNeedBusinessApi } from '@/api/modules/common';
-
+import { useI18n } from 'vue-i18n';
+const { t: ti } = useI18n();
 let alarm_level: Dict = (await getDict('alarm_level')) as unknown as Dict;
 const proTable = ref();
 const initParam = reactive({});
 const columns: tableProps<Row>[] = [
   {
     prop: 'alarmTime',
-    label: '告警时间',
+    label: ti('alarm.alarmTime'),
     sortable: true,
   },
   {
     prop: 'alarmAreaName',
-    label: '告警区域',
+    label: ti('alarm.alarmAreaName'),
   },
   {
     prop: 'alarmObjectName',
-    label: '告警对象',
+    label: ti('alarm.alarmObjectName'),
   },
   {
     prop: 'alarmItemName',
-    label: '告警项',
+    label: ti('alarm.alarmItemName'),
   },
   {
     prop: 'recognitionResult',
-    label: '识别结果',
+    label: ti('alarm.recognitionResult'),
   },
   {
     prop: 'alarmRules',
-    label: '告警规则',
+    label: ti('alarm.alarmRules'),
   },
   {
     prop: 'alarmGrade',
-    label: '告警等级',
+    label: ti('alarm.alarmGrade'),
     filters: getDictForColumnFilters(alarm_level!),
     enum: alarm_level,
   },
@@ -150,42 +151,44 @@ onUnmounted(() => {
 </script>
 <template>
   <KrPublicDialog
-    title="新告警信息"
+    :title="$t('alarm.newAlarmMsg')"
     v-model="open"
     width="60%"
     ref="RulesFormDialogRef"
     @doClose="close"
     appendTobody
     singleClose
-    :btnText="['关闭']"
+    :btnText="[$t('buttonName.close')]"
     customClass="alarmDialog"
   >
     <template #dialog-title>
       <div class="leftTitle">
-        <img src="@/assets/images/alarmIcon/home1.png" alt="消息提醒" />
-        <span>新告警信息</span>
+        <img src="@/assets/images/alarmIcon/home1.png" alt="msg" />
+        <span>{{ $t('alarm.newAlarmMsg') }}</span>
       </div>
     </template>
     <div ref="alarmDialogContentRef" class="alarmDialogContent">
       <div class="alarmDialogInfo">
         <div class="infoLeft">
-          近{{ hours }}小时告警数：<span class="red">{{ parseInt(os) }}</span>
+          {{ $t('messageTip.jin') }}{{ hours }}{{ $t('messageTip.alarmNum') }}：<span class="red">{{
+            parseInt(os)
+          }}</span>
         </div>
         <div class="infoRight">
           <el-input
             v-model="input3"
             style="max-width: 600px"
             suffix-icon="Search"
-            placeholder="请输入关键词回车"
+            :placeholder="$t('inputPlaceholder.placeholderEnter')"
             class="input-with-select"
             clearable
             @change="inputChange"
           >
             <template #prepend>
               <el-select v-model="select" placeholder="" @change="inputChange" style="width: 115px">
-                <el-option label="告警区域" value="alarmAreaName" />
-                <el-option label="告警对象" value="alarmObjectName" />
-                <el-option label="告警项" value="alarmItemName" />
+                <el-option :label="$t('alarm.alarmAreaName')" value="alarmAreaName" />
+                <el-option :label="$t('alarm.alarmObjectName')" value="alarmObjectName" />
+                <el-option :label="$t('alarm.alarmItemName')" value="alarmItemName" />
               </el-select>
             </template>
           </el-input>

@@ -49,6 +49,8 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 import PasswordDialog from './PasswordDialog.vue';
 import { usePreview } from '@/hooks/usePreview';
 import imgUrl from '@/assets/images/avatar.svg';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const { getPreviewUrl } = usePreview();
 const router = useRouter();
 const globalStore = GlobalStore();
@@ -74,9 +76,9 @@ async function redirect() {
 }
 // 退出登录
 const logout = () => {
-  ElMessageBox.confirm('您是否确认退出登录?', '温馨提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('messageTip.logoutMsg1'), t('messageTip.logoutMsg2'), {
+    confirmButtonText: t('ui.confirm'),
+    cancelButtonText: t('ui.cancel'),
     type: 'warning',
   }).then(async () => {
     // 1.调用退出登录接口
@@ -92,7 +94,7 @@ const logout = () => {
     } catch (e: any) {
       window.location.replace(e.response.headers.redirecturl);
     }*/
-    ElMessage.success('退出登录成功！');
+    ElMessage.success(t('messageTip.logoutMsg3'));
   });
 };
 
