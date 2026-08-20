@@ -16,10 +16,12 @@
     >
       <!-- 表格 header 按钮 -->
       <template #tableHeader="{ selectedListIds }">
-        <el-button icon="Delete" :disabled="!selectedListIds.length" @click="deleteList(selectedListIds)"
-          >批量删除</el-button
-        >
-        <el-button :disabled="!selectedListIds.length" @click="updateStatus(selectedListIds)">标记已读</el-button>
+        <el-button icon="Delete" :disabled="!selectedListIds.length" @click="deleteList(selectedListIds)">{{
+          $t('buttonName.delAll')
+        }}</el-button>
+        <el-button :disabled="!selectedListIds.length" @click="updateStatus(selectedListIds)">{{
+          $t('worktop.messageRead')
+        }}</el-button>
       </template>
       <template #messageContent="{ row }">
         <div class="messageContent" @click="rowClick(row)">{{ row.messageContent }}</div>
@@ -34,55 +36,57 @@ import myTabs from '@/components/Tabs/index.vue';
 import { getMessageList, getDeleteList, getUpdateList } from '@/api/modules/workstand';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const router = useRouter();
 const proTable = ref();
 const options1 = [
-  { label: '全部', value: undefined },
-  { label: '未读', value: 0 },
-  { label: '已读', value: 1 },
+  { label: t('worktop.All'), value: undefined },
+  { label: t('worktop.unRead'), value: 0 },
+  { label: t('worktop.read'), value: 1 },
 ];
 const initParam = reactive({});
 const columns = [
-  { type: 'selection', label: '序号', width: 150 },
+  { type: 'selection', label: t('table.sort'), width: 150 },
   { type: 'index', label: '序号', width: 120 },
   {
     prop: 'messageContent',
-    label: '消息内容',
+    label: t('worktop.messageContent'),
   },
 
   {
     prop: 'readStatus',
-    label: '状态',
+    label: t('table.status'),
     sortable: false,
     filterMultiple: false,
     filters: [
-      { text: '未读', value: 0 },
-      { text: '已读', value: 1 },
+      { text: t('worktop.unRead'), value: 0 },
+      { text: t('worktop.read'), value: 1 },
     ],
     enum: [
-      { label: '未读', value: 0 },
-      { label: '已读', value: 1 },
+      { label: t('worktop.unRead'), value: 0 },
+      { label: t('worktop.read'), value: 1 },
     ],
     width: 120,
   },
   {
     prop: 'messageType',
-    label: '消息类型',
+    label: t('worktop.messageType'),
     sortable: false,
     filterMultiple: false,
     filters: [
-      { text: '业务消息', value: '业务消息' },
-      { text: '系统消息', value: '系统消息' },
+      { text: t('worktop.messageType1'), value: t('worktop.messageType1') },
+      { text: t('worktop.messageType2'), value: t('worktop.messageType2') },
     ],
     enum: [
-      { label: '业务消息', value: '业务消息' },
-      { label: '系统消息', value: '系统消息' },
+      { label: t('worktop.messageType1'), value: t('worktop.messageType1') },
+      { label: t('worktop.messageType2'), value: t('worktop.messageType2') },
     ],
     width: 120,
   },
   {
     prop: 'sendTime',
-    label: '接收时间',
+    label: t('worktop.sendTime'),
     width: 160,
   },
 ];
@@ -91,7 +95,7 @@ let tabItem = ref(options1[0]);
 
 const deleteList = async (selectedListIds: any) => {
   try {
-    await useHandleData<{ ids: string }>(getDeleteList, { ids: selectedListIds.join(',') }, '删除所选消息');
+    await useHandleData<{ ids: string }>(getDeleteList, { ids: selectedListIds.join(',') }, t('worktop.delSelectNote'));
     proTable.value.getTableList();
     proTable.value.clearSelection();
   } catch (e) {}
@@ -117,7 +121,7 @@ const getTableList = async (params: any) => {
 };
 const updateStatus = async (selectedListIds: any) => {
   try {
-    await useHandleData<{ ids: string }>(getUpdateList, { ids: selectedListIds.join(',') }, '标记为已读');
+    await useHandleData<{ ids: string }>(getUpdateList, { ids: selectedListIds.join(',') }, t('worktop.selectRead'));
     proTable.value.clearSelection();
     proTable.value.getTableList();
   } catch (e) {}

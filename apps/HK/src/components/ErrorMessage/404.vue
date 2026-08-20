@@ -3,8 +3,8 @@
     <img src="@/assets/images/404.png" class="not-img" alt="404" />
     <div class="not-detail">
       <h2>404</h2>
-      <h4>抱歉，您访问的页面不存在~🤷‍♂️🤷‍♀️</h4>
-      <el-button type="primary" @click="router.push(HOME_URL)">返回首页</el-button>
+      <h4>{{ $t('error.page404Msg') }}</h4>
+      <el-button type="primary" @click="router.push(HOME_URL)">{{ $t('errpr.goHome') }}</el-button>
     </div>
   </div>
 </template>

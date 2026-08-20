@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div class="home-welcome">
-      <span>Hi，{{ authStore.userInfo.userName }}，欢迎您！</span>
+      <span>Hi，{{ authStore.userInfo.userName }}，{{ $t('worktop.hello') }}！</span>
       <!-- 暂时隐藏切换租户功能,TODO: 放开-->
       <!--  <el-select
         :model-value="groupValue"
@@ -16,32 +16,32 @@
       <div class="flex-left">
         <div class="flex-top">
           <div class="grid">
-            <kr-card header="巡检设备总览" :border="false" class="card-equipment">
+            <kr-card :header="$t('worktop.title1')" :border="false" class="card-equipment">
               <div class="equipment" v-for="(item, index) in equipmentList" :key="index" @click="goPath(item)">
                 <p class="equip-title">{{ item.name }}</p>
                 <div class="equip-num">
                   <img :src="item.icon" alt="" />
                   <div class="equip-item">
                     <p class="value-online">{{ item.online }}</p>
-                    <p class="label value-label">在线数</p>
+                    <p class="label value-label">{{ $t('worktop.onlineNum') }}</p>
                   </div>
                   <div class="equip-item1">
                     <p class="value">{{ item.total }}</p>
-                    <p class="label">总数</p>
+                    <p class="label">{{ $t('worktop.count') }}</p>
                   </div>
                   <div class="equip-item1" v-if="item.menuName === 'cameraMng'">
                     <p class="value" style="color: #ea3939">{{ item.total - item.online }}</p>
-                    <p class="label">离线数</p>
+                    <p class="label">{{ $t('worktop.offlineNum') }}</p>
                   </div>
                 </div>
               </div>
             </kr-card>
-            <common :title="'异常概述'" :dataList="linkList2" class="card-linkage" @itemClick="goPath" />
-            <common :title="'消息推送概况'" :dataList="linkList3" class="card-linkage" @itemClick="goPath" />
+            <common :title="$t('worktop.title2')" :dataList="linkList2" class="card-linkage" @itemClick="goPath" />
+            <common :title="$t('worktop.title3')" :dataList="linkList3" class="card-linkage" @itemClick="goPath" />
           </div>
           <div class="left-bottom">
-            <common :title="'告警概况'" :dataList="alarmList" class="card-alarm" @itemClick="goPath" />
-            <common :title="'智能联动概况'" :dataList="linkList" class="card-linkage" @itemClick="goPath" />
+            <common :title="$t('worktop.title4')" :dataList="alarmList" class="card-alarm" @itemClick="goPath" />
+            <common :title="$t('worktop.title5')" :dataList="linkList" class="card-linkage" @itemClick="goPath" />
           </div>
         </div>
         <taskItems class="flex-bottom" />
@@ -79,6 +79,8 @@ import {
   getTodayCount,
   getTodayXXTSCount,
 } from '@/api/modules/workstand';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 defineOptions({ name: 'home' });
 const authStore = AuthStore();
 const globalStore = GlobalStore();
@@ -91,21 +93,21 @@ const ChangeCurrDs = (val) => {
 };
 const equipmentList = ref([
   {
-    name: '摄像头',
+    name: t('device.camera'),
     online: 0,
     total: 0,
     icon: video1,
     menuName: 'cameraMng',
   },
   {
-    name: '传感器',
+    name: t('device.sensor'),
     online: 0,
     total: 0,
     icon: video2,
     menuName: 'sensorMng',
   },
   {
-    name: '轨道机器人',
+    name: t('device.trackBot'),
     online: 0,
     total: 0,
     icon: video3,
@@ -114,7 +116,7 @@ const equipmentList = ref([
 ]);
 const alarmList = ref([
   {
-    name: '今日报警数 (条)',
+    name: t('worktop.subTitle1'),
     value: 0,
     icon: icon1,
     color: '#EA3939',
@@ -122,7 +124,7 @@ const alarmList = ref([
     fromRoute: '1',
   },
   {
-    name: '巡检项总数 (项)	',
+    name: t('worktop.subTitle2'),
     value: 0,
     icon: icon2,
     color: '#0D60B4',
@@ -131,7 +133,7 @@ const alarmList = ref([
 ]);
 const linkList = ref([
   {
-    name: '今日联动告警数 (条)',
+    name: t('worktop.subTitle3'),
     value: 0,
     icon: icon3,
     color: '#FA802F',
@@ -139,7 +141,7 @@ const linkList = ref([
     fromRoute: '2',
   },
   {
-    name: '联动巡检点位数 (项)',
+    name: t('worktop.subTitle4'),
     value: 0,
     icon: icon4,
     color: '#0D60B4',
@@ -148,7 +150,7 @@ const linkList = ref([
 ]);
 const linkList2 = ref([
   {
-    name: '今日异常项 (条)',
+    name: t('worktop.subTitle5'),
     value: 0,
     icon: icon3,
     color: '#FA802F',
@@ -158,7 +160,7 @@ const linkList2 = ref([
 ]);
 const linkList3 = ref([
   {
-    name: '今日推送告警数',
+    name: t('worktop.subTitle6'),
     value: 0,
     icon: icon3,
     color: '#FA802F',

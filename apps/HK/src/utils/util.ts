@@ -1,6 +1,10 @@
 import { isArray } from '@patrol/shared/utils/is';
 import { cloneDeep } from 'lodash';
 import { RouteRecordRaw } from 'vue-router';
+import I18n from '@/languages/index';
+const t = function (str: string) {
+  return I18n.global.t(str);
+};
 /**
  * @description 获取localStorage
  * @param {String} key Storage名称
@@ -131,11 +135,11 @@ export function getTimeState() {
   // 获取当前小时
   let hours = timeNow.getHours();
   // 判断当前时间段
-  if (hours >= 6 && hours <= 10) return `早上好 ⛅`;
-  if (hours >= 10 && hours <= 14) return `中午好 🌞`;
-  if (hours >= 14 && hours <= 18) return `下午好 🌞`;
-  if (hours >= 18 && hours <= 24) return `晚上好 🌛`;
-  if (hours >= 0 && hours <= 6) return `凌晨好 🌛`;
+  if (hours >= 6 && hours <= 10) return `${t('messageTip.timeState1')} ⛅`;
+  if (hours >= 10 && hours <= 14) return `${t('messageTip.timeState2')} 🌞`;
+  if (hours >= 14 && hours <= 18) return `${t('messageTip.timeState3')} 🌞`;
+  if (hours >= 18 && hours <= 24) return `${t('messageTip.timeState4')} 🌛`;
+  if (hours >= 0 && hours <= 6) return `${t('messageTip.timeState5')} 🌛`;
 }
 
 /**

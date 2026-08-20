@@ -3,8 +3,8 @@
     <img src="@/assets/images/500.png" class="not-img" alt="500" />
     <div class="not-detail">
       <h2>500</h2>
-      <h4>抱歉，您的网络不见了~🤦‍♂️🤦‍♀️</h4>
-      <el-button type="primary" @click="router.push(HOME_URL)">返回首页</el-button>
+      <h4>{{ $t('error.page500Msg') }}</h4>
+      <el-button type="primary" @click="router.push(HOME_URL)">{{ $t('errpr.goHome') }}</el-button>
     </div>
   </div>
 </template>

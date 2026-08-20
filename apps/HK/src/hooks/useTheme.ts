@@ -4,6 +4,7 @@ import { GlobalStore } from '@/stores';
 import { DEFAULT_PRIMARY } from '@/config/config';
 import { ElMessage } from 'element-plus';
 import { TinyColor } from '@ctrl/tinycolor';
+import { useI18n } from 'vue-i18n';
 
 /**
  * @description 切换主题
@@ -11,7 +12,7 @@ import { TinyColor } from '@ctrl/tinycolor';
 export const useTheme = () => {
   const globalStore = GlobalStore();
   const themeConfig = computed(() => globalStore.themeConfig);
-
+  const { t } = useI18n();
   // 切换暗黑模式
   const switchDark = () => {
     const body = document.documentElement as HTMLElement;
@@ -24,7 +25,7 @@ export const useTheme = () => {
   const changePrimary = (val: string) => {
     if (!val) {
       val = DEFAULT_PRIMARY;
-      ElMessage({ type: 'success', message: `主题颜色已重置为 ${DEFAULT_PRIMARY}` });
+      ElMessage({ type: 'success', message: `${t('messageTip.themeReset')} ${DEFAULT_PRIMARY}` });
     }
     globalStore.setThemeConfig({ ...themeConfig.value, primary: val });
     // 为了兼容暗黑模式下主题颜色也正常，以下方法计算主题颜色 由深到浅 的具体颜色

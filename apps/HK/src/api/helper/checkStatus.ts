@@ -1,5 +1,8 @@
 import { ElMessage } from 'element-plus';
-
+import I18n from '@/languages/index';
+const t = function (str: string) {
+  return I18n.global.t(str);
+};
 /**
  * @description: 校验网络请求状态码
  * @param {Number} status
@@ -8,39 +11,39 @@ import { ElMessage } from 'element-plus';
 export const checkStatus = (status: number): void => {
   switch (status) {
     case 400:
-      ElMessage.error('请求失败！请您稍后重试');
+      ElMessage.error(t('error.400'));
       break;
     case 401:
-      ElMessage.error('登录失效！请您重新登录');
+      ElMessage.error(t('error.401'));
       break;
     case 403:
-      ElMessage.error('当前账号无权限访问！');
+      ElMessage.error(t('error.403'));
       break;
     case 404:
-      ElMessage.error('你所访问的资源不存在！');
+      ElMessage.error(t('error.404'));
       break;
     case 405:
-      ElMessage.error('请求方式错误！请您稍后重试');
+      ElMessage.error(t('error.405'));
       break;
     case 408:
-      ElMessage.error('请求超时！请您稍后重试');
+      ElMessage.error(t('error.408'));
       break;
     case 500:
-      ElMessage.error('服务异常！');
+      ElMessage.error(t('error.500'));
       break;
     case 502:
-      ElMessage.error('网关错误！');
+      ElMessage.error(t('error.502'));
       break;
     case 503:
-      ElMessage.error('服务不可用！');
+      ElMessage.error(t('error.503'));
       break;
     case 504:
-      ElMessage.error('网关超时！');
+      ElMessage.error(t('error.504'));
       break;
     case 302:
-      ElMessage.error('登陆失效！');
+      ElMessage.error(t('error.302'));
       break;
     default:
-      ElMessage.error('请求失败！');
+      ElMessage.error(t('error.other'));
   }
 };

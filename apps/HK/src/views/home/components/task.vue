@@ -1,12 +1,12 @@
 <template>
-  <kr-card header="巡检任务统计 (次)" :border="false">
+  <kr-card :header="$t('worktop.title6')" :border="false">
     <template #headerRight>
       <div class="bolck" style="width: 230px">
         <el-date-picker
           v-model="dateValue"
           type="daterange"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
+          :start-placeholder="$t('input.sTime')"
+          :end-placeholder="$t('input.eTime')"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="initData"
@@ -23,7 +23,8 @@ import chart from '../components/chart.vue';
 
 import ChartsConfig from '../config/chart.js';
 import { getTaskStatistics } from '@/api/modules/workstand';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 let energyChartOption = ref({});
 let loading = ref(true);
 
@@ -57,7 +58,7 @@ const initData = async () => {
     };
     yData.push(obj);
   }
-  energyChartOption.value = ChartsConfig.lineOptions(xData, '单位:次', yData);
+  energyChartOption.value = ChartsConfig.lineOptions(xData, t('echarts.unit'), yData);
 };
 
 onMounted(() => {

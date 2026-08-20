@@ -1,8 +1,8 @@
 <template>
-  <kr-card header="消息通知" :border="false" bodyClass="msgCardBody">
+  <kr-card :header="$t('worktop.messagetz')" :border="false" bodyClass="msgCardBody">
     <template #headerRight>
       <el-button type="primary" link @click="getMessageDetail">
-        更多<el-icon style="font-size: 14px"><ArrowRight /></el-icon>
+        {{ $t('tabs.more') }}<el-icon style="font-size: 14px"><ArrowRight /></el-icon>
       </el-button>
     </template>
     <div class="msgCard">

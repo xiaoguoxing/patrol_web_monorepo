@@ -25,7 +25,8 @@ import { IToolbarConfig, IEditorConfig } from '@wangeditor/editor';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
 import { uploadImg, uploadVideo } from '@/api/modules/upload';
 import '@wangeditor/editor/dist/css/style.css';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 // 富文本 DOM 元素
 const editorRef = shallowRef();
 
@@ -52,7 +53,7 @@ const props = withDefaults(defineProps<RichEditorProps>(), {
   },
   editorConfig: () => {
     return {
-      placeholder: '请输入内容...',
+      placeholder: t('inputPlaceholder.placeholderContext'),
       MENU_CONF: {},
     };
   },

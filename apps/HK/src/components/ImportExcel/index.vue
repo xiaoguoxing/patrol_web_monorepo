@@ -1,17 +1,17 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    :title="`批量添加${parameter.title}`"
+    :title="`${$t('exportFile.addAll')}${parameter.title}`"
     :destroy-on-close="true"
     width="580px"
     draggable
     class="padding16"
   >
     <el-form class="drawer-multiColumn-form" label-width="100px">
-      <el-form-item label="模板下载 :">
-        <el-button type="primary" :icon="Download" @click="downloadTemp">点击下载</el-button>
+      <el-form-item :label="`${$t('exportFile.tempDown')} :`">
+        <el-button type="primary" :icon="Download" @click="downloadTemp">{{ $t('exportFile.ClickDown') }}</el-button>
       </el-form-item>
-      <el-form-item label="文件上传 :">
+      <el-form-item :label="`${$t('exportFile.fileUpload')} :`">
         <el-upload
           action="string"
           class="upload"
@@ -27,13 +27,15 @@
           accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         >
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+          <div class="el-upload__text">
+            {{ $t('exportFile.fileMsgTip1') }}<em>{{ $t('exportFile.clickUpload') }}</em>
+          </div>
           <template #tip>
-            <div class="el-upload__tip">请上传 .xls , .xlsx 标准格式文件</div>
+            <div class="el-upload__tip">{{ $t('exportFile.uploadTip') }}</div>
           </template>
         </el-upload>
       </el-form-item>
-      <el-form-item v-if="parameter.coverable" label="数据覆盖 :">
+      <el-form-item v-if="parameter.coverable" :label="`${$t('exportFile.dataArea')} :`">
         <el-switch v-model="isCover" />
       </el-form-item>
     </el-form>
@@ -45,7 +47,8 @@ import { ref } from 'vue';
 import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { Download } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 export interface ExcelParameterProps {
   title: string; // 标题
   coverable: boolean;
@@ -72,7 +75,7 @@ const acceptParams = (params?: any): void => {
 // Excel 导入模板下载
 const downloadTemp = () => {
   if (!parameter.value.tempApi) return;
-  useDownload(parameter.value.tempApi, `${parameter.value.title}模板`);
+  useDownload(parameter.value.tempApi, `${parameter.value.title}${t('messageTip.temp')}`);
 };
 
 // 文件上传
@@ -98,14 +101,14 @@ const beforeExcelUpload = (file: any) => {
   const fileSize = file.size / 1024 / 1024 < 5;
   if (!isExcel)
     ElNotification({
-      title: '温馨提示',
-      message: '上传文件只能是 xls / xlsx 格式！',
+      title: t('messageTip.logoutMsg2'),
+      message: t('exportFile.fileMsgTip2'),
       type: 'warning',
     });
   if (!fileSize)
     ElNotification({
-      title: '温馨提示',
-      message: '上传文件大小不能超过 5MB！',
+      title: t('messageTip.logoutMsg2'),
+      message: t('exportFile.fileMsgTip3'),
       type: 'warning',
     });
   return isExcel && fileSize;
@@ -114,8 +117,8 @@ const beforeExcelUpload = (file: any) => {
 // 文件数超出提示
 const handleExceed = (): void => {
   ElNotification({
-    title: '温馨提示',
-    message: '最多只能上传一个文件！',
+    title: t('messageTip.logoutMsg2'),
+    message: t('exportFile.fileMsgTip4'),
     type: 'warning',
   });
 };
@@ -123,8 +126,10 @@ const handleExceed = (): void => {
 // 上传错误提示
 const excelUploadError = (): void => {
   ElNotification({
-    title: '温馨提示',
-    message: `批量添加${parameter.value.title}失败，请您重新上传！`,
+    title: t('messageTip.logoutMsg2'),
+    message: `${t('exportFile.addAll')}${parameter.value.title}${t('buttonName.error')}，${t(
+      'exportFile.fileMsgTip5'
+    )}！`,
     type: 'error',
   });
 };
@@ -132,8 +137,8 @@ const excelUploadError = (): void => {
 // 上传成功提示
 const excelUploadSuccess = (): void => {
   ElNotification({
-    title: '温馨提示',
-    message: `批量添加${parameter.value.title}成功！`,
+    title: t('messageTip.logoutMsg2'),
+    message: `${t('exportFile.addAll')}${parameter.value.title}${t('buttonName.success')}！`,
     type: 'success',
   });
 };

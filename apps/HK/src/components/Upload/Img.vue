@@ -19,15 +19,15 @@
         <div class="upload-handle" @click.stop>
           <div class="handle-icon" @click="editImg" v-if="!self_disabled">
             <el-icon><Edit /></el-icon>
-            <span>编辑</span>
+            <span>{{ $t('buttonName.edit') }}</span>
           </div>
           <div class="handle-icon" @click="imgViewVisible = true">
             <el-icon><ZoomIn /></el-icon>
-            <span>查看</span>
+            <span>{{ $t('buttonName.detail') }}</span>
           </div>
           <div class="handle-icon" @click="deleteImg" v-if="!self_disabled">
             <el-icon><Delete /></el-icon>
-            <span>删除</span>
+            <span>{{ $t('ui.delete') }}</span>
           </div>
         </div>
       </template>
@@ -53,7 +53,8 @@ import { uploadImg } from '@/api/modules/upload';
 import { generateUUID } from '@/utils/util';
 import { ElNotification, formContextKey, formItemContextKey } from 'element-plus';
 import type { UploadProps, UploadRequestOptions } from 'element-plus';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 type FileTypes =
   | 'image/apng'
   | 'image/bmp'
@@ -152,14 +153,14 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
   const imgType = props.fileType;
   if (!imgType.includes(rawFile.type as FileTypes))
     ElNotification({
-      title: '温馨提示',
-      message: '上传图片不符合所需的格式！',
+      title: t('messageTip.logoutMsg2'),
+      message: t('exportFile.uploadTip2'),
       type: 'warning',
     });
   if (!imgSize)
     ElNotification({
-      title: '温馨提示',
-      message: `上传图片大小不能超过 ${props.fileSize}M！`,
+      title: t('messageTip.logoutMsg2'),
+      message: `${t('exportFile.fileMsgTip6')} ${props.fileSize}M！`,
       type: 'warning',
     });
   return imgType.includes(rawFile.type as FileTypes) && imgSize;
@@ -168,8 +169,8 @@ const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
 // 图片上传成功提示
 const uploadSuccess = () => {
   ElNotification({
-    title: '温馨提示',
-    message: '图片上传成功！',
+    title: t('messageTip.logoutMsg2'),
+    message: t('exportFile.fileMsgTip7'),
     type: 'success',
   });
 };
@@ -177,8 +178,8 @@ const uploadSuccess = () => {
 // 图片上传错误提示
 const uploadError = () => {
   ElNotification({
-    title: '温馨提示',
-    message: '图片上传失败，请您重新上传！',
+    title: t('messageTip.logoutMsg2'),
+    message: t('exportFile.fileMsgTip8'),
     type: 'error',
   });
 };

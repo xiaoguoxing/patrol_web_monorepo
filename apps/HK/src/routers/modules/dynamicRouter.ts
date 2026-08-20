@@ -6,7 +6,10 @@ import { GlobalStore } from '@/stores';
 import { AuthStore } from '@/stores/modules/auth';
 import { notFoundRouter } from '@/routers/modules/staticRouter';
 import { RouteRecordRaw } from 'vue-router';
-
+import I18n from '@/languages/index';
+const t = function (str: string) {
+  return I18n.global.t(str);
+};
 // 引入 views 文件夹下所有 vue 文件
 const modules = import.meta.glob('@/views/**/*.vue');
 
@@ -26,8 +29,8 @@ export const initDynamicRouter = async () => {
     // 2.判断当前用户有没有菜单权限
     if (!authStore.authMenuListGet.length) {
       ElNotification({
-        title: '无权限访问',
-        message: '当前账号无任何菜单权限，请联系系统管理员！',
+        title: t('error.noAuto'),
+        message: t('error.noPr'),
         type: 'warning',
         duration: 3000,
       });

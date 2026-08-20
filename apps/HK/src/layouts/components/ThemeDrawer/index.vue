@@ -25,19 +25,19 @@
       全局主题
     </el-divider>
     <div class="theme-item">
-      <span>主题颜色</span>
+      <span>{{ $t('ui.themeColor') }}</span>
       <el-color-picker v-model="themeConfig.primary" :predefine="colorList" @change="changePrimary" />
     </div>
     <div class="theme-item">
-      <span>暗黑模式</span>
+      <span>{{ $t('ui.themeBlackColor') }}</span>
       <SwitchDark></SwitchDark>
     </div>
     <div class="theme-item">
-      <span>灰色模式</span>
+      <span>{{ $t('ui.themeGreyColor') }}</span>
       <el-switch v-model="themeConfig.isGrey" @change="changeGreyOrWeak($event, 'grey')" />
     </div>
     <div class="theme-item">
-      <span>色弱模式</span>
+      <span>{{ $t('ui.themeEyeLowColor') }}</span>
       <el-switch v-model="themeConfig.isWeak" @change="changeGreyOrWeak($event, 'weak')" />
     </div>
     <br />
@@ -45,30 +45,30 @@
     <!-- 界面设置 -->
     <el-divider class="divider" content-position="center">
       <el-icon><Setting /></el-icon>
-      界面设置
+      {{ $t('ui.layoutSetting') }}
     </el-divider>
     <div class="theme-item">
-      <span>折叠菜单</span>
+      <span>{{ $t('ui.collapseMenu') }}</span>
       <el-switch v-model="themeConfig.isCollapse" />
     </div>
     <div class="theme-item">
-      <span>面包屑</span>
+      <span>{{ $t('ui.breadcrumb') }}</span>
       <el-switch v-model="themeConfig.breadcrumb" />
     </div>
     <div class="theme-item">
-      <span>面包屑图标</span>
+      <span>{{ $t('ui.breadcrumbIcon') }}</span>
       <el-switch v-model="themeConfig.breadcrumbIcon" />
     </div>
     <div class="theme-item">
-      <span>标签栏</span>
+      <span>{{ $t('ui.tabs') }}</span>
       <el-switch v-model="themeConfig.tabs" />
     </div>
     <div class="theme-item">
-      <span>标签栏图标</span>
+      <span>{{ $t('ui.tabsIcon') }}</span>
       <el-switch v-model="themeConfig.tabsIcon" />
     </div>
     <div class="theme-item">
-      <span>页脚</span>
+      <span>{{ $t('ui.footer') }}</span>
       <el-switch v-model="themeConfig.footer" />
     </div>
   </el-drawer>
