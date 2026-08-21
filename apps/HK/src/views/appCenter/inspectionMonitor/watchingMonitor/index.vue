@@ -11,7 +11,7 @@
       v-if="isCollapse"
       class="two-col-page-lf"
       v-dragLine
-      placeholder="请输入您想搜索的设备名称"
+      :placeholder="$t('inputPlaceholder.placeholderEnter2')"
       :data="dataSource"
       label="nodeName"
       :highlightCurrent="false"
@@ -31,7 +31,9 @@
     <div class="two-col-page-rt">
       <div class="watching-title">
         <my-tabs v-model="tabValue" :options="tabOpt" @change="tabsChange"></my-tabs>
-        <el-button @click="toggle" icon="FullScreen">{{ isFullscreen ? '退出全屏' : '全屏' }}</el-button>
+        <el-button @click="toggle" icon="FullScreen">{{
+          isFullscreen ? $t('header.exitFullScreen') : $t('header.fullScreen')
+        }}</el-button>
         <!--        <el-button @click="clearMonitor" :disabled="!monitorLen" icon="Delete">清空</el-button>-->
       </div>
       <div class="watching-container">
@@ -67,7 +69,7 @@
         :data-index="watchingItemIndex"
         :style="{ transform: `translate(${MouseX}px,${MouseY}px)` }"
       >
-        {{ nodeRow?.nodeName }}（{{ watchingItemIndex != undefined ? '松开鼠标' : '请拖拽至👉' }}）
+        {{ nodeRow?.nodeName }}（{{ watchingItemIndex != undefined ? $t('video.playMouse') : $t('video.moveMouse') }}）
       </div>
     </div>
   </kr-card>
@@ -84,6 +86,8 @@ import { treeFirst, treeItem } from '@/api/modules/optCenter/aiPatrolManage/posi
 import collapseBar from '@appCenter/components/collapseBar.vue';
 import { ElMessage } from 'element-plus';
 import { videoNodeType } from '@optCenter/hooks/use-video';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 let route = useRoute();
 let router = useRouter();
 let { nodeType, nodeTypeLabel } = videoNodeType();
@@ -103,11 +107,11 @@ onUnmounted(() => {
 });
 //分屏
 const tabOpt: Tabs[] = [
-  { label: '单一屏', value: 1 },
-  { label: '四分屏', value: 2 },
-  { label: '九分屏', value: 3 },
-  { label: '十六分屏', value: 4 },
-  { label: '三十六分屏', value: 6 },
+  { label: t('video.x1'), value: 1 },
+  { label: t('video.x4'), value: 2 },
+  { label: t('video.x9'), value: 3 },
+  { label: t('video.x16'), value: 4 },
+  { label: t('video.x36'), value: 6 },
 ];
 for (const argument of tabOpt) {
   argument.arrValue = argument.value * argument.value;

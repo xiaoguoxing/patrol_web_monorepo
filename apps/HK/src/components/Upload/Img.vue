@@ -23,7 +23,7 @@
           </div>
           <div class="handle-icon" @click="imgViewVisible = true">
             <el-icon><ZoomIn /></el-icon>
-            <span>{{ $t('buttonName.detail') }}</span>
+            <span>{{ $t('buttonName.check') }}</span>
           </div>
           <div class="handle-icon" @click="deleteImg" v-if="!self_disabled">
             <el-icon><Delete /></el-icon>

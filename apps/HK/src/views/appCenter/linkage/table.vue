@@ -19,7 +19,7 @@
   >
     <!-- 表格操作 -->
     <template #operation="scope">
-      <el-button type="primary" link @click="goDetail(scope.row)">详情</el-button>
+      <el-button type="primary" link @click="goDetail(scope.row)">{{ $t('buttonName.detail') }}</el-button>
     </template>
   </kr-pro-table>
 </template>
@@ -33,7 +33,8 @@ import { getListApi, getStatisticsApi } from '@/api/modules/appCenter/linkage/in
 import type { AILinkageTask } from '@/api/modules/appCenter/linkage/index';
 import Tabs from '@/components/Tabs/index.vue';
 import { useRouter, useRoute } from 'vue-router';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const keepAliveStore = KeepAliveStore();
@@ -41,7 +42,7 @@ const keepAliveStore = KeepAliveStore();
 //联动状态数据字典
 const statusDictlist = [
   ...((await getDict('task_status')) as DefaultDict),
-  { label: '全部', value: 'total', remark: '' },
+  { label: t('worktop.All'), value: 'total', remark: '' },
 ];
 const getTabOptions = async () => {
   let taskNumObj = (await getStatisticsApi()).data;
@@ -78,11 +79,11 @@ const dataCallback = (data: any) => {
 const columns: ColumnProps[] = [
   { type: 'selection', width: 60 },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
 
   {
     prop: 'linkageSignalCode',
-    label: '联动信号编码',
+    label: t('aiInspection.linkageSignalCode'),
     minWidth: 150,
     search: {
       el: 'input',
@@ -93,10 +94,14 @@ const columns: ColumnProps[] = [
             {{
               prepend: () => {
                 return (
-                  <el-select v-model={searchProp.value} placeholder="请选择" style={'width: 140px'}>
-                    <el-option label="联动信号名称" value={'linkageSignalName'} />
-                    <el-option label="联动信号编码" value={'linkageSignalCode'} />
-                    <el-option label="联动点位" value={'cameraName'} />
+                  <el-select
+                    v-model={searchProp.value}
+                    placeholder={t('inputPlaceholder.placeholderSelect')}
+                    style={'width: 140px'}
+                  >
+                    <el-option label={t('aiInspection.linkageSignalName')} value={'linkageSignalName'} />
+                    <el-option label={t('aiInspection.linkageSignalCode')} value={'linkageSignalCode'} />
+                    <el-option label={t('aiInspection.cameraName')} value={'cameraName'} />
                   </el-select>
                 );
               },
@@ -108,30 +113,30 @@ const columns: ColumnProps[] = [
   },
   {
     prop: 'linkageSignalName',
-    label: '联动信号名称',
+    label: t('aiInspection.linkageSignalName'),
     minWidth: 150,
   },
   {
     prop: 'cameraName',
-    label: '联动点位',
+    label: t('aiInspection.cameraName'),
     minWidth: 150,
   },
   {
     prop: 'linkageStatus',
-    label: '联动状态',
+    label: t('aiInspection.linkageStatus'),
     minWidth: 120,
     filters: dictForFilters(statusDictlist),
     enum: statusDictlist,
   },
   {
     prop: 'abnormalNum',
-    label: '异常项数量',
+    label: t('aiInspection.abnormalNum'),
     minWidth: 120,
   },
 
   {
     prop: 'executionTime',
-    label: '执行时间',
+    label: t('aiInspection.executionTime'),
     minWidth: 150,
     isShowInputLabel: true,
     search: {
@@ -144,10 +149,10 @@ const columns: ColumnProps[] = [
   },
   {
     prop: 'linkageSource',
-    label: '联动信号来源',
+    label: t('aiInspection.linkageSource'),
     minWidth: 120,
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 
 // 获取表格数据

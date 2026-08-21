@@ -4,12 +4,12 @@
       <template #header>
         <div>
           <el-icon @click="openDialogChange()" class="mr8 page-back"><Back /></el-icon>
-          <span class="title kr-font-medium">账号与资料</span>
+          <span class="title kr-font-medium">{{ $t('header.zlofuser') }}</span>
         </div>
       </template>
       <div class="infos">
         <div class="info">
-          <div class="info-title">个人信息</div>
+          <div class="info-title">{{ $t('header.personalData') }}</div>
           <div class="info-part">
             <div class="showImg">
               <div class="avatar">
@@ -17,30 +17,32 @@
                 <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
               </div>
               <div class="avatarBtn">
-                <el-button size="small" @click="updateAvatar">修改头像</el-button>
-                <div class="tip"><span>仅支持jpg,jpeg,png格式的图片，不大于100k</span></div>
+                <el-button size="small" @click="updateAvatar">{{ $t('buttonName.updateAvatar') }}</el-button>
+                <div class="tip">
+                  <span>{{ $t('messageTip.avatarTip') }}</span>
+                </div>
               </div>
             </div>
             <!-- </div> -->
             <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="userFormData" label-width="100">
               <el-row class="">
                 <el-col :span="24">
-                  <el-form-item label="用户名" prop="name" label-width="100">
+                  <el-form-item :label="$t('inputPlaceholder.username')" prop="name" label-width="100">
                     <el-input v-model="userFormData.name" disabled></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="账号" prop="account" label-width="100">
+                  <el-form-item :label="$t('input.account')" prop="account" label-width="100">
                     <el-input v-model="userFormData.account" disabled></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="手机号" prop="phone" label-width="100">
+                  <el-form-item :label="$t('input.phone')" prop="phone" label-width="100">
                     <el-input v-model="userFormData.phone" disabled></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="默认组织" prop="defaultOrgId" label-width="100">
+                  <el-form-item :label="$t('input.defaultOrg')" prop="defaultOrgId" label-width="100">
                     <!-- <el-input v-model="userFormData.defaultOrgId" clearable></el-input> -->
                     <el-select v-model="userFormData.defaultOrgId" placeholder="">
                       <el-option v-for="item in zzOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -59,22 +61,22 @@
           </div>
         </div>
         <div class="info">
-          <div class="info-title">修改密码</div>
+          <div class="info-title">{{ $t('header.changePassword') }}</div>
           <div class="info-part">
             <el-form ref="pswFormRef" :rules="rules1" label-suffix=" :" :model="passwdFormData" label-width="100">
               <el-row class="">
                 <el-col :span="24">
-                  <el-form-item label="旧密码" prop="oldPassword" label-width="100">
+                  <el-form-item :label="$t('input.oldPassword')" prop="oldPassword" label-width="100">
                     <el-input v-model="passwdFormData.oldPassword" type="password" show-password></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="新密码" prop="newPassword" label-width="100">
+                  <el-form-item :label="$t('input.newPassword')" prop="newPassword" label-width="100">
                     <el-input v-model="passwdFormData.newPassword" type="password" show-password></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="确认新密码" prop="newPasswordAgin" label-width="100">
+                  <el-form-item :label="$t('input.newPasswordAgin')" prop="newPasswordAgin" label-width="100">
                     <el-input v-model="passwdFormData.newPasswordAgin" type="password" show-password></el-input>
                   </el-form-item>
                 </el-col>
@@ -85,8 +87,8 @@
       </div>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="openDialogChange()">取消</el-button>
-          <el-button type="primary" @click="confirm">确定并保存</el-button>
+          <el-button @click="openDialogChange()">{{ $t('ui.cancel') }}</el-button>
+          <el-button type="primary" @click="confirm">{{ $t('buttonName.YesAndSave') }}</el-button>
         </div>
       </template>
     </kr-card>
@@ -120,6 +122,8 @@ import { resetRouter } from '@/routers/index';
 import { LOGIN_URL } from '@/config/config';
 import { usePreview } from '@/hooks/usePreview';
 import { useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const globalStore = GlobalStore();
 const router = useRouter();
 
@@ -146,7 +150,7 @@ const rules1 = {
   oldPassword: [
     {
       required: true,
-      message: '请输入旧密码',
+      message: t('inputPlaceholder.placeholderBase') + t('input.oldPassword'),
       trigger: 'blur',
       validator: async (rule: any, value: any, callback: any) => {
         await checkPassword(rule, value, callback);
@@ -156,13 +160,13 @@ const rules1 = {
   newPassword: [
     {
       required: true,
-      message: '密码必须是包含字母、数字、特殊符号(包含下划线)的8位以上组合',
+      message: t('inputPlaceholder.placeholderPwd'),
       trigger: 'blur',
       validator: (rule: any, value: any, callback: any) => {
         // checkPassword(rule, value, callback);
         const mailReg = /^(?![A-Za-z0-9]+$)(?![A-Za-z\W]+$)[a-zA-Z0-9_\W]{8,}$/;
         if (!mailReg.test(value) && value) {
-          return callback(new Error('密码必须是包含字母、数字、特殊符号(包含下划线)的8位以上组合'));
+          return callback(new Error(t('inputPlaceholder.placeholderPwd')));
         } else {
           callback();
         }
@@ -172,7 +176,7 @@ const rules1 = {
   newPasswordAgin: [
     {
       required: true,
-      message: '输入有误',
+      message: t('inputPlaceholder.placeholderError'),
       trigger: 'blur',
       validator: (rule: any, value: any, callback: any) => {
         checkNewPassword(rule, value, callback);
@@ -231,7 +235,7 @@ const autoUploadFile = (e: any) => {
   const extOK = /\.(jpe?g|png)$/i.test(file.name);
 
   if (!allowed.includes(file.type) || !extOK) {
-    alert('只能上传 jpg / jpeg / png 格式的图片！');
+    alert(t('exportFile.fileMsgTip9'));
     e.target.value = ''; // 清空
   } else {
     photoFile.value = uploadFile.value.files[0];
@@ -283,7 +287,7 @@ const confirm = async () => {
         logOut();
       }
     } else {
-      ElMessage.error('请完成修改密码部分');
+      ElMessage.error(t('messageTip.pleasEditPwd'));
     }
   }
   if (res.code == 200) {
@@ -304,7 +308,7 @@ const logOut = async function () {
   resetRouter();
   // 4.重定向到登陆页
   router.replace(LOGIN_URL);
-  ElMessage.success('请重新登录');
+  ElMessage.success(t('messageTip.pleasEditRelogin'));
 };
 /**
  * 用于账号密码验证时对密码的加密
@@ -323,7 +327,7 @@ const encryptPassword = function (val: any) {
 };
 //检验旧密码
 const checkPassword = async (rule: any, val: any, callback: any) => {
-  if (!val) return callback(new Error('请输入正确的密码'));
+  if (!val) return callback(new Error(t('inputPlaceholder.placeholderBingoPwd')));
   let params = {
     account: userFormData.value.account,
     password: '',
@@ -334,7 +338,7 @@ const checkPassword = async (rule: any, val: any, callback: any) => {
       callback();
     })
     .catch((e) => {
-      return callback(new Error('请输入正确的密码'));
+      return callback(new Error(t('inputPlaceholder.placeholderBingoPwd')));
     });
 };
 //校验新密码与确认密码是否一致
@@ -342,7 +346,7 @@ const checkNewPassword = (rule: any, val: any, callback: any) => {
   let newPassword = passwdFormData.value.newPassword;
   if (newPassword != val) {
     //debugger
-    return callback(new Error('密码前后不一致'));
+    return callback(new Error(t('inputPlaceholder.placeholderBfPwd')));
   } else {
     callback();
   }

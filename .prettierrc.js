@@ -5,4 +5,5 @@ module.exports = {
   printWidth: 120,
   // 使用单引号(true单双引号，false双引号)
   singleQuote: true,
+  endOfLine: 'crlf',
 };

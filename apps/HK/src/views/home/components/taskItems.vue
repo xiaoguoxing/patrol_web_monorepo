@@ -2,27 +2,27 @@
   <kr-card header="" :border="false" bodyClass="taskCardBody">
     <template #header>
       <div class="left-title flx-align-center">
-        <div class="title kr-font-medium">每日任务</div>
+        <div class="title kr-font-medium">{{ $t('worktop.title7') }}</div>
         <div class="itemData flx-align-center ml20">
           <div class="label">
-            已结束：<span class="c c1 kr-font-medium">{{ titleData.finished }}</span>
+            {{ $t('worktop.finished') }}：<span class="c c1 kr-font-medium">{{ titleData.finished }}</span>
           </div>
           <div class="label">
-            执行中：<span class="c c2 kr-font-medium">{{ titleData.during }}</span>
+            {{ $t('worktop.during') }}：<span class="c c2 kr-font-medium">{{ titleData.during }}</span>
           </div>
           <div class="label">
-            未执行：<span class="c c2 kr-font-medium">{{ titleData.no_execute }}</span>
+            {{ $t('worktop.no_execute') }}：<span class="c c2 kr-font-medium">{{ titleData.no_execute }}</span>
           </div>
         </div>
       </div>
 
       <div class="left-time flx-align-center">
-        <el-button @click="backNow" :disabled="time === dateValue">返回今天</el-button>
+        <el-button @click="backNow" :disabled="time === dateValue">{{ $t('buttonName.backNow') }}</el-button>
         <el-date-picker
           v-model="dateValue"
           type="date"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
+          :start-placeholder="$t('input.sTime')"
+          :end-placeholder="$t('input.eTime')"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="initData"

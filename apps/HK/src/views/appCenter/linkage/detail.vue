@@ -5,7 +5,7 @@
         <div>
           <el-icon @click="goBack" class="mr8 page-back"><Back /></el-icon>
 
-          <span class="title kr-font-medium">智能联动详情</span>
+          <span class="title kr-font-medium">{{ $t('aiInspection.detail2') }}</span>
         </div>
       </template>
       <div class="flex-1 two-col-page">
@@ -27,7 +27,7 @@
             </el-progress>
             <div class="flx-justify-between mt24 attr-box">
               <div>
-                <span class="attr-label">任务状态：</span>
+                <span class="attr-label">{{ $t('aiInspection.taskStatus') }}：</span>
                 <span class="attr-value" :class="task.linkageStatus == 'during' ? 'attr-value-primary' : ''">{{
                   task.linkageStatusName || '-'
                 }}</span>

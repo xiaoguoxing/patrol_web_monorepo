@@ -2,7 +2,7 @@
   <div class="flex-1 two-col-page">
     <div class="two-col-page-lf flex-column">
       <div class="mb20 flx-justify-between">
-        <span class="list-title">执行中联动列表</span>
+        <span class="list-title">{{ $t('aiInspection.listTitle2') }}</span>
       </div>
       <el-scrollbar class="flex-1-column list-scroll">
         <el-collapse v-if="dataSource?.length > 0" accordion :model-value="activeTask.id" @change="onChange">
@@ -29,7 +29,7 @@
             </template>
           </el-collapse-item>
         </el-collapse>
-        <div v-else class="list-empty">暂无数据</div>
+        <div v-else class="list-empty">{{ $t('table.noData') }}</div>
       </el-scrollbar>
     </div>
     <div class="two-col-page-rt flex-1-column">
@@ -39,7 +39,7 @@
     <kr-public-dialog
       class="picVidoDialog"
       v-model="show"
-      title="巡检项结果详情"
+      :title="$t('aiInspection.dialogTitle')"
       :singleClose="true"
       width="942"
       @doClose="show = false"

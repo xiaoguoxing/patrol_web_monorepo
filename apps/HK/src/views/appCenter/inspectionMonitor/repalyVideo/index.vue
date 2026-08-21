@@ -10,7 +10,7 @@
       v-if="isCollapse"
       class="two-col-page-lf"
       v-dragLine
-      placeholder="请输入您想搜索的设备名称"
+      :placeholder="$t('inputPlaceholder.placeholderEnter2')"
       :data="dataSource"
       label="nodeName"
       :highlightCurrent="true"

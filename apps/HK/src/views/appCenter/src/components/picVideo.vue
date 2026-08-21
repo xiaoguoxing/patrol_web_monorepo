@@ -21,7 +21,7 @@
         :show-controls="false"
         :business-id="activeItem.id!"
       />
-      <el-empty class="flex-1 video-empty" v-else description="目前没有录像回放" />
+      <el-empty class="flex-1 video-empty" v-else :description="$t('aiInspection.videoEmpty')" />
     </template>
   </div>
 </template>
@@ -30,16 +30,17 @@ import { ref, reactive, watch } from 'vue';
 import Tabs from '@/components/Tabs/index.vue';
 import PicRes from './picRes.vue';
 import VideoControls from '@optCenter/videoRealTime.vue';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   activeItem: { [key: string]: any };
 }
 // 接受父组件参数，配置默认值
 const props = withDefaults(defineProps<Props>(), {});
 const tabsOption = [
-  { label: '巡检抓图', value: 'picture' },
-  { label: '实时视频', value: 'watching' },
-  { label: '录像回放', value: 'video' },
+  { label: t('aiInspection.picture'), value: 'picture' },
+  { label: t('aiInspection.watching'), value: 'watching' },
+  { label: t('aiInspection.playBackVideo'), value: 'video' },
 ];
 
 const activeTab = ref(tabsOption[0]!.value);

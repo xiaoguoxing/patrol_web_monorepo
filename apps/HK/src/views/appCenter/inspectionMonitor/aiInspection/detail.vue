@@ -5,7 +5,7 @@
         <div>
           <el-icon @click="goBack" class="mr8 page-back"><Back /></el-icon>
 
-          <span class="title kr-font-medium">查看巡检详情</span>
+          <span class="title kr-font-medium">{{ $t('aiInspection.detail') }}</span>
         </div>
       </template>
       <div class="flex-1 two-col-page">
@@ -26,23 +26,23 @@
             <div class="flx-justify-between mt24 attr-box">
               <div>
                 <div class="mb16">
-                  <span class="attr-label">任务状态：</span>
+                  <span class="attr-label">{{ $t('aiInspection.taskStatus') }}：</span>
                   <span class="attr-value" :class="task.taskStatus == 'during' ? 'attr-value-primary' : ''">{{
                     task.taskStatusName || '-'
                   }}</span>
                 </div>
                 <div>
-                  <span class="attr-label">任务类型：</span>
+                  <span class="attr-label">{{ $t('aiInspection.taskTypeName') }}：</span>
                   <span class="attr-value">{{ task.taskTypeName || '-' }}</span>
                 </div>
               </div>
               <div>
                 <div class="mb16">
-                  <span class="attr-label">任务执行类型：</span>
+                  <span class="attr-label">{{ $t('aiInspection.executeTypeName') }}：</span>
                   <span class="attr-value">{{ task.executeTypeName || '-' }}</span>
                 </div>
                 <div>
-                  <span class="attr-label">任务开始时间：</span>
+                  <span class="attr-label">{{ $t('aiInspection.taskStartTime') }}：</span>
                   <span class="attr-value">{{ task.taskStartTime || '-' }}</span>
                 </div>
               </div>

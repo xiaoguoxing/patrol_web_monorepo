@@ -1,9 +1,9 @@
 <template>
   <template v-if="activeItem.gatherPic">
     <el-image class="flex-1" :src="url" fit="fill" />
-    <div class="mt20 result-title">智能巡检结果:</div>
+    <div class="mt20 result-title">{{ $t('aiInspection.inspectionRes') }}:</div>
     <div class="mt10">
-      <span class="result-label mr12">巡检结论:</span>
+      <span class="result-label mr12">{{ $t('aiInspection.inspectionResult') }}:</span>
       <span
         class="result-result mr28"
         :class="
@@ -15,7 +15,7 @@
         "
         >{{ activeItem.inspectionResult || '--' }}</span
       >
-      <span class="result-label mr12">识别结果:</span>
+      <span class="result-label mr12">{{ $t('aiInspection.recognitionResult') }}:</span>
       <span
         class="result-result mr28"
         :class="
@@ -27,11 +27,11 @@
         "
         >{{ activeItem.recognitionResult || '--' }}</span
       >
-      <span class="result-label mr12">巡检时间:</span>
+      <span class="result-label mr12">{{ $t('aiInspection.gatherTime') }}:</span>
       <span class="result-time">{{ gatherTime }}</span>
     </div>
   </template>
-  <el-empty class="flex-1 video-empty" v-else description="目前没有任何预览图" />
+  <el-empty class="flex-1 video-empty" v-else :description="$t('aiInspection.ImgEmpty')" />
 </template>
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue';

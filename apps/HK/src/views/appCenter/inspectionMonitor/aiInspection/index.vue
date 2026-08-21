@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1 app-inspection">
-    <kr-card class="flex-1" header="智能巡检" header-border>
+    <kr-card class="flex-1" :header="cardTitle" header-border>
       <template #headerRight>
         <Switch v-model="listType" />
       </template>
@@ -17,7 +17,7 @@
   </div>
 </template>
 <script setup lang="ts" name="aiInspection">
-import { ref, reactive, watch, onActivated, onDeactivated, onMounted } from 'vue';
+import { ref, reactive, watch, onActivated, onDeactivated, onMounted, ComputedRef, computed } from 'vue';
 import { KeepAliveStore } from '@/stores/modules/keepAlive';
 import Table from './table.vue';
 import TaskList from './list.vue';
@@ -26,6 +26,7 @@ import '@appCenter/styles/inspection.scss';
 import { useRoute } from 'vue-router';
 const keepAliveStore = KeepAliveStore();
 const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 //切换列表形式
 enum ListType {
   Grid = 1,

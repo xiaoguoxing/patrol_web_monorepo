@@ -19,7 +19,7 @@
   >
     <!-- 表格操作 -->
     <template #operation="scope">
-      <el-button type="primary" link @click="goDetail(scope.row)">详情</el-button>
+      <el-button type="primary" link @click="goDetail(scope.row)">{{ $t('buttonName.detail') }}</el-button>
     </template>
   </kr-pro-table>
 </template>
@@ -34,13 +34,15 @@ import { getAllListApi as getTaskTypeList } from '@/api/modules/optCenter/inspec
 
 import Tabs from '@/components/Tabs/index.vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const keepAliveStore = KeepAliveStore();
 
 //任务状态数据字典
 // const taskNumObj = (await getStatisticsApi()).data;
-const statusDictlist = [...((await getDict('task_status')) as DefaultDict), { label: '全部', value: 'all' }];
+const statusDictlist = [...((await getDict('task_status')) as DefaultDict), { label: t('worktop.All'), value: 'all' }];
 const getTabOptions = async () => {
   let taskNumObj = (await getStatisticsApi()).data;
   return statusDictlist.map((item) => {
@@ -82,11 +84,11 @@ const dataCallback = (data: any) => {
 const columns: ColumnProps[] = [
   { type: 'selection', width: 60 },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
 
   {
     prop: 'inspectionTaskName',
-    label: '任务名称',
+    label: t('aiInspection.inspectionTaskName'),
     minWidth: 150,
     search: {
       el: 'input',
@@ -97,10 +99,14 @@ const columns: ColumnProps[] = [
             {{
               prepend: () => {
                 return (
-                  <el-select v-model={searchProp.value} placeholder="请选择" style={'width: 140px'}>
-                    <el-option label="巡检任务名称" value={'taskName'} />
-                    <el-option label="巡检区域" value={'areaName'} />
-                    <el-option label="巡检对象名称" value={'objectName'} />
+                  <el-select
+                    v-model={searchProp.value}
+                    placeholder={t('inputPlaceholder.placeholderSelect')}
+                    style={'width: 140px'}
+                  >
+                    <el-option label={t('aiInspection.taskName')} value={'taskName'} />
+                    <el-option label={t('aiInspection.areaName')} value={'areaName'} />
+                    <el-option label={t('aiInspection.objectName')} value={'objectName'} />
                   </el-select>
                 );
               },
@@ -112,36 +118,36 @@ const columns: ColumnProps[] = [
   },
   {
     prop: 'taskType', //TODO:该属性名称未知，问后端
-    label: '任务类型',
+    label: t('aiInspection.taskTypeName'),
     minWidth: 120,
     filters: dictForFilters(taskTypeList),
     enum: taskTypeList,
   },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     minWidth: 150,
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     minWidth: 120,
   },
   {
     prop: 'itemNum',
-    label: '巡检项数量',
+    label: t('aiInspection.itemNum'),
     minWidth: 100,
   },
   {
     prop: 'executeType',
-    label: '任务执行类型',
+    label: t('aiInspection.executeTypeName'),
     minWidth: 120,
     filters: dictForFilters(taskExecuteTypeDict),
     enum: taskExecuteTypeDict,
   },
   {
     prop: 'taskStartTime',
-    label: '任务开始时间',
+    label: t('aiInspection.taskStartTime'),
     minWidth: 150,
     isShowInputLabel: true,
     search: {
@@ -152,7 +158,7 @@ const columns: ColumnProps[] = [
       },
     },
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 
 // 获取表格数据

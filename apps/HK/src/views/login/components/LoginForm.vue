@@ -1,14 +1,19 @@
 <template>
   <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" size="large">
     <el-form-item prop="account">
-      <el-input v-model="loginForm.account" placeholder="用户名">
+      <el-input v-model="loginForm.account" :placeholder="$t('inputPlaceholder.username')">
         <template #prefix>
           <el-icon class="el-input__icon"><user /></el-icon>
         </template>
       </el-input>
     </el-form-item>
     <el-form-item prop="password">
-      <el-input type="password" v-model="loginForm.password" placeholder="密码" autocomplete="new-password">
+      <el-input
+        type="password"
+        v-model="loginForm.password"
+        :placeholder="$t('inputPlaceholder.password')"
+        autocomplete="new-password"
+      >
         <template #prefix>
           <el-icon class="el-input__icon"><lock /></el-icon>
         </template>
@@ -16,9 +21,9 @@
     </el-form-item>
   </el-form>
   <div class="login-btn">
-    <el-button :icon="CircleClose" round @click="resetForm(loginFormRef)" size="large">重置</el-button>
+    <el-button :icon="CircleClose" round @click="resetForm(loginFormRef)" size="large">{{ $t('ui.reset') }}</el-button>
     <el-button :icon="UserFilled" round @click="login(loginFormRef)" size="large" type="primary" :loading="loading">
-      登录
+      {{ $t('buttonName.login') }}
     </el-button>
   </div>
 </template>
@@ -37,7 +42,8 @@ import { CircleClose, UserFilled } from '@element-plus/icons-vue';
 import type { ElForm } from 'element-plus';
 // tsconfig disabled
 import JSEncrypt from 'jsencrypt/bin/jsencrypt';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 // import md5 from 'js-md5';
 const router = useRouter();
 const tabsStore = TabsStore();
@@ -46,8 +52,20 @@ const tabsStore = TabsStore();
 type FormInstance = InstanceType<typeof ElForm>;
 const loginFormRef = ref<FormInstance>();
 const loginRules = reactive({
-  account: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  account: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.username'),
+      trigger: 'blur',
+    },
+  ],
+  password: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.password'),
+      trigger: 'blur',
+    },
+  ],
 });
 
 const loading = ref(false);
@@ -77,7 +95,7 @@ const login = (formEl: FormInstance | undefined) => {
       router.push(HOME_URL);
       ElNotification({
         title: getTimeState(),
-        message: '欢迎登录 智能巡检',
+        message: t('home.welcome') + t('home.sysName'),
         type: 'success',
         duration: 3000,
       });
