@@ -40,7 +40,9 @@ const orgList = (await orgTree()).data;
 
 <template>
   <div>
-    <span class="kr-font-medium" style="font-size: 16px" :class="!checkListCode ? '' : 'checkColor'">所属组织</span>
+    <span class="kr-font-medium" style="font-size: 16px" :class="!checkListCode ? '' : 'checkColor'">{{
+      $t('common.orgName')
+    }}</span>
     <el-popover
       ref="orgPopover"
       placement="bottom"
@@ -78,8 +80,8 @@ const orgList = (await orgTree()).data;
             </el-scrollbar>
           </div>
           <div class="orgBtn el-table-filter__bottom">
-            <el-button link :disabled="!checkListCode" @click="searchOrg">筛选</el-button>
-            <el-button link @click="resetOrgData">重置</el-button>
+            <el-button link :disabled="!checkListCode" @click="searchOrg">{{ $t('buttonName.searchOrg') }}</el-button>
+            <el-button link @click="resetOrgData">{{ $t('ui.reset') }}</el-button>
           </div>
         </div>
       </template>

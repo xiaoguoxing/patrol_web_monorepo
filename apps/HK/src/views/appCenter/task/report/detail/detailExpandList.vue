@@ -6,6 +6,8 @@ import { useTimeoutFn } from '@vueuse/core';
 import { useRouter } from 'vue-router';
 import { GlobalStore } from '@/stores';
 import { cameraInTask } from '@/api/modules/camera';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const node_env = import.meta.env.VITE_USER_NODE_ENV;
 const globalStore = GlobalStore();
 interface Props {
@@ -33,32 +35,32 @@ const proTableSubRef = ref();
 const urlArr = useRemoveURLObject();
 const resColumns = [
   { type: 'expand', label: '', width: 1 },
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
   },
   {
     prop: 'objectName1',
-    label: '巡检结果',
+    label: t('aiInspection.inspectionRes'),
   },
   {
     prop: 'conclusion',
-    label: '巡检结论',
+    label: t('aiInspection.inspectionResult'),
   },
 ];
 const resColumnsSub = [
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
   },
   {
     prop: 'recognitionResult',
-    label: '识别结果',
+    label: t('aiInspection.recognitionResult'),
     render(scope: any) {
       // scadaResult
       return (
@@ -67,7 +69,7 @@ const resColumnsSub = [
           {scope.row?.isCheck ? (
             <el-tooltip
               effect="dark"
-              content={`修正前：${scope.row?.recognitionResultBeforeCheck}`}
+              content={`${t('task.beforeValue')}：${scope.row?.recognitionResultBeforeCheck}`}
               placement="top-start"
             >
               <el-icon class="box-item" size="18">
@@ -84,7 +86,7 @@ const resColumnsSub = [
   },
   {
     prop: 'scadaResult',
-    label: 'SCADA识别结果',
+    label: t('alarm.scadaResult'),
     render(scope: any) {
       // scadaResult
       return (
@@ -96,7 +98,7 @@ const resColumnsSub = [
     },
   },
   ...props.column,
-  { prop: 'operation', align: 'right', label: '操作', width: 120 },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 120 },
 ];
 let subList = ref<any[]>([]);
 let subListId = ref<any[]>([]);
@@ -208,15 +210,15 @@ async function getCamera(itemId: string) {
     <template #objectName1="{ row }">
       <div class="badgeItems flx-align-center">
         <div class="badgeItem">
-          <div class="badgeLabel">告警:</div>
+          <div class="badgeLabel">{{ $t('task.badgeItem1') }}:</div>
           <div class="badgeValue" :class="row.abnormalNum ? 'text1' : 'defaultText'">{{ row.abnormalNum }}</div>
         </div>
         <div class="badgeItem">
-          <div class="badgeLabel">正常:</div>
+          <div class="badgeLabel">{{ $t('task.badgeItem2') }}:</div>
           <div class="badgeValue" :class="row.normalNum ? 'text2' : 'defaultText'">{{ row.normalNum }}</div>
         </div>
         <div class="badgeItem">
-          <div class="badgeLabel">异常:</div>
+          <div class="badgeLabel">{{ $t('task.badgeItem3') }}:</div>
           <div class="badgeValue" :class="row.noDoneNum ? 'text3' : 'defaultText'">{{ row.noDoneNum }}</div>
         </div>
       </div>
@@ -250,19 +252,19 @@ async function getCamera(itemId: string) {
               v-if="showOperation"
               v-auth="'falsealarm'"
               :disabled="syncData"
-              :title="syncData ? '同步的数据不支持此操作' : ''"
+              :title="syncData ? $t('buttonName.syncData') : ''"
               link
               @click="open(row)"
-              >复核</el-button
+              >{{ $t('task.Fh') }}</el-button
             >
             <el-button
               type="primary"
               v-if="showOperation"
               :disabled="syncData"
-              :title="syncData ? '同步的数据不支持此操作' : ''"
+              :title="syncData ? $t('buttonName.syncData') : ''"
               link
               @click="goPath(row)"
-              >跳转</el-button
+              >{{ $t('task.openWind') }}</el-button
             >
           </template>
         </kr-pro-table>

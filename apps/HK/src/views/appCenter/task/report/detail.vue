@@ -7,7 +7,8 @@ import type { ColumnProps } from '@patrol/ui';
 import { getReportDetailApi, ReportListRows, PageType, getReportCheckApi } from '@/api/modules/appCenter/task/report';
 import { ElMessage } from 'element-plus';
 import { Clock } from '@element-plus/icons-vue';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface props {
   id: string;
   pageType: PageType;
@@ -41,23 +42,23 @@ let formData = ref<ReportListRows>({
 type FormProps = { label: string; prop: keyof ReportListRows; format?: (val: string, obj: ReportListRows) => any }[];
 
 let formProps: FormProps = [
-  { label: '任务名称：', prop: 'inspectionTaskName' },
+  { label: `${t('aiInspection.inspectionTaskName')}：`, prop: 'inspectionTaskName' },
   {
-    label: '任务类型：',
+    label: `${t('aiInspection.taskTypeName')}：`,
     prop: 'taskTypeName',
   },
-  { label: '所属组织：', prop: 'orgName' },
+  { label: `${t('common.orgName')}：`, prop: 'orgName' },
   {
-    label: '任务状态：',
+    label: `${t('aiInspection.taskStatus')}：`,
     prop: 'taskStatus',
   },
   {
-    label: '任务执行时长：',
+    label: `${t('task.taskUseTime')}：`,
     prop: 'taskUseTime',
-    format: (val) => ((val as unknown as number) / 60).toFixed(2) + '分钟',
+    format: (val) => ((val as unknown as number) / 60).toFixed(2) + t('common.minute'),
   },
-  { label: '任务开始时间：', prop: 'taskStartTime' },
-  { label: '任务结束时间：', prop: 'taskEndTime' },
+  { label: `${t('aiInspection.taskStartTime')}：`, prop: 'taskStartTime' },
+  { label: `${t('aiInspection.taskEndTime')}：`, prop: 'taskEndTime' },
   /*  { label: '巡检方式：', prop: 'inspectionWay' },
   { label: '任务执行类型：', prop: 'executeType' },*/
 ];
@@ -65,7 +66,7 @@ let formProps: FormProps = [
 const resColumnBase: ColumnProps[] = [
   {
     prop: 'gatherPic',
-    label: '采集信息',
+    label: t('task.gatherPic'),
     render(scope) {
       return (
         <div>
@@ -90,11 +91,11 @@ const resColumnBase: ColumnProps[] = [
   },
   {
     prop: 'gatherTime',
-    label: '采集时间',
+    label: t('task.gatherTime'),
   },
   {
     prop: 'inspectionConclusion',
-    label: '巡检结论',
+    label: t('aiInspection.inspectionResult'),
     render(scope: any) {
       let obj = props.inspection_conclusion.find((i) => i.value === scope.row.inspectionConclusion);
       let obj2 = props.inspection_conclusion.find((i) => i.value === scope.row.inspectionConclusionBeforeCheck);
@@ -102,7 +103,7 @@ const resColumnBase: ColumnProps[] = [
         <div class="recognitionResult">
           <span style="color:#666666">{obj?.label || '--'}</span>
           {scope.row?.isCheck ? (
-            <el-tooltip effect="dark" content={`修正前：${obj2?.label}`} placement="top-start">
+            <el-tooltip effect="dark" content={`${t('task.beforeValue')}：${obj2?.label}`} placement="top-start">
               <el-icon class="box-item" size="18">
                 <Clock />
               </el-icon>
@@ -119,7 +120,7 @@ const resColumnBase: ColumnProps[] = [
 const resColumns1: ColumnProps[] = [
   {
     prop: 'alarmRule',
-    label: '告警规则',
+    label: t('alarm.alarmRules'),
   },
   ...resColumnBase,
 ];
@@ -180,7 +181,7 @@ defineExpose({
 
 <template>
   <div class="detailPage">
-    <div class="detail-title kr-font-medium" style="">任务信息</div>
+    <div class="detail-title kr-font-medium" style="">{{ $t('task.taskInfo') }}</div>
     <div class="detail-description">
       <div class="detail-description-items" :key="item.prop" v-for="item in formProps">
         <div class="detail-description-label">{{ item.label }}</div>
@@ -189,38 +190,38 @@ defineExpose({
         </div>
       </div>
     </div>
-    <div class="detail-title kr-font-medium">巡查结果</div>
+    <div class="detail-title kr-font-medium">{{ $t('task.taskResult') }}</div>
     <div class="detail-card">
       <div class="detail-card-items">
         <img class="detail-card-item-img" src="@/assets/images/taskDetail/task_detail1.png" alt="巡检项总数量 (个)" />
         <div class="detail-card-item-info">
-          <div class="detail-card-item-info-label">巡检项总数量 (个)</div>
+          <div class="detail-card-item-info-label">{{ $t('task.taskResult1') }}</div>
           <div class="detail-card-item-info-text type1">{{ formData.itemNum }}</div>
         </div>
       </div>
       <div class="detail-card-items">
         <img class="detail-card-item-img" src="@/assets/images/taskDetail/task_detail2.png" alt="告警项数量 (个)" />
         <div class="detail-card-item-info">
-          <div class="detail-card-item-info-label">告警项数量 (个)</div>
+          <div class="detail-card-item-info-label">{{ $t('task.taskResult2') }}</div>
           <div class="detail-card-item-info-text type2">{{ formData.abnormalNum ?? '' }}</div>
         </div>
       </div>
       <div class="detail-card-items">
         <img class="detail-card-item-img" src="@/assets/images/taskDetail/task_detail3.png" alt="正常项数量 (个)" />
         <div class="detail-card-item-info">
-          <div class="detail-card-item-info-label">正常项数量 (个)</div>
+          <div class="detail-card-item-info-label">{{ $t('task.taskResult3') }}</div>
           <div class="detail-card-item-info-text type3">{{ formData.normalNum }}</div>
         </div>
       </div>
       <div class="detail-card-items">
         <img class="detail-card-item-img" src="@/assets/images/taskDetail/task_detail4.png" alt="异常巡检项数量 (个)" />
         <div class="detail-card-item-info">
-          <div class="detail-card-item-info-label">异常巡检项数量 (个)</div>
+          <div class="detail-card-item-info-label">{{ $t('task.taskResult4') }}</div>
           <div class="detail-card-item-info-text type4">{{ formData.noDoneNum }}</div>
         </div>
       </div>
     </div>
-    <div class="detail-sub-title"><span class="Rect">◆</span>告警项明细</div>
+    <div class="detail-sub-title"><span class="Rect">◆</span>{{ $t('task.taskDetail') }}</div>
     <div class="detail-table">
       <detailList
         :objectList="objectList1"
@@ -231,7 +232,7 @@ defineExpose({
         @setDetail="setDetail"
       ></detailList>
     </div>
-    <div class="detail-sub-title"><span class="Rect">◆</span>巡检对象明细</div>
+    <div class="detail-sub-title"><span class="Rect">◆</span>{{ $t('task.taskDetail1') }}</div>
     <div class="detail-table">
       <detailExpandList
         :objectList="objectList2"

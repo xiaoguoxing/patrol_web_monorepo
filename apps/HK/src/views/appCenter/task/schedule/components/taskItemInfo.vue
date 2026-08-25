@@ -17,7 +17,7 @@ function gotoOther(item: TaskDetail) {
     <div class="div-title" :class="{ 'div-end-title': itemDate.taskStatus == 'finished' }" @click="gotoOther(itemDate)">
       <div class="title-1">
         <span>{{ itemDate.taskStartTime }}</span
-        ><span>状态：{{ itemDate.taskStatusName }}</span>
+        ><span>{{ $t('table.status') }}：{{ itemDate.taskStatusName }}</span>
       </div>
       <div class="title-2">
         <span> {{ itemDate.inspectionTaskName?.split(' ')[1] }}</span

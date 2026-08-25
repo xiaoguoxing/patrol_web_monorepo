@@ -21,10 +21,10 @@
             </template>
           </div>
           <div class="day-more" v-if="item.isCurM && item.nums > 3" @click="showDateAll(item, index)">
-            <span>还有{{ item.nums - 3 }}项任务</span>
+            <span>{{ $t('task.hy') }}{{ item.nums - 3 }}{{ $t('task.itemTasks') }}</span>
             <el-icon class="more-icon" :ref="(el:any) => el?(dayMoreAllRef[index] = el):''"><ArrowDown /></el-icon>
           </div>
-          <div class="day-none" v-if="!item.isCurM || !item.nums">暂无任务</div>
+          <div class="day-none" v-if="!item.isCurM || !item.nums">{{ $t('task.NoTasks') }}</div>
           <div class="day-more" v-if="!item.isCurM || item.nums <= 3"></div>
         </div>
       </el-scrollbar>
@@ -43,7 +43,7 @@
     >
       <template #default>
         <div class="list-all" v-click-outside="hideDateAll">
-          <div class="list-title">全部任务</div>
+          <div class="list-title">{{ $t('task.AllTasks') }}</div>
           <div class="list-content">
             <template v-for="(item1, index1) in dateList[Number(dataAll)]" :key="index1">
               <taskInfoPopover
@@ -95,7 +95,8 @@ import { useRouter } from 'vue-router';
 import { ClickOutside as vClickOutside } from 'element-plus';
 import taskInfoPopover from './taskPopover.vue';
 import taskItemInfo from './taskItemInfo.vue';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 defineOptions({
   name: 'calendar',
 });
@@ -121,7 +122,15 @@ let { year: nowYear, month: nowMonth } = getToday();
 onBeforeMount(() => {
   dateDataChange(nowYear, nowMonth);
 });
-const weekText = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const weekText = [
+  t('common.z7'),
+  t('common.z1'),
+  t('common.z2'),
+  t('common.z3'),
+  t('common.z4'),
+  t('common.z5'),
+  t('common.z6'),
+];
 let positionTop = ref(0);
 let dates = ref<any[]>([]);
 watch(

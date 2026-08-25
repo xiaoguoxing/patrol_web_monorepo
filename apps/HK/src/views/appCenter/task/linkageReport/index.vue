@@ -7,7 +7,7 @@
         </el-icon>
         <span class="title kr-font-medium">{{ cardTitle }}</span>
       </div>
-      <el-button v-if="pageType === 'detail'" id="Box" @click="exportFile">导出报告</el-button>
+      <el-button v-if="pageType === 'detail'" id="Box" @click="exportFile">{{ $t('task.exportReport') }}</el-button>
     </template>
     <div v-show="pageType === 'list'" class="flex-1">
       <kr-pro-table
@@ -28,7 +28,7 @@
       >
         <!-- 表格操作 -->
         <template #operation="{ row }">
-          <el-button type="primary" link @click="toDetailPage('detail', row)">详情</el-button>
+          <el-button type="primary" link @click="toDetailPage('detail', row)">{{ $t('buttonName.detail') }}</el-button>
         </template>
         <template #orgNameHeader>
           <OrgNameHeaderSearch
@@ -70,6 +70,8 @@ import { getDataURL } from '@/utils/util';
 import { useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { GlobalStore } from '@/stores';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const globalStore = GlobalStore();
 const node_env = import.meta.env.VITE_USER_NODE_ENV;
 type Option = {
@@ -100,10 +102,10 @@ onMounted(() => {
 const proTable = ref();
 const initParam = reactive<Partial<ReportListParams>>({ selectProp: 'linkageSignalCode' });
 const columns: tableProps<ReportListRows>[] = [
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'linkageSignalCode',
-    label: '联动信号编码',
+    label: t('aiInspection.linkageSignalCode'),
     isShowInputLabel: false,
     width: 250,
     search: {
@@ -117,8 +119,8 @@ const columns: tableProps<ReportListRows>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.selectProp} style={'width: 140px'}>
-                    <el-option label="联动信号编码" value={'linkageSignalCode'} />
-                    <el-option label="联动信号名称" value={'linkageSignalName'} />
+                    <el-option label={t('aiInspection.linkageSignalCode')} value={'linkageSignalCode'} />
+                    <el-option label={t('aiInspection.linkageSignalName')} value={'linkageSignalName'} />
                   </el-select>
                 );
               },
@@ -130,7 +132,7 @@ const columns: tableProps<ReportListRows>[] = [
   },
   {
     prop: 'linkageSignalName',
-    label: '联动信号名称',
+    label: t('aiInspection.linkageSignalName'),
   },
   /* {
     prop: 'orgName',
@@ -158,11 +160,11 @@ const columns: tableProps<ReportListRows>[] = [
   },*/
   {
     prop: 'itemNum',
-    label: '巡检项数量',
+    label: t('aiInspection.itemNum'),
   },
   {
     prop: 'abnormalNum',
-    label: '告警项数量',
+    label: t('task.abnormalNum'),
   },
   /*{
     prop: 'abnormalInspectionNum',
@@ -170,7 +172,7 @@ const columns: tableProps<ReportListRows>[] = [
   },*/
   {
     prop: 'taskStartTime',
-    label: '任务开始时间',
+    label: t('aiInspection.taskStartTime'),
     isShowInputLabel: true,
     search: {
       el: 'date-picker',
@@ -185,14 +187,14 @@ const columns: tableProps<ReportListRows>[] = [
   },
   {
     prop: 'taskUseTime',
-    label: '任务执行时长',
+    label: t('task.taskUseTime'),
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 180, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
 ];
 const dataCallback = (data: any) => {
   return {
     datalist: data.list.map((i: ReportListRows) => {
-      i.taskUseTime = ((i.taskUseTime as unknown as number) / 60).toFixed(2) + '分钟';
+      i.taskUseTime = ((i.taskUseTime as unknown as number) / 60).toFixed(2) + t('common.minute');
       return i;
     }),
     total: data.total,
@@ -241,7 +243,7 @@ async function exportFile() {
   let a = document.createElement('a');
   a.href = res1;
   urls.add(res1);
-  a.download = addPageRef.value.formData.inspectionTaskName || '任务报告';
+  a.download = addPageRef.value.formData.inspectionTaskName || t('task.inspectionTaskFile');
   a.click();
 }
 const OrgNameHeaderSearchRef = ref();

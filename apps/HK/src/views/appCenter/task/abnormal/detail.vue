@@ -5,6 +5,8 @@ import videoControls from '@optCenter/videoRealTime.vue';
 import { onMounted, ref, watch } from 'vue';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { cameraInTask } from '@/api/modules/camera';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   id: string;
   pageType: PageType;
@@ -18,9 +20,9 @@ defineEmits<Emits>();
 
 const urlArr = useRemoveURLObject();
 let tabsOpt = [
-  { label: '告警抓图', value: '1' },
-  { label: '实时视频', value: '2' },
-  { label: '录像回放', value: '3' },
+  { label: t('aiInspection.picture'), value: '1' },
+  { label: t('aiInspection.watching'), value: '2' },
+  { label: t('aiInspection.playBackVideo'), value: '3' },
 ];
 let tabValue = ref('1');
 interface FormConfig {
@@ -37,13 +39,13 @@ interface FormConfig {
   changeStyle?: (val: string, row: any) => string;
 }
 let formDataConfig = ref<FormConfig[]>([
-  { label: '所属组织', value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
-  { label: '巡检区域', value: '南沙水司/黄阁水厂/加药间', prop: 'areaName', type: 'text' },
-  { label: '巡检对象', value: 'PAC投加系统', prop: 'objectName', type: 'text' },
-  { label: '巡检项', value: 'PAC投加系统', prop: 'itemName', type: 'text' },
-  { label: '异常时间', value: '2023-09-08 16:00', prop: 'executeTime', type: 'text' },
+  { label: t('common.orgName'), value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
+  { label: t('aiInspection.areaName'), value: '南沙水司/黄阁水厂/加药间', prop: 'areaName', type: 'text' },
+  { label: t('aiInspection.objectName'), value: 'PAC投加系统', prop: 'objectName', type: 'text' },
+  { label: t('task.itemName'), value: 'PAC投加系统', prop: 'itemName', type: 'text' },
+  { label: t('alarm.executeTime'), value: '2023-09-08 16:00', prop: 'executeTime', type: 'text' },
   {
-    label: '异常结果',
+    label: t('alarm.recognitionResult2'),
     value: '80℃',
     prop: 'recognitionResult',
     type: 'text',
@@ -130,14 +132,14 @@ async function goRealVideo() {
             :src="rows.imgPath"
           >
             <template #error>
-              <el-empty class="pic-empty" description="图片加载失败">
+              <el-empty class="pic-empty" :description="$t('alarm.picEmpty')">
                 <template #image>
                   <img src="@/assets/images/notData.png" />
                 </template>
               </el-empty>
             </template>
           </el-image>
-          <el-empty class="pic-empty" description="目前没有任何预览图" v-else>
+          <el-empty class="pic-empty" :description="$t('alarm.picEmpty2')" v-else>
             <template #image>
               <img src="@/assets/images/notData.png" />
             </template>
@@ -162,7 +164,7 @@ async function goRealVideo() {
     </div>
     <div class="alarm-right">
       <div class="alarm-right-title">
-        <span class="alarm-right-title-text kr-font-medium">异常事件信息</span>
+        <span class="alarm-right-title-text kr-font-medium">{{ $t('alarm.detailTit2') }}</span>
         <div class="alarm-right-title-btn"></div>
       </div>
       <div class="alarm-right-content">

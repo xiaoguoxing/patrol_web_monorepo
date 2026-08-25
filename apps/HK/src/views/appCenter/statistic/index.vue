@@ -8,9 +8,9 @@
             <el-date-picker
               v-model="timesArr"
               type="datetimerange"
-              range-separator="到"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
+              :range-separator="$t('input.rangeSeparator')"
+              :start-placeholder="$t('input.sTime')"
+              :end-placeholder="$t('input.eTime')"
               format="YYYY-MM-DD HH:mm"
               value-format="YYYY-MM-DD HH:mm"
               date-format="YYYY-MM-DD ddd"
@@ -44,7 +44,7 @@
       </div>
       <div class="t-bottom">
         <div class="bottom-left">
-          <kr-card header="告警对象" :border="false" class="h100 w100">
+          <kr-card :header="$t('alarm.alarmObjectName')" :border="false" class="h100 w100">
             <template #headerRight>
               <el-input
                 clearable
@@ -56,8 +56,8 @@
               >
                 <template #prepend>
                   <el-select class="input-prepend-select" v-model="selectProp" style="width: 100px">
-                    <el-option label="告警区域" value="areaName" />
-                    <el-option label="告警对象" value="objectName" />
+                    <el-option :label="$t('alarm.alarmAreaName')" value="areaName" />
+                    <el-option :label="$t('alarm.alarmObjectName')" value="objectName" />
                   </el-select>
                 </template>
                 <template #suffix>
@@ -78,7 +78,7 @@
           </kr-card>
         </div>
         <div class="bottom-right">
-          <kr-card header="告警等级" :border="false" class="h100 w100">
+          <kr-card :header="$t('alarm.alarmObjectName')" :border="false" class="h100 w100">
             <div class="alarm-content" v-if="!loading1">
               <chart
                 class="alarm-chart"
@@ -89,7 +89,7 @@
               <div class="alarm-span">
                 <span class="span" v-for="(item, index) of rightData" :key="index">
                   <span class="span-before" :style="'background-color:' + item.color"> </span>{{ item.name }}
-                  {{ item.data }}条
+                  {{ item.data }}{{ $t('statistic.item') }}
                 </span>
               </div>
             </div>
@@ -128,15 +128,17 @@ import SvgIcon from '@/components/SvgIcon/index.vue';
 import { getDict, DefaultDict } from '@/utils/serviceDict';
 import { isJSON } from '@patrol/shared/utils/is';
 import { Search } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 // const ChartsConfig = createRequire('@/views/appCenter/statistic/config/chart.js');
 // const ChartsConfig = require('@/views/appCenter/statistic/config/chart.js');
 
 const levelDictList = (await getDict('alarm_level')) as DefaultDict;
 const timeOptions: Tabs[] = [
-  { label: '今天', value: 0 },
-  { label: '近一周', value: 1 },
-  { label: '近一月', value: 2 },
-  { label: '自定义', value: 3 },
+  { label: t('common.today'), value: 0 },
+  { label: t('common.week'), value: 1 },
+  { label: t('common.month'), value: 2 },
+  { label: t('common.custom'), value: 3 },
 ];
 const options = [
   { data: 'today', value: 0 },
@@ -151,15 +153,15 @@ const downSvg = ref('icon-a-7xiadie');
 // month - 近一月
 // custom - 自定义
 const timeOptions1: Tabs[] = [
-  { label: '近一周', value: 1 },
-  { label: '近一月', value: 2 },
+  { label: t('common.week'), value: 1 },
+  { label: t('common.month'), value: 2 },
 ];
 const wainingInfo = ref([
-  { name: '告警条数（条）', nums: 0, circle: 0, up: true },
-  { name: '设备安全隐患告警（条）', nums: 0, circle: 0, up: true },
-  { name: '设备状态异常告警（条）', nums: 0, circle: 0, up: true },
-  { name: '环境风险异常告警（条）', nums: 0, circle: 0, up: true },
-  { name: '人员行为异常告警（条）', nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo1'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo2'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo3'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo4'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo5'), nums: 0, circle: 0, up: true },
 ]);
 interface levelObj {
   name: String;
@@ -200,7 +202,7 @@ const columns: ColumnProps[] = [
   // { type: 'selection', label: '序号', width: 50 },
   {
     prop: 'index',
-    label: '排名',
+    label: t('statistic.sort'),
     width: 100,
     render: (scope) => {
       let value = scope.row.index > 9 ? scope.row.index : '0' + scope.row.index.toString();
@@ -212,9 +214,9 @@ const columns: ColumnProps[] = [
       } else return <div style={str1}> {value} </div>;
     },
   },
-  { prop: 'areaName', label: '告警区域' },
-  { prop: 'objectName', label: '告警对象名称' },
-  { prop: 'alarmItemNum', label: '告警项数量' },
+  { prop: 'areaName', label: t('aiInspection.areaName') },
+  { prop: 'objectName', label: t('aiInspection.objectName') },
+  { prop: 'alarmItemNum', label: t('aiInspection.abnormalNum') },
 ];
 const selectProp = ref('areaName');
 const tableText = ref('');
@@ -235,12 +237,12 @@ const initData = async () => {
     let data = res.data;
     //告警趋势
     let yData2: any = [
-      { name: '本月', data: [], color: '#FA802F', dates: [] },
-      { name: '上月', data: [], color: '#0D60B4', dates: [] },
+      { name: t('common.month1'), data: [], color: '#FA802F', dates: [] },
+      { name: t('common.month2'), data: [], color: '#0D60B4', dates: [] },
     ];
     if (searchParams1.value.dimension == 'week') {
-      yData2[0].name = '本周';
-      yData2[1].name = '上周';
+      yData2[0].name = t('common.week1');
+      yData2[1].name = t('common.week2');
     }
     let xData2: string[] = [];
     data.trend.forEach(
@@ -259,12 +261,12 @@ const initData = async () => {
         xData2.push(element.date);
       }
     );
-    energyChartOption2.value = ChartsConfig.default.lineOptions(xData2, '', yData2, '告警趋势统计');
+    energyChartOption2.value = ChartsConfig.default.lineOptions(xData2, '', yData2, t('statistic.qstj'));
     //告警状态
 
     let yData3: any = [
-      { name: '告警中', data: [], color: '#0D60B4' },
-      { name: '已消警', data: [], color: '#cccccc' },
+      { name: t('alarm.alarmStatus1'), data: [], color: '#0D60B4' },
+      { name: t('alarm.yxj'), data: [], color: '#cccccc' },
     ];
     // let dataTmp: any = [];
     let xData3: string[] = [];
@@ -274,7 +276,7 @@ const initData = async () => {
       xData3.push(element.date);
     });
     // yData3[0].data = [...dataTmp];
-    energyChartOption3.value = ChartsConfig.default.cotegoryStackOptions(xData3, '', yData3, '告警状态统计');
+    energyChartOption3.value = ChartsConfig.default.cotegoryStackOptions(xData3, '', yData3, t('alarm.alarmStatusTic'));
     loading2.value = false;
     loading3.value = false;
   });
@@ -321,7 +323,11 @@ const getTableList = (params: any) => {
           });
           let title1 = yData1.value.reduce((acc, cur) => acc + cur.data, 0);
           rightData.value = yData1.value;
-          energyChartOption1.value = ChartsConfig.default.pieOptions('总数', title1 + '条', yData1.value);
+          energyChartOption1.value = ChartsConfig.default.pieOptions(
+            t('worktop.count'),
+            title1 + t('statistic.item2'),
+            yData1.value
+          );
         }
         //告警对象
         if (res.data.alarmObject) {
@@ -344,7 +350,7 @@ const getTableList = (params: any) => {
   });
 };
 function dateChange() {
-  timeChange({ label: '自定义', value: 3 });
+  timeChange({ label: t('common.custom'), value: 3 });
 }
 function timeChange(nums: { value: number; label: string }) {
   if (nums) tabValue.value = nums.value;

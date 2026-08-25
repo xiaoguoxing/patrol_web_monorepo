@@ -8,9 +8,9 @@
             <el-date-picker
               v-model="timesArr"
               type="datetimerange"
-              range-separator="到"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
+              :range-separator="$t('input.rangeSeparator')"
+              :start-placeholder="$t('input.sTime')"
+              :end-placeholder="$t('input.eTime')"
               format="YYYY-MM-DD HH:mm"
               value-format="YYYY-MM-DD HH:mm"
               date-format="YYYY-MM-DD ddd"
@@ -46,7 +46,7 @@
       </div>
       <div class="t-bottom">
         <!--        <div class="bottom-left">-->
-        <kr-card header="告警对象" :border="false" class="h100 w100">
+        <kr-card :header="$t('alarm.alarmObjectName')" :border="false" class="h100 w100">
           <template #headerRight>
             <el-input
               clearable
@@ -58,8 +58,8 @@
             >
               <template #prepend>
                 <el-select class="input-prepend-select" v-model="selectProp" style="width: 100px">
-                  <el-option label="巡检区域" value="areaName" />
-                  <el-option label="巡检对象" value="objectName" />
+                  <el-option :label="$t('aiInspection.areaName')" value="areaName" />
+                  <el-option :label="$t('aiInspection.objectName')" value="objectName" />
                 </el-select>
               </template>
               <template #suffix>
@@ -132,13 +132,14 @@ import { isJSON } from '@patrol/shared/utils/is';
 import { Search } from '@element-plus/icons-vue';
 // const ChartsConfig = createRequire('@/views/appCenter/statistic/config/chart.js');
 // const ChartsConfig = require('@/views/appCenter/statistic/config/chart.js');
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const levelDictList = (await getDict('alarm_level')) as DefaultDict;
 const timeOptions: Tabs[] = [
-  { label: '今天', value: 0 },
-  { label: '近一周', value: 1 },
-  { label: '近一月', value: 2 },
-  { label: '自定义', value: 3 },
+  { label: t('common.today'), value: 0 },
+  { label: t('common.week'), value: 1 },
+  { label: t('common.month'), value: 2 },
+  { label: t('common.custom'), value: 3 },
 ];
 const options = [
   { data: 'today', value: 0 },
@@ -153,15 +154,15 @@ const downSvg = ref('icon-a-7xiadie');
 // month - 近一月
 // custom - 自定义
 const timeOptions1: Tabs[] = [
-  { label: '近一周', value: 1 },
-  { label: '近一月', value: 2 },
+  { label: t('common.week'), value: 1 },
+  { label: t('common.month'), value: 2 },
 ];
 const wainingInfo = ref([
-  { name: '告警条数（条）', nums: 0, circle: 0, up: true },
-  { name: '设备安全隐患告警（条）', nums: 0, circle: 0, up: true },
-  { name: '设备状态异常告警（条）', nums: 0, circle: 0, up: true },
-  { name: '环境风险异常告警（条）', nums: 0, circle: 0, up: true },
-  { name: '人员行为异常告警（条）', nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo1'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo2'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo3'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo4'), nums: 0, circle: 0, up: true },
+  { name: t('statistic.wainingInfo5'), nums: 0, circle: 0, up: true },
 ]);
 interface levelObj {
   name: String;
@@ -202,7 +203,7 @@ const columns: ColumnProps[] = [
   // { type: 'selection', label: '序号', width: 50 },
   {
     prop: 'index',
-    label: '排名',
+    label: t('statistic.sort'),
     width: 60,
     render: (scope) => {
       let value = scope.row.rank > 9 ? scope.row.rank : '0' + scope.row.rank.toString();
@@ -214,25 +215,26 @@ const columns: ColumnProps[] = [
       } else return <div style={str1}> {value} </div>;
     },
   },
-  { prop: 'areaName', label: '巡检区域' },
-  { prop: 'objectName', label: '巡检对象名称' },
-  { prop: 'abnormalCount', label: '异常项数量' },
+  { prop: 'areaName', label: t('aiInspection.areaName') },
+  { prop: 'objectName', label: t('aiInspection.objectName') },
+  { prop: 'abnormalCount', label: t('aiInspection.abnormalNum') },
   {
     prop: 'alarmItemNum',
-    label: '异常原因分布',
+    label: t('statistic.alarmItemNum'),
     minWidth: 200,
     render: (scope) => {
       const opt = [
-        { text: '算法识别失败', value: '' },
-        { text: '算法调用失败', value: '' },
-        { text: '摄像头离线', value: '' },
-        { text: '预置位异常', value: '' },
+        { text: t('statistic.alarmItemNum1'), value: '' },
+        { text: t('statistic.alarmItemNum2'), value: '' },
+        { text: t('statistic.alarmItemNum3'), value: '' },
+        { text: t('statistic.alarmItemNum4'), value: '' },
       ];
       return (
         <div style={'display:inline-flex;gap:10px'}>
           {scope.row.reasonList.map((item, index) => (
             <div>
-              {item.reason}：{item.count || 123}项
+              {item.reason}：{item.count || 123}
+              {t('statistic.item')}
             </div>
           ))}
         </div>
@@ -262,11 +264,11 @@ const initData = async () => {
     let data = res.data;
     //告警趋势
     let yData2: any = [
-      { name: '本月', data: [], color: '#FA802F', dates: [] },
+      { name: t('common.month1'), data: [], color: '#FA802F', dates: [] },
       // { name: '上月', data: [], color: '#0D60B4', dates: [] },
     ];
     if (searchParams1.value.dimension == 'week') {
-      yData2[0].name = '本周';
+      yData2[0].name = t('common.week1');
       // yData2[1].name = '上周';
     }
     let xData2: string[] = [];
@@ -286,7 +288,7 @@ const initData = async () => {
         xData2.push(element.date);
       }
     );
-    energyChartOption2.value = ChartsConfig.default.lineOptions(xData2, '', yData2, '趋势统计');
+    energyChartOption2.value = ChartsConfig.default.lineOptions(xData2, '', yData2, t('statistic.qstj'));
     //告警状态
     /*
     let yData3: any = [
@@ -321,7 +323,7 @@ const getTableList = (params: any) => {
 };
 function dateChange() {
   pickDay.value = null;
-  timeChange({ label: '自定义', value: 3 });
+  timeChange({ label: t('common.custom'), value: 3 });
 }
 function timeChange(nums: { value: number; label: string }) {
   if (nums) tabValue.value = nums.value;

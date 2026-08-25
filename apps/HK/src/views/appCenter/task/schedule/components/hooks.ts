@@ -1,3 +1,7 @@
+import I18n from '@/languages/index';
+const t = function (str: string) {
+  return I18n.global.t(str);
+};
 export function formatNum(num: number) {
   let res = Number(num);
   return res < 10 ? '0' + res : res;
@@ -8,8 +12,16 @@ export function getToday() {
   let m = date.getMonth();
   let d = date.getDate();
   let week = new Date().getDay();
-  let weekText = ['日', '一', '二', '三', '四', '五', '六'];
-  let formatWeek = '星期' + weekText[week];
+  let weekText = [
+    t('common.z17'),
+    t('common.z11'),
+    t('common.z12'),
+    t('common.z13'),
+    t('common.z14'),
+    t('common.z15'),
+    t('common.z16'),
+  ];
+  let formatWeek = t('common.xq') + weekText[week];
   return {
     date: y + '-' + formatNum(m + 1) + '-' + formatNum(d),
     week: formatWeek,

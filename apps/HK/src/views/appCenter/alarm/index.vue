@@ -6,15 +6,15 @@
         <span class="title kr-font-medium">{{ cardTitle }}</span>
       </div>
       <div v-if="id" :title="`${globalIndex + 1}/${proTable.pageable.total}`">
-        <el-button :disabled="isFirstItem" link type="primary" @click="prev">上一项</el-button>
-        <el-button :disabled="isLastItem" link type="primary" @click="next">下一项</el-button>
+        <el-button :disabled="isFirstItem" link type="primary" @click="prev">{{ $t('alarm.prevItem') }}</el-button>
+        <el-button :disabled="isLastItem" link type="primary" @click="next">{{ $t('alarm.nextItem') }}</el-button>
       </div>
     </template>
     <kr-filter-tree
       v-show="pageType === 'list'"
       class="two-col-page-lf"
       v-dragLine
-      placeholder="请输入您想搜索的巡检对象名称"
+      :placeholder="$t('alarm.placeholder')"
       :data="dataSource"
       label="nodeName"
       :dea="false"
@@ -40,21 +40,23 @@
     >
       <template #tableHeader="{ selectedListIds }">
         <!--   v-auth="'export'"     -->
-        <el-button icon="Download" v-auth="'export'" @click="exportList(selectedListIds)">导出</el-button>
-        <el-button icon="" type="primary" v-auth="'yjxj'" @click="yjxjList">一键消警</el-button>
+        <el-button icon="Download" v-auth="'export'" @click="exportList(selectedListIds)">{{
+          $t('buttonName.exportFile')
+        }}</el-button>
+        <el-button icon="" type="primary" v-auth="'yjxj'" @click="yjxjList">{{ $t('alarm.yjxj') }}</el-button>
       </template>
       <!-- 表格操作 -->
       <template #operation="{ row }">
-        <el-button type="primary" link @click="toDetailPage('detail', row)">详情</el-button>
+        <el-button type="primary" link @click="toDetailPage('detail', row)">{{ $t('buttonName.detail') }}</el-button>
         <el-button
           v-if="!row.isReport"
           type="primary"
           :disabled="row.syncData"
-          :title="row.syncData ? '同步的数据不支持此操作' : ''"
+          :title="row.syncData ? $t('buttonName.syncData') : ''"
           v-auth="'reportingDeficiencies'"
           link
           @click="openUploadDialog(row)"
-          >报缺</el-button
+          >{{ $t('alarm.bq') }}</el-button
         >
       </template>
       <template #orgNameHeader>
@@ -112,7 +114,8 @@ import { getTodayRange } from '@/utils/util';
 import { useDebounceFn } from '@vueuse/core';
 import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { ElMessage } from 'element-plus';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 let alarm_level: Dict = [];
 let alarm_type: Dict = [];
 let alarm_status: Dict = [];
@@ -172,7 +175,7 @@ const initParam = reactive({ objectId: defaultValue.value, selectProp: 'alarmObj
 const columns: tableProps<AlarmListRows>[] = [
   {
     type: 'index',
-    label: '序号',
+    label: t('table.sort'),
     selectable(e) {
       return !e.syncData;
     },
@@ -180,12 +183,12 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'orgName',
-    label: '所属组织',
+    label: t('common.orgName'),
     width: 150,
   },
   {
     prop: 'alarmAreaName',
-    label: '告警区域',
+    label: t('alarm.alarmAreaName'),
     width: 200,
     isShowInputLabel: false,
     search: {
@@ -199,10 +202,10 @@ const columns: tableProps<AlarmListRows>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.selectProp} style={'width: 140px'}>
-                    <el-option label="告警区域" value={'alarmAreaName'} />
-                    <el-option label="告警对象" value={'alarmObjectName'} />
-                    <el-option label="告警点位" value={'cameraName'} />
-                    <el-option label="告警项" value={'alarmItemName'} />
+                    <el-option label={t('alarm.alarmAreaName')} value={'alarmAreaName'} />
+                    <el-option label={t('alarm.alarmObjectName')} value={'alarmObjectName'} />
+                    <el-option label={t('alarm.cameraName')} value={'cameraName'} />
+                    <el-option label={t('alarm.alarmItemName')} value={'alarmItemName'} />
                   </el-select>
                 );
               },
@@ -214,17 +217,17 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'alarmObjectName',
-    label: '告警对象',
+    label: t('alarm.alarmObjectName'),
     width: 150,
   },
   {
     prop: 'alarmItemName',
-    label: '告警项',
+    label: t('alarm.alarmItemName'),
     width: 150,
   },
   {
     prop: 'alarmTime',
-    label: '告警时间',
+    label: t('alarm.alarmTime'),
     width: 160,
     sortable: true,
     isShowInputLabel: true,
@@ -242,17 +245,17 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'recognitionResult',
-    label: '识别结果',
+    label: t('alarm.recognitionResult'),
     width: 150,
   },
   {
     prop: 'alarmRules',
-    label: '告警规则',
+    label: t('alarm.alarmRules'),
     width: 150,
   },
   {
     prop: 'alarmGrade',
-    label: '告警等级',
+    label: t('alarm.alarmGrade'),
     width: 150,
     filters: getDictForColumnFilters(alarm_level),
     enum: alarm_level,
@@ -285,26 +288,26 @@ const columns: tableProps<AlarmListRows>[] = [
 
   {
     prop: 'isReport',
-    label: '报缺状态',
+    label: t('alarm.isReport'),
     width: 150,
     filterMultiple: false,
     filters: [
-      { text: '已报缺', value: true },
-      { text: '未报缺', value: false },
+      { text: t('alarm.isReport1'), value: true },
+      { text: t('alarm.isReport2'), value: false },
     ],
     enum: [
-      { label: '已报缺', value: true },
-      { label: '未报缺', value: false },
+      { label: t('alarm.isReport1'), value: true },
+      { label: t('alarm.isReport2'), value: false },
     ],
   },
   {
     prop: 'reportId',
-    label: '报缺工单号',
+    label: t('alarm.reportId'),
     width: 150,
   },
   {
     prop: 'alarmSource',
-    label: '告警来源',
+    label: t('alarm.alarmSource'),
     width: 150,
     filters: getDictForColumnFilters(alarm_source),
     enum: alarm_source,
@@ -312,7 +315,7 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'cameraName',
-    label: '告警点位',
+    label: t('alarm.cameraName'),
     width: 150,
   },
   /*  {
@@ -329,7 +332,7 @@ const columns: tableProps<AlarmListRows>[] = [
   },*/
   {
     prop: 'alarmStatus',
-    label: '告警状态',
+    label: t('alarm.alarmStatus'),
     fixed: 'right',
     width: 120,
     filters: getDictForColumnFilters(alarm_status),
@@ -340,28 +343,30 @@ const columns: tableProps<AlarmListRows>[] = [
       let label = obj?.label;
       return (
         <div class="alarm-tab-main">
-          <span class={['alarm-tag-line', label === '告警中' ? 'tag2type1' : 'tag2type2']}>{label ?? '--'}</span>
+          <span class={['alarm-tag-line', label === t('alarm.alarmStatus1') ? 'tag2type1' : 'tag2type2']}>
+            {label ?? '--'}
+          </span>
         </div>
       );
     },
   },
   {
     prop: 'sendQywx',
-    label: '推送状态',
+    label: t('alarm.sendQywx'),
     width: 120,
     fixed: 'right',
     filterMultiple: false,
     filteredValue: (route.query.fromRoute === '3' ? [true] : []) as unknown as string[],
     filters: [
-      { text: '已推送', value: true },
-      { text: '未推送', value: false },
+      { text: t('alarm.sendQywx1'), value: true },
+      { text: t('alarm.sendQywx2'), value: false },
     ],
     enum: [
-      { label: '已推送', value: true },
-      { label: '未推送', value: false },
+      { label: t('alarm.sendQywx1'), value: true },
+      { label: t('alarm.sendQywx2'), value: false },
     ],
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 120, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 120, fixed: 'right' },
 ];
 const dataCallback = (data: any) => {
   return {
@@ -379,7 +384,7 @@ const getTableList = async (params: any) => {
 const yjxjList = async (selectedListIds: string[]) => {
   try {
     const { total, ...par } = getTableSearchData();
-    await useHandleData<{ ids: string }>(yjxjApi, par, '一键消警');
+    await useHandleData<{ ids: string }>(yjxjApi, par, t('alarm.yjxj'));
     proTable.value.getTableList();
   } catch (e) {
     proTable.value.getTableList();
@@ -434,8 +439,8 @@ async function openUploadDialog(row: AlarmListRows) {
     await useHandleData<{ id: string }>(
       addDefectStockToEAMApi,
       { id: row.id! },
-      '上报成功',
-      '确认将本条告警提交到EAM系统缺陷工单?'
+      t('alarm.reportSuccess'),
+      t('alarm.reportText')
     );
   } catch (e) {}
 }
@@ -447,11 +452,11 @@ function resetFn() {
 function exportList() {
   const { total, ...par } = getTableSearchData();
   if (total > 500) {
-    return ElMessage.warning(`导出最多不超过500条`);
+    return ElMessage.warning(t('alarm.msg1'));
   } else if (total === 0) {
-    return ElMessage.warning(`当前搜索结果为0条`);
+    return ElMessage.warning(t('alarm.msg2'));
   }
-  useDownload(exportExcel, `告警管理`, par);
+  useDownload(exportExcel, t('alarm.msg3'), par);
 }
 function getTableSearchData() {
   return formatSearchData({

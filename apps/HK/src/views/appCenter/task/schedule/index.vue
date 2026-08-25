@@ -1,41 +1,51 @@
 <template>
-  <kr-card header="任务日程" class="flex-1" header-border>
+  <kr-card :header="cardTitle" class="flex-1" header-border>
     <template #header>
       <div class="header-left">
-        <span class="title kr-font-medium mr30">任务日程</span>
+        <span class="title kr-font-medium mr30">{{ cardTitle }}</span>
         <div class="header-button">
           <div class="pre" @click="change('pre')">
             <el-icon><ArrowLeft /></el-icon>
           </div>
-          <div>{{ year + '年' + formatNum(month) + '月' }}</div>
+          <div>{{ year + $t('common.year') + formatNum(month) + $t('common.month3') }}</div>
           <div class="next" @click="change('next')">
             <el-icon><ArrowRight /></el-icon>
           </div>
-          <div class="back-today" :class="{ disable: isToToday }" @click="isToToday ? null : backToday()">返回本月</div>
-          <div class="back-today" @click="goSys()">前往{{ sysName }}</div>
+          <div class="back-today" :class="{ disable: isToToday }" @click="isToToday ? null : backToday()">
+            {{ $t('buttonName.back') }}{{ $t('common.month1') }}
+          </div>
+          <div class="back-today" @click="goSys()">{{ $t('header.goFrom') }}{{ sysName }}</div>
         </div>
       </div>
       <div class="header-right">
-        <span class="ectant-status"><span class="icon"></span><span class="text">未执行</span></span>
+        <span class="ectant-status"
+          ><span class="icon"></span><span class="text">{{ $t('task.status1') }}</span></span
+        >
         <span class="excution-status">
           <span class="icon"></span>
-          <span class="text">执行中 <img :src="icon1" /></span>
+          <span class="text">{{ $t('task.status2') }} <img :src="icon1" /></span>
         </span>
-        <span class="finished-status"><span class="icon"></span><span class="text">已结束</span></span>
+        <span class="finished-status">
+          <span class="icon"></span><span class="text">{{ $t('task.status3') }}</span>
+        </span>
       </div>
     </template>
     <my-calendar ref="calendar" :dateList="dateList" @changeYearMonth="initData"></my-calendar>
   </kr-card>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ComputedRef, ref } from 'vue';
 import KrCard from '@patrol/ui/components/card';
 import myCalendar from './components/calendar.vue';
 import icon1 from '@/assets/images/schedule/doing.png';
 import { getListApi } from '@/api/modules/appCenter/task/schedule';
 import { formatNum, getToday } from './components/hooks';
 import { GlobalStore } from '@/stores';
+import { PageTypeTitle } from '@/api/modules/appCenter/alarm';
+import { useRoute } from 'vue-router';
 const globalStore = GlobalStore();
+const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 const node_env = import.meta.env.VITE_USER_NODE_ENV;
 const year = ref(0);
 const month = ref(0);

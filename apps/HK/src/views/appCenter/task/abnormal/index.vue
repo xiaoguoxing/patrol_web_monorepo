@@ -10,7 +10,7 @@
       v-show="pageType === 'list'"
       class="two-col-page-lf"
       v-dragLine
-      placeholder="请输入您想搜索的巡检对象名称"
+      :placeholder="$t('alarm.placeholder')"
       :data="dataSource"
       label="nodeName"
       @change="changeTreeFilter"
@@ -35,11 +35,13 @@
     >
       <template #tableHeader="{ selectedListIds }">
         <!--   v-auth="'export'"     -->
-        <el-button icon="Download" v-auth="'export'" @click="exportList(selectedListIds)">导出</el-button>
+        <el-button icon="Download" v-auth="'export'" @click="exportList(selectedListIds)">{{
+          $t('buttonName.exportFile')
+        }}</el-button>
       </template>
       <!-- 表格操作 -->
       <template #operation="{ row }">
-        <el-button type="primary" link @click="toDetailPage('detail', row)">详情</el-button>
+        <el-button type="primary" link @click="toDetailPage('detail', row)">{{ $t('buttonName.detail') }}</el-button>
       </template>
       <template #orgNameHeader>
         <OrgNameHeaderSearch
@@ -74,6 +76,8 @@ import { GlobalStore } from '@/stores';
 import { getTodayRange } from '@/utils/util';
 import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const globalStore = GlobalStore();
 const route = useRoute();
 const router = useRouter();
@@ -112,7 +116,7 @@ const initParam = reactive({ objectId: defaultValue.value, selectProp: 'objectNa
 const columns: tableProps<AlarmListRows>[] = [
   {
     type: 'index',
-    label: '序号',
+    label: t('table.sort'),
     selectable(e) {
       return !e.syncData;
     },
@@ -120,12 +124,12 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'orgName',
-    label: '所属组织',
+    label: t('common.orgName'),
     width: 150,
   },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     width: 200,
     isShowInputLabel: false,
     search: {
@@ -140,8 +144,8 @@ const columns: tableProps<AlarmListRows>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.selectProp} style={'width: 140px'}>
-                    <el-option label="巡检对象" value={'objectName'} />
-                    <el-option label="巡检项" value={'itemName'} />
+                    <el-option label={t('aiInspection.objectName')} value={'objectName'} />
+                    <el-option label={t('task.itemName')} value={'itemName'} />
                   </el-select>
                 );
               },
@@ -153,17 +157,17 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'objectName',
-    label: '巡检对象',
+    label: t('aiInspection.objectName'),
     width: 150,
   },
   {
     prop: 'itemName',
-    label: '巡检项',
+    label: t('task.itemName'),
     width: 150,
   },
   {
     prop: 'executeTime',
-    label: '异常时间',
+    label: t('alarm.executeTime'),
     width: 160,
     sortable: true,
     isShowInputLabel: true,
@@ -181,16 +185,16 @@ const columns: tableProps<AlarmListRows>[] = [
   },
   {
     prop: 'recognitionResult',
-    label: '异常结果',
+    label: t('alarm.recognitionResult2'),
     filterMultiple: false,
     filters: [
-      { text: '算法识别失败', value: 1 },
-      { text: '算法调用失败', value: 2 },
-      { text: '摄像头离线', value: 3 },
-      { text: '预置位异常', value: 4 },
+      { text: t('statistic.alarmItemNum1'), value: 1 },
+      { text: t('statistic.alarmItemNum2'), value: 2 },
+      { text: t('statistic.alarmItemNum3'), value: 3 },
+      { text: t('statistic.alarmItemNum4'), value: 4 },
     ],
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 120, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 120, fixed: 'right' },
 ];
 const dataCallback = (data: any) => {
   return {
@@ -235,16 +239,16 @@ const resetFn = () => {
 function exportList() {
   const { total, ...pageable } = proTable.value.pageable;
   if (total > 500) {
-    return ElMessage.warning(`导出最多不超过500条`);
+    return ElMessage.warning(t('alarm.msg1'));
   } else if (total === 0) {
-    return ElMessage.warning(`当前搜索结果为0条`);
+    return ElMessage.warning('alarm.msg2');
   }
   const par = formatSearchData({
     ...proTable.value.searchParam,
     ...pageable,
     ...initParam,
   });
-  useDownload(exportExcel, `异常项`, par);
+  useDownload(exportExcel, t('alarm.msg4'), par);
 }
 function formatSearchData(params: any) {
   let { pageNum, executeTime, def, selectProp, ...searchData } = params;

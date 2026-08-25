@@ -2,6 +2,8 @@
 import { ref, watch } from 'vue';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { Clock } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   objectList: any[];
   parentId: string;
@@ -28,7 +30,7 @@ const resColumns = [
     props.showBtn
       ? {
           type: 'selection',
-          label: '序号',
+          label: t('table.sort'),
           selectable(e: { syncData: boolean }) {
             return !e.syncData;
           },
@@ -36,25 +38,25 @@ const resColumns = [
         }
       : {},
   ],
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     width: 200,
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     width: 200,
   },
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
     width: 200,
   },
   {
     prop: 'recognitionResult',
-    label: '识别结果',
+    label: t('aiInspection.recognitionResult'),
     width: 150,
     render(scope: any) {
       // scadaResult
@@ -64,7 +66,7 @@ const resColumns = [
           {scope.row?.isCheck ? (
             <el-tooltip
               effect="dark"
-              content={`修正前：${scope.row?.recognitionResultBeforeCheck}`}
+              content={`${t('task.beforeValue')}：${scope.row?.recognitionResultBeforeCheck}`}
               placement="top-start"
             >
               <el-icon class="box-item" size="18">
@@ -81,7 +83,7 @@ const resColumns = [
   },
   {
     prop: 'scadaResult',
-    label: 'SCADA识别结果',
+    label: t('alarm.scadaResult'),
     width: 170,
     render(scope: any) {
       // scadaResult
@@ -94,7 +96,7 @@ const resColumns = [
     },
   },
   ...props.column,
-  { prop: 'operation', align: 'right', label: '操作', width: 80 },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 80 },
 ];
 const initParam = {};
 watch(
@@ -144,10 +146,10 @@ async function open(row: any) {
         v-if="showOperation"
         v-auth="'falsealarm'"
         :disabled="syncData"
-        :title="syncData ? '同步的数据不支持此操作' : ''"
+        :title="syncData ? $t('buttonName.syncData') : ''"
         link
         @click="open(row)"
-        >复核</el-button
+        >{{ $t('task.Fh') }}</el-button
       >
     </template>
   </kr-pro-table>

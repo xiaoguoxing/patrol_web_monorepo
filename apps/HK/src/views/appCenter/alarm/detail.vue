@@ -15,6 +15,8 @@ import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { useRouter } from 'vue-router';
 import { GlobalStore } from '@/stores';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 import { cameraInTask } from '@/api/modules/camera';
 const router = useRouter();
 const globalStore = GlobalStore();
@@ -37,9 +39,9 @@ defineEmits<Emits>();
 
 const urlArr = useRemoveURLObject();
 let tabsOpt = [
-  { label: '告警抓图', value: '1' },
-  { label: '实时视频', value: '2' },
-  { label: '录像回放', value: '3' },
+  { label: t('aiInspection.picture'), value: '1' },
+  { label: t('aiInspection.watching'), value: '2' },
+  { label: t('aiInspection.playBackVideo'), value: '3' },
 ];
 let tabValue = ref('1');
 interface FormConfig {
@@ -56,12 +58,12 @@ interface FormConfig {
   changeStyle?: (val: string, row: any) => string;
 }
 let formDataConfig = ref<FormConfig[]>([
-  { label: '所属组织', value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
-  { label: '告警区域', value: '南沙水司/黄阁水厂/加药间', prop: 'alarmAreaName', type: 'text' },
-  { label: '告警对象', value: 'PAC投加系统', prop: 'alarmObjectName', type: 'text' },
-  { label: '告警项', value: 'PAC投加系统', prop: 'alarmItemName', type: 'text' },
+  { label: t('common.orgName'), value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
+  { label: t('alarm.alarmAreaName'), value: '南沙水司/黄阁水厂/加药间', prop: 'alarmAreaName', type: 'text' },
+  { label: t('alarm.alarmObjectName'), value: 'PAC投加系统', prop: 'alarmObjectName', type: 'text' },
+  { label: t('alarm.alarmItemName'), value: 'PAC投加系统', prop: 'alarmItemName', type: 'text' },
   {
-    label: '识别结果',
+    label: t('alarm.recognitionResult'),
     value: '80℃',
     prop: 'recognitionResult',
     type: 'text',
@@ -70,7 +72,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: 'SCADA结果',
+    label: t('alarm.scadaResult'),
     value: '80℃',
     prop: 'scadaResult',
     type: 'text',
@@ -79,7 +81,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: '告警规则',
+    label: t('alarm.alarmRules'),
     value: '温度≥65℃',
     prop: 'alarmRules',
     type: 'text',
@@ -102,7 +104,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: '告警等级',
+    label: t('alarm.alarmGrade'),
     value: '二级',
     prop: 'alarmGrade',
     type: 'tag',
@@ -127,7 +129,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: '告警状态',
+    label: t('alarm.alarmStatus'),
     value: '告警中',
     prop: 'alarmStatus',
     type: 'tag',
@@ -136,14 +138,14 @@ let formDataConfig = ref<FormConfig[]>([
       return findOpt(val, 'alarm_status').label;
     },
     changeClass(val: string) {
-      return val === '告警中' ? 'tag2type1' : 'tag2type2';
+      return val === t('alarm.alarmStatus1') ? 'tag2type1' : 'tag2type2';
     },
   },
-  { label: '告警时间', value: '2023-09-08 16:00', prop: 'alarmTime', type: 'text' },
-  { label: '消警时间', value: '2023-09-08 16:00', prop: 'erasingTime', type: 'text' },
-  { label: '消警说明', value: '2023-09-08 16:00', prop: 'erasingExplain', type: 'text' },
+  { label: t('alarm.alarmTime'), value: '2023-09-08 16:00', prop: 'alarmTime', type: 'text' },
+  { label: t('alarm.erasingTime'), value: '2023-09-08 16:00', prop: 'erasingTime', type: 'text' },
+  { label: t('alarm.erasingExplain'), value: '2023-09-08 16:00', prop: 'erasingExplain', type: 'text' },
   {
-    label: '告警来源',
+    label: t('alarm.alarmSource'),
     value: '2023-09-08 16:00',
     prop: 'alarmSource',
     type: 'text',
@@ -151,17 +153,17 @@ let formDataConfig = ref<FormConfig[]>([
       return findOpt(val, 'alarm_source').label;
     },
   },
-  { label: '告警点位', value: '加药间PAC投加系统热成像球机#1', prop: 'cameraName', type: 'text' },
+  { label: t('alarm.cameraName'), value: '加药间PAC投加系统热成像球机#1', prop: 'cameraName', type: 'text' },
   {
-    label: '报缺状态',
+    label: t('alarm.isReport'),
     value: '加药间PAC投加系统热成像球机#1',
     prop: 'isReport',
     type: 'text',
     format(val: string) {
-      return eval(val) ? '已报缺' : '未报缺';
+      return eval(val) ? t('alarm.isReport1') : t('alarm.isReport2');
     },
   },
-  { label: '报缺工单号', value: '加药间PAC投加系统热成像球机#1', prop: 'reportId', type: 'text' },
+  { label: t('alarm.reportId'), value: '加药间PAC投加系统热成像球机#1', prop: 'reportId', type: 'text' },
 
   /*  { label: '告警名称', value: '设备温度异常', prop: 'alarmName', type: 'text' },
   {
@@ -280,8 +282,8 @@ async function openUploadDialog() {
     await useHandleData<{ id: string }>(
       addDefectStockToEAMApi,
       { id: props.id! },
-      '上报成功',
-      '确认将本条告警提交到EAM系统缺陷工单?'
+      t('alarm.reportSuccess'),
+      t('alarm.reportText')
     );
   } catch (e) {}
 }
@@ -324,14 +326,14 @@ async function openUploadDialog() {
             :src="rows.imgPath"
           >
             <template #error>
-              <el-empty class="pic-empty" description="图片加载失败">
+              <el-empty class="pic-empty" :description="$t('alarm.picEmpty')">
                 <template #image>
                   <img src="@/assets/images/notData.png" />
                 </template>
               </el-empty>
             </template>
           </el-image>
-          <el-empty class="pic-empty" description="目前没有任何预览图" v-else>
+          <el-empty class="pic-empty" :description="$t('alarm.picEmpty2')" v-else>
             <template #image>
               <img src="@/assets/images/notData.png" />
             </template>
@@ -356,24 +358,24 @@ async function openUploadDialog() {
     </div>
     <div class="alarm-right">
       <div class="alarm-right-title">
-        <span class="alarm-right-title-text kr-font-medium">告警事件信息</span>
+        <span class="alarm-right-title-text kr-font-medium">{{ $t('alarm.detailTit') }}</span>
         <div class="alarm-right-title-btn">
           <el-button
             @click="show = true"
             class="el-button--primary2"
-            :title="rows.syncData ? '同步的数据不支持此操作' : ''"
+            :title="rows.syncData ? $t('buttonName.syncData') : ''"
             :disabled="rows.syncData || rows.alarmStatus === 'alert_lifted'"
             v-auth="'falsealarm'"
-            >消警</el-button
+            >{{ $t('alarm.xj') }}</el-button
           >
           <el-button
             v-if="!rows.isReport"
             type="primary"
             :disabled="rows.syncData"
-            :title="rows.syncData ? '同步的数据不支持此操作' : ''"
+            :title="rows.syncData ? $t('buttonName.syncData') : ''"
             v-auth="'reportingDeficiencies'"
             @click="openUploadDialog"
-            >报缺</el-button
+            >{{ $t('alarm.bq') }}</el-button
           >
         </div>
       </div>
@@ -409,25 +411,32 @@ async function openUploadDialog() {
     <!--    <dialogPicture ref="dialogPictureRef" :id="rows.id" @confirm="checkConfirm" :row-data="rows"></dialogPicture>-->
     <kr-public-dialog
       v-model="show"
-      title="温馨提示"
+      :title="$t('messageTip.logoutMsg2')"
       :singleClose="false"
       @doSubmit="handleSubmit"
       @doClose="show = false"
       width="5%"
     >
       <div class="flx-align-center mb10">
-        <el-icon class="el-message-box__status el-message-box-icon--warning mr10"><WarningFilled /></el-icon>是否消警？
+        <el-icon class="el-message-box__status el-message-box-icon--warning mr10"><WarningFilled /></el-icon
+        >{{ $t('alarm.isxj') }}
       </div>
-      <el-input v-model="abc" class="mb10" placeholder="请输入消警说明" type="textarea" clearable></el-input>
-      <div class="flx-align-center mb10">停止告警时间区间</div>
+      <el-input
+        v-model="abc"
+        class="mb10"
+        :placeholder="$t('alarm,stopAlarmTime3')"
+        type="textarea"
+        clearable
+      ></el-input>
+      <div class="flx-align-center mb10">{{ $t('alarm.stopAlarmTime') }}</div>
       <el-date-picker
         v-model="timeRange"
         value-format="YYYY-MM-DD HH:mm"
         format="YYYY-MM-DD HH:mm"
         time-format="HH:mm"
         type="datetimerange"
-        start-placeholder="开始消警时间"
-        end-placeholder="结束消警时间"
+        :start-placeholder="$t('alarm.stopAlarmTime1')"
+        :end-placeholder="$t('alarm.stopAlarmTime2')"
       />
     </kr-public-dialog>
   </div>

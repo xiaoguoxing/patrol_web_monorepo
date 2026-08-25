@@ -6,6 +6,8 @@ import { detailInspectionApi } from '@/api/modules/optCenter/aiPatrolManage/insp
 import { FormInstance, FormRules } from 'element-plus';
 import { detailPositionApi, PositionListRows } from '@/api/modules/optCenter/aiPatrolManage/position';
 import { getIndexListApi } from '@/api/modules/optCenter/inspectionSet/alarm';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface FormData {
   objectId?: string;
   itemId?: string;
@@ -71,8 +73,10 @@ async function getAlarmDetail() {
   }
 }
 let rules = ref<FormRules<FormData>>({
-  checkConclusion: [{ required: true, message: '请选择巡检结论' }],
-  checkResult: [{ required: true, message: '请输入实际结果' }],
+  checkConclusion: [
+    { required: true, message: `${t('inputPlaceholder.placeholderSelect')}${t('aiInspection.inspectionResult')}` },
+  ],
+  checkResult: [{ required: true, message: `${t('inputPlaceholder.placeholderSelect')}${t('task.checkResult')}` }],
 });
 let formData = ref<FormData>({
   checkConclusion: '',
@@ -127,8 +131,8 @@ defineExpose({
 <template>
   <KrPublicDialog
     width="60%"
-    :btnText="['取消', '确定修正']"
-    :title="`结果复核`"
+    :btnText="[$t('ui.cancel'), $t('task.qrxz')]"
+    :title="$t('task.resFh')"
     v-model="show"
     @doSubmit="confirm"
     @doClose="close"
@@ -143,36 +147,36 @@ defineExpose({
         ></pictureDimension>-->
         <el-image v-if="rowData?.imgPath && show" :src="rowData.imgPath!" fit="contain">
           <template #error>
-            <el-empty class="pic-empty" description="图片加载失败">
+            <el-empty class="pic-empty" :description="$t('alarm.picEmpty')">
               <template #image>
                 <img src="@/assets/images/notData.png" />
               </template>
             </el-empty>
           </template>
         </el-image>
-        <el-empty v-else class="pic-empty" description="目前没有任何预览图">
+        <el-empty v-else class="pic-empty" :description="$t('alarm.picEmpty2')">
           <template #image>
             <img src="@/assets/images/notData.png" />
           </template>
         </el-empty>
       </div>
       <div class="detailDialog-right">
-        <div class="detailDialog-right-title kr-font-medium">智能巡检结果</div>
+        <div class="detailDialog-right-title kr-font-medium">{{ $t('aiInspection.inspectionRes') }}</div>
         <div class="detailDialog-right-description">
           <div class="detailDialog-right-description-items">
-            <div class="detailDialog-right-description-items-label">巡检结论：</div>
+            <div class="detailDialog-right-description-items-label">{{ $t('aiInspection.inspectionResult') }}：</div>
             <div class="detailDialog-right-description-items-value">{{ inspectionConclusion }}</div>
           </div>
           <div class="detailDialog-right-description-items">
-            <div class="detailDialog-right-description-items-label">识别结果：</div>
+            <div class="detailDialog-right-description-items-label">{{ $t('aiInspection.recognitionResult') }}：</div>
             <div class="detailDialog-right-description-items-value">{{ rowData?.recognitionResult ?? '' }}</div>
           </div>
         </div>
-        <div class="detailDialog-right-title kr-font-medium">复核结果</div>
+        <div class="detailDialog-right-title kr-font-medium">{{ $t('task.Fhres') }}</div>
         <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="formData">
           <div class="detailDialog-right-description">
             <div class="detailDialog-right-description-items no20">
-              <div class="detailDialog-right-description-items-label">巡检结论：</div>
+              <div class="detailDialog-right-description-items-label">{{ $t('aiInspection.inspectionResult') }}：</div>
               <el-form-item class="detailDialog-right-description-items-value" prop="checkConclusion">
                 <el-radio-group v-model="formData.checkConclusion">
                   <el-radio :value="item.value" :key="item.value" size="large" v-for="item in inspection_conclusion">{{
@@ -182,7 +186,7 @@ defineExpose({
               </el-form-item>
             </div>
             <div class="detailDialog-right-description-items no20">
-              <div class="detailDialog-right-description-items-label">实际结果：</div>
+              <div class="detailDialog-right-description-items-label">{{ $t('task.checkResult') }}：</div>
               <el-form-item class="detailDialog-right-description-items-value" prop="checkResult">
                 <template v-if="isState">
                   <el-select v-model="formData.checkResult" clearable>
@@ -203,16 +207,11 @@ defineExpose({
             </div>
           </div>
         </el-form>
-        <el-popover
-          placement="bottom-start"
-          :width="290"
-          trigger="hover"
-          content="采集的抓图如有问题，可框选问题区域，点击确定修正后，框选的问题图片会自动进入数据收集模块，用于后续算法训练;如采集的抓图没有问题，则无需框选。"
-        >
+        <el-popover placement="bottom-start" :width="290" trigger="hover" :content="$t('task.operationInfo')">
           <template #reference>
             <div class="detailDialog-right-tip">
               <el-icon size="16"><Warning /></el-icon>
-              <span>操作说明</span>
+              <span>{{ $t('task.operationInfoLabel') }}</span>
             </div>
           </template>
         </el-popover>
