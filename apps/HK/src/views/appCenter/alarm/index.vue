@@ -134,7 +134,7 @@ await getD();
 const route = useRoute();
 const router = useRouter();
 let cardTitle: ComputedRef<any> = computed(() =>
-  pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]
+  pageType.value === 'list' ? route.meta?.title! : t(PageTypeTitle[pageType.value])
 );
 let pageType = ref<PageType>('list');
 //树操作

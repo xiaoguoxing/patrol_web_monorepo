@@ -90,7 +90,7 @@ const inspection_conclusion = (await getDict('inspection_conclusion')) as Option
 const route = useRoute();
 const router = useRouter();
 let pageType = ref<PageType>('list');
-let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]));
+let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : t(PageTypeTitle[pageType.value])));
 
 onMounted(() => {
   if (route.query.id) {

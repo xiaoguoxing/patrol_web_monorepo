@@ -296,6 +296,9 @@ export default {
     stopAlarmTime3: `请输入消警说明`,
     executeTime: `异常时间`,
     recognitionResult2: `异常结果`,
+    alarmDetail: `告警详情`,
+    abnormalDetail: `异常详情`,
+    qxReport: `缺陷上报`,
   },
   menu: {
     znxj: '智能巡检',
@@ -388,5 +391,6 @@ export default {
     badgeItem2: '正常',
     badgeItem3: '异常',
     openWind: '跳转',
+    taskReportDetail: '报告详情',
   },
 };

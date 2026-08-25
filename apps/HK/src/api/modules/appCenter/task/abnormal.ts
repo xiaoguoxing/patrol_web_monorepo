@@ -4,8 +4,8 @@ import { ResPage } from '@/api/interface';
 import { ContentTypeEnum } from '@/enums/httpEnum';
 export enum PageTypeTitle {
   list = '',
-  detail = '异常详情',
-  reportingDeficiencies = '缺陷上报',
+  detail = 'alarm.abnormalDetail',
+  reportingDeficiencies = 'alarm.qxReport',
 }
 export type PageType = keyof typeof PageTypeTitle;
 export interface Tree {

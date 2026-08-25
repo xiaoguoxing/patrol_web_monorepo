@@ -4,7 +4,7 @@ import { ContentTypeEnum } from '@/enums/httpEnum';
 
 export enum PageTypeTitle {
   list = '',
-  detail = '报告详情',
+  detail = 'task.taskReportDetail',
 }
 export type PageType = keyof typeof PageTypeTitle;
 export interface ReportListParams {
