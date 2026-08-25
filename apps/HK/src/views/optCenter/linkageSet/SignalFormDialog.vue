@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${props.title}联动信号`"
+    :title="`${props.title} ${$t('linkageSet.ldxh')}`"
     :singleClose="props.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,7 +17,7 @@
       :model="props.rowData"
       :hide-required-asterisk="props.isView"
     >
-      <el-form-item label="联动点位" prop="linkageSignalCode">
+      <el-form-item :label="$t('aiInspection.cameraName')" prop="linkageSignalCode">
         <!--        <el-input v-model="props.rowData!.linkageSignalCode" placeholder="请输入联动信号编码" clearable></el-input>-->
         <el-select-v2
           v-model="props.rowData!.linkageSignalCode"
@@ -25,22 +25,30 @@
           :props="{ value: 'code', label: 'name' }"
           filterable
           clearable
-          :disabled="props.title === '编辑'"
+          :disabled="props.title === $t('buttonName.edit')"
           @change="scadaChange"
         >
           <!--                <el-option :label="item.name" :value="item.code" :key="item.id" v-for="item in scadaList"></el-option>-->
         </el-select-v2>
       </el-form-item>
-      <el-form-item label="联动信号名称" prop="linkageSignalName">
-        <el-input v-model="props.rowData!.linkageSignalName" placeholder="请输入联动信号名称" clearable></el-input>
+      <el-form-item :label="$t('aiInspection.linkageSignalName')" prop="linkageSignalName">
+        <el-input
+          v-model="props.rowData!.linkageSignalName"
+          :placeholder="`${$t('inputPlaceholder.placeholderBase')}${$t('aiInspection.linkageSignalName')}`"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="标准值" prop="standardValue">
-        <el-input v-model="props.rowData!.standardValue" placeholder="请输入标准值" clearable></el-input>
+      <el-form-item :label="$t('linkageSet.standardValue')" prop="standardValue">
+        <el-input
+          v-model="props.rowData!.standardValue"
+          :placeholder="`${$t('inputPlaceholder.placeholderBase')}${$t('linkageSet.standardValue')}`"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="巡检模式" prop="executeMode">
+      <el-form-item :label="$t('task.inspectionModel')" prop="executeMode">
         <el-select v-model="props.rowData!.executeMode" clearable>
-          <el-option label="顺序执行" value="serial"></el-option>
-          <el-option label="并行执行" value="parallel"></el-option>
+          <el-option :label="$t('linkageSet.serial')" value="serial"></el-option>
+          <el-option :label="$t('linkageSet.parallel')" value="parallel"></el-option>
         </el-select>
       </el-form-item>
     </el-form>
@@ -51,12 +59,37 @@
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { getScadaInfoApi } from '@/api/modules/optCenter/aiPatrolManage/position';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  linkageSignalName: [{ required: true, message: '请输入联动信号名称', trigger: 'blur' }],
-  linkageSignalCode: [{ required: true, message: '请输入联动信号编码', trigger: 'blur' }],
-  standardValue: [{ required: true, message: '请输入标准值', trigger: 'blur' }],
-  executeMode: [{ required: true, message: '请选择巡检模式', trigger: 'blur' }],
+  linkageSignalName: [
+    {
+      required: true,
+      message: `${t('inputPlaceholder.placeholderBase')}${t('aiInspection.linkageSignalName')}`,
+      trigger: 'blur',
+    },
+  ],
+  linkageSignalCode: [
+    {
+      required: true,
+      message: `${t('inputPlaceholder.placeholderBase')}${t('aiInspection.linkageSignalCode')}`,
+      trigger: 'blur',
+    },
+  ],
+  standardValue: [
+    {
+      required: true,
+      message: `${t('inputPlaceholder.placeholderBase')}${t('linkageSet.standardValue')}`,
+      trigger: 'blur',
+    },
+  ],
+  executeMode: [
+    {
+      required: true,
+      message: `${t('inputPlaceholder.placeholderSelect')}${t('linkageSet.inspectionModel')}`,
+      trigger: 'blur',
+    },
+  ],
 });
 
 interface DialogProps {
@@ -105,7 +138,7 @@ const handleSubmit = () => {
     if (!valid) return;
     try {
       await props.value.api!(props.value.rowData);
-      ElMessage.success({ message: `${props.value.title}联动信号成功！` });
+      ElMessage.success({ message: `${props.value.title}${t('linkageSet.ldxh')}${t('buttonName.success')}！` });
       props.value.getList!();
       show.value = false;
     } catch (error) {

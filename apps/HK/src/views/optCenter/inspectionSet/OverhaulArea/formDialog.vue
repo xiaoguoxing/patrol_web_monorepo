@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${props.title}检修区域`"
+    :title="`${props.title}${$t('overHaulArea.overHaulAreaName')}`"
     :singleClose="props.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,25 +17,25 @@
       :model="props.rowData"
       :hide-required-asterisk="props.isView"
     >
-      <el-form-item label="巡检对象" prop="objectIdList">
+      <el-form-item :label="$t('overHaulArea.object')" prop="objectIdList">
         <el-tree-select
           v-model="props.rowData!.objectIdList"
           :data="data"
           :props="{ label: 'nodeName', value: 'id' }"
           multiple
           node-key="id"
-          :disabled="props.title === '编辑'"
+          :disabled="props.title === $t('buttonName.edit')"
           :render-after-expand="false"
           show-checkbox
         />
       </el-form-item>
-      <el-form-item label="检修时间" prop="startTime">
+      <el-form-item :label="$t('overHaulArea.jxTime')" prop="startTime">
         <el-date-picker
           v-model="timesArr"
           type="datetimerange"
-          range-separator="到"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
+          :range-separator="$t('input.rangeSeparator')"
+          :start-placeholder="$t('input.sTime')"
+          :end-placeholder="$t('input.eTime')"
           format="YYYY-MM-DD HH:mm:ss"
           value-format="YYYY-MM-DD HH:mm:ss"
           time-format="HH:mm:ss"
@@ -50,9 +50,17 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { getObjectTreeApi } from '@/api/modules/optCenter/inspectionSet/OverhaulArea';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  objectIdList: [{ required: true, type: 'array', message: '请选择巡检对象' }],
-  startTime: [{ required: true, message: '请选择检修时间' }],
+  objectIdList: [
+    {
+      required: true,
+      type: 'array',
+      message: t('inputPlaceholder.placeholderSelect') + t('overHaulArea.object'),
+    },
+  ],
+  startTime: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('overHaulArea.jxTime') }],
 });
 interface DialogProps {
   title: string;
@@ -86,7 +94,9 @@ const handleSubmit = () => {
     if (!valid) return;
     try {
       await props.value.api!(props.value.rowData);
-      ElMessage.success({ message: `${props.value.title}检修对象成功！` });
+      ElMessage.success({
+        message: `${props.value.title}${t('overHaulArea.overHaulAreaName')}${t('buttonName.success')}！`,
+      });
       props.value.getTableList!();
       show.value = false;
     } catch (error) {

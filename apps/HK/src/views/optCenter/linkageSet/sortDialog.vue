@@ -17,7 +17,8 @@ import { ElMessage, FormInstance } from 'element-plus';
 import Sortable from 'sortablejs';
 import { Rank } from '@element-plus/icons-vue';
 import { getListApi, sortApi, linkObj } from '@/api/modules/optCenter/linkageSet';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface DialogProps {
   title: string;
   linkageSignalId?: string;
@@ -89,7 +90,7 @@ const columns = [
 
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     minWidth: 120,
     render: (scope) => {
       return (
@@ -104,10 +105,10 @@ const columns = [
   },
   {
     prop: 'areaPath',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     minWidth: 200,
   },
-  { prop: 'itemName', label: '巡检项名称' },
+  { prop: 'itemName', label: t('task.itemName') },
 ];
 const handleSubmit = async () => {
   try {
@@ -121,7 +122,7 @@ const handleSubmit = async () => {
       }),
     };
     await sortApi!(param);
-    ElMessage.success({ message: `${props.value.title}成功！` });
+    ElMessage.success({ message: `${props.value.title}${t('buttonName.success')}！` });
     props.value.getTableList!();
     show.value = false;
   } catch (error) {

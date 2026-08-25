@@ -7,8 +7,8 @@
     :getListApi="getTableList"
     :defaultValue="defaultValue"
     :column="column"
-    tree-title="巡检对象列表"
-    table-title="巡检项列表"
+    :tree-title="$t('linkageSet.objectNameList')"
+    :table-title="$t('linkageSet.itemList')"
     tree-label="nodeName"
     label="itemName"
     id="id"
@@ -25,7 +25,8 @@ import { ColumnProps } from '@patrol/ui';
 import { getObjTreeApi } from '@/api/modules/optCenter/inspectionSet/area';
 import type { InspectionObj } from '@/api/modules/optCenter/inspectionSet/area';
 import { getInspectionListAllApi } from '@/api/modules/optCenter/aiPatrolManage/inspection';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 // 弹窗状态
 const show = ref(false);
 //树数据
@@ -61,7 +62,7 @@ const getTableList = (params: any) => {
 const column: ColumnProps[] = [
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
   },
 ];
 
@@ -91,7 +92,7 @@ const onConfirm = async (ids: string[], arr: any[]) => {
   };
   await props.value.api!(postParams);
 
-  ElMessage.success({ message: `${props.value.title}成功！` });
+  ElMessage.success({ message: `${props.value.title}${t('buttonName.success')}！` });
   props.value.getTableList!();
   show.value = false;
 };

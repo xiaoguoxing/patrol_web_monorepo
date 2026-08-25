@@ -1,11 +1,16 @@
 <template>
   <div class="flex-1">
-    <kr-card class="flex-1 two-col-page" header="智能联动配置" header-border>
+    <kr-card class="flex-1 two-col-page" :header="cardTitle" header-border>
       <div class="two-col-page-lf flex-column" v-dragLine>
-        <el-input v-model="filterText" placeholder="请输入联动信号" clearable />
+        <el-input v-model="filterText" :placeholder="$t('linkageSet.treePlaceholder')" clearable />
         <div class="signal-btns mt20 mb18">
-          <el-button v-auth="'addSignal'" icon="CirclePlus" type="primary" link @click="openSignalDialog('新建')"
-            >新建</el-button
+          <el-button
+            v-auth="'addSignal'"
+            icon="CirclePlus"
+            type="primary"
+            link
+            @click="openSignalDialog($t('buttonName.add'))"
+            >{{ $t('buttonName.add') }}</el-button
           >
           <!-- <el-button icon="Download" class="mr10" link @click="downloadFile">下载模板</el-button> -->
 
@@ -19,7 +24,9 @@
           >
             <el-button icon="Upload" link>导入</el-button>
           </el-upload> -->
-          <el-button v-auth="'uploadSignal'" icon="Upload" link @click="handleHttpUpload">导入</el-button>
+          <el-button v-auth="'uploadSignal'" icon="Upload" link @click="handleHttpUpload">{{
+            $t('buttonName.importFile')
+          }}</el-button>
         </div>
         <el-scrollbar class="flex-1-column">
           <div class="signal-item" v-for="(signal, index) in filterList" :key="index">
@@ -30,11 +37,13 @@
             >
               <div class="signal-item-name mb10">
                 <el-tag class="signal-item-tag mr10" :type="signal.linked ? 'primary' : 'warning'">{{
-                  signal.linked ? '已关联' : '未关联'
+                  signal.linked ? $t('linkageSet.linked1') : $t('linkageSet.linked2')
                 }}</el-tag
                 >{{ signal.linkageSignalName }}
               </div>
-              <div class="signal-item-code">联动信号编码：{{ signal.linkageSignalCode }}</div>
+              <div class="signal-item-code">
+                {{ $t('aiInspection.linkageSignalCode') }}：{{ signal.linkageSignalCode }}
+              </div>
             </div>
             <el-popover
               placement="bottom"
@@ -48,8 +57,12 @@
                 <el-icon class="signal-item-rt"><MoreFilled /></el-icon>
               </template>
 
-              <el-button v-auth="'editSignal'" link @click="openSignalDialog('编辑', signal)">编辑</el-button>
-              <el-button v-auth="'deleteSignal'" link @click="deleteSignalData(signal.id)">删除</el-button>
+              <el-button v-auth="'editSignal'" link @click="openSignalDialog($t('buttonName.edit'), signal)">{{
+                $t('buttonName.edit')
+              }}</el-button>
+              <el-button v-auth="'deleteSignal'" link @click="deleteSignalData(signal.id)">{{
+                $t('ui.delete')
+              }}</el-button>
             </el-popover>
           </div>
         </el-scrollbar>
@@ -66,26 +79,28 @@
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="scope">
-          <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm('添加巡检项')"
-            >添加巡检项</el-button
-          >
+          <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm($t('linkageSet.addItem'))">{{
+            $t('linkageSet.addItem')
+          }}</el-button>
           <el-button
             v-auth="'batchDelete'"
             icon="Delete"
             @click="batchDelete(scope.selectedListIds)"
             :disabled="!scope.isSelected"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
           <!-- v-auth="'batchUp'" -->
           <!-- v-auth="'batchDown'" -->
-          <el-button icon="Sort" @click="openSort()">排序</el-button>
+          <el-button icon="Sort" @click="openSort()">{{ $t('buttonName.sort') }}</el-button>
           <!-- <el-button icon="Bottom" @click="batchMove(scope.selectedListIds, 1)" :disabled="!scope.isSelected"
             >下移</el-button
           > -->
         </template>
         <!-- 表格操作 -->
         <template #operation="scope">
-          <el-button v-auth="'delete'" type="primary" link @click="deleteData(scope.row)">删除</el-button>
+          <el-button v-auth="'delete'" type="primary" link @click="deleteData(scope.row)">{{
+            $t('ui.delete')
+          }}</el-button>
         </template>
       </kr-pro-table>
     </kr-card>
@@ -96,7 +111,7 @@
   </div>
 </template>
 <script setup lang="tsx" name="linkageSet">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, ComputedRef, computed } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
 import type { DefaultDict, FilterDict } from '@/utils/serviceDict';
@@ -121,6 +136,12 @@ import {
   addApi,
 } from '@/api/modules/optCenter/linkageSet';
 import type { Signal } from '@/api/modules/optCenter/linkageSet';
+4;
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
+const { t } = useI18n();
+const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 /*
  **数据字典
  */
@@ -191,8 +212,8 @@ const openSignalDialog = (title: string, data: any = {}) => {
   let params = {
     title,
     rowData: { ...data },
-    isView: title === '详情',
-    api: title === '新建' ? addSignalApi : title === '编辑' ? editSignalApi : '',
+    isView: title === t('buttonName.detail'),
+    api: title === t('buttonName.add') ? addSignalApi : title === t('buttonName.edit') ? editSignalApi : '',
     getList: initSignalList,
   };
   signalDialogRef.value.acceptParams(params);
@@ -200,14 +221,14 @@ const openSignalDialog = (title: string, data: any = {}) => {
 
 //删除信号
 const deleteSignalData = async (id: string) => {
-  await useHandleData(deleteSignalApi, { ids: id }, `删除该联动信号`);
+  await useHandleData(deleteSignalApi, { ids: id }, t('linkageSet.deleteItem'));
   initSignalList();
 };
 //
 const importRef = ref();
 const handleHttpUpload = () => {
   let params = {
-    title: '数据',
+    title: t('linkageSet.data'),
     tempApi: downloadTemplateApi,
     importApi: uploadSignalApi,
     getTableList: initSignalList,
@@ -225,22 +246,6 @@ const handleHttpUpload = () => {
   }
 }; */
 // 上传成功提示
-const uploadSuccess = () => {
-  ElNotification({
-    title: '温馨提示',
-    message: '文件上传成功！',
-    type: 'success',
-  });
-};
-
-// 上传错误提示
-const uploadError = () => {
-  ElNotification({
-    title: '温馨提示',
-    message: '文件上传失败，请您重新上传！',
-    type: 'error',
-  });
-};
 /*
   巡检项功能
 
@@ -261,20 +266,20 @@ const dataCallback = (data: any) => {
 const columns: ColumnProps[] = [
   { type: 'selection', width: 60 },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'areaPath',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     minWidth: 200,
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     minWidth: 120,
   },
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
     minWidth: 120,
     width: 120,
     search: {
@@ -286,13 +291,17 @@ const columns: ColumnProps[] = [
             {{
               prepend: () => {
                 return (
-                  <el-select v-model={searchProp.value} placeholder="请选择" style={'width: 140px'}>
-                    <el-option label="巡检项名称" value={'itemName'} />
-                    <el-option label="巡检区域" value={'areaName'} />
-                    <el-option label="巡检对象名称" value={'objectName'} />
-                    <el-option label="监控设备名称" value={'cameraName'} />
-                    <el-option label="预置位名称" value={'presetPositionName'} />
-                    <el-option label="关联技能" value={'relatedSkills'} />
+                  <el-select
+                    v-model={searchProp.value}
+                    placeholder={t('inputPlaceholder.placeholderSelect')}
+                    style={'width: 140px'}
+                  >
+                    <el-option label={t('task.itemName')} value={'itemName'} />
+                    <el-option label={t('aiInspection.areaName')} value={'areaName'} />
+                    <el-option label={t('aiInspection.objectName')} value={'objectName'} />
+                    <el-option label={t('linkageSet.cameraName')} value={'cameraName'} />
+                    <el-option label={t('linkageSet.presetPositionName')} value={'presetPositionName'} />
+                    <el-option label={t('linkageSet.relatedSkills')} value={'relatedSkills'} />
                   </el-select>
                 );
               },
@@ -304,35 +313,35 @@ const columns: ColumnProps[] = [
   },
   {
     prop: 'cameraName',
-    label: '监控设备名称',
+    label: t('linkageSet.cameraName'),
     minWidth: 120,
     width: 120,
   },
   {
     prop: 'cameraType', //TODO:该属性名称未知，问后端
-    label: '监控设备类型',
+    label: t('linkageSet.cameraType'),
     minWidth: 150,
     filters: dictForFilters(typeDictlist),
     enum: typeDictlist,
   },
   {
     prop: 'presetPositionName',
-    label: '预置位名称',
+    label: t('linkageSet.presetPositionName'),
     minWidth: 120,
     width: 120,
   },
   {
     prop: 'relatedSkillsName',
-    label: '关联技能',
+    label: t('linkageSet.relatedSkills'),
     minWidth: 120,
     width: 120,
   },
   {
     prop: 'createTime', //TODO:属性名称问后端
-    label: '创建时间',
+    label: t('linkageSet.createTime'),
     minWidth: 150,
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 // 点击联动信号
 const onClickSignal = (signal: any) => {
@@ -367,7 +376,7 @@ const openForm = (title: string) => {
     };
     formDialogRef.value.acceptParams(params);
   } else {
-    ElMessage.warning('请选择联动信号！');
+    ElMessage.warning(t('linkageSet.msg1'));
   }
 };
 const sortDialogRef = ref();
@@ -375,27 +384,27 @@ const sortDialogRef = ref();
 const openSort = () => {
   if (initParam.linkageSignalId) {
     let params = {
-      title: '排序',
+      title: t('buttonName.sort'),
       linkageSignalId: initParam.linkageSignalId,
       getTableList: proTable.value.getTableList,
     };
     sortDialogRef.value.acceptParams(params);
   } else {
-    ElMessage.warning('请选择联动信号！');
+    ElMessage.warning(t('linkageSet.msg1'));
   }
 };
 //批量移动数据
 const batchMove = (id: string[], num: number) => {};
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(deleteApi, { ids: id.join() }, '删除所选联动内容');
+  await useHandleData(deleteApi, { ids: id.join() }, t('linkageSet.msg2'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
   getSignalList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(deleteApi, { ids: row.id }, `删除该联动内容`);
+  await useHandleData(deleteApi, { ids: row.id }, t('linkageSet.msg3'));
   proTable.value.getTableList();
   getSignalList();
 };

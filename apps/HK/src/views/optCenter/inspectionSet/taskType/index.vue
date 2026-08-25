@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1">
-    <kr-card class="flex-1" header="巡检任务类型配置" header-border>
+    <kr-card class="flex-1" :header="cardTitle" header-border>
       <kr-pro-table
         ref="proTable"
         :columns="columns"
@@ -12,19 +12,25 @@
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="scope">
-          <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm('新建')">新建任务类型</el-button>
+          <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm($t('buttonName.add'))">{{
+            $t('buttonName.add') + $t('aiInspection.taskTypeName')
+          }}</el-button>
           <el-button
             v-auth="'batchDelete'"
             icon="Delete"
             @click="batchDelete(scope.selectedListIds)"
             :disabled="!scope.isSelected"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <!-- 表格操作 -->
         <template #operation="scope">
-          <el-button v-auth="'edit'" type="primary" link @click="openForm('编辑', scope.row)">编辑</el-button>
-          <el-button v-auth="'delete'" type="primary" link @click="deleteData(scope.row)">删除</el-button>
+          <el-button v-auth="'edit'" type="primary" link @click="openForm($t('buttonName.edit'), scope.row)">{{
+            $t('buttonName.edit')
+          }}</el-button>
+          <el-button v-auth="'delete'" type="primary" link @click="deleteData(scope.row)">{{
+            $t('ui.delete')
+          }}</el-button>
         </template>
       </kr-pro-table>
     </kr-card>
@@ -32,12 +38,17 @@
   </div>
 </template>
 <script setup lang="tsx" name="TaskType">
-import { ref } from 'vue';
+import { computed, ComputedRef, ref } from 'vue';
 import { ColumnProps } from '@patrol/ui';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import formDialog from './formDialog.vue';
 import { getListApi, deleteApi, editApi, addApi, TaskType } from '@/api/modules/optCenter/inspectionSet/taskType';
 import { Warning } from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 /*
 任务类型树表 选择器
 
@@ -68,27 +79,27 @@ const tableSource = [
 const columns: ColumnProps[] = [
   { type: 'selection', width: 60 },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'taskType',
-    label: '任务类型名称',
+    label: t('task.taskTypeName'),
     search: {
       el: 'input',
       props: {
-        placeholder: '请输入您想搜索的任务类型名称',
+        placeholder: t('task.taskTypeNamePlaceholder'),
       },
     },
   },
 
   {
     prop: 'priorityLevel',
-    label: '执行优先级',
+    label: t('task.priorityLevel'),
     // 使用 headerRender 自定义表头
     headerRender: (scope) => {
       return (
         <span>
-          执行优先级
-          <el-tooltip content="任务类型执行有优先级, 数值1~10，数值越小，执行优先级越高" effect="light" placement="top">
+          {t('task.priorityLevel')}
+          <el-tooltip content={t('task.priorityLevelTip')} effect="light" placement="top">
             <el-icon>
               <Warning />
             </el-icon>
@@ -97,7 +108,7 @@ const columns: ColumnProps[] = [
       );
     },
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 
 // 获取表格数据
@@ -113,21 +124,21 @@ const openForm = (title: string, rowData: Partial<TaskType.ResList> = {}) => {
   let params = {
     title,
     rowData: { ...rowData },
-    isView: title === '详情',
-    api: title === '新建' ? addApi : title === '编辑' ? editApi : '',
+    isView: title === t('buttonName.detail'),
+    api: title === t('buttonName.add') ? addApi : title === t('buttonName.edit') ? editApi : '',
     getTableList: proTable.value.getTableList,
   };
   formDialogRef.value.acceptParams(params);
 };
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(deleteApi, { ids: id.join() }, '删除所选任务类型');
+  await useHandleData(deleteApi, { ids: id.join() }, t('task.msg1'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(deleteApi, { ids: row.id }, `删除该任务类型`);
+  await useHandleData(deleteApi, { ids: row.id }, t('task.msg2'));
   proTable.value.getTableList();
 };
 </script>

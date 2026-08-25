@@ -25,18 +25,18 @@
           <el-button
             v-auth="'add'"
             icon="CirclePlus"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             :disabled="syncData"
             type="primary"
-            @click="openForm('新建')"
-            >新建检修区域</el-button
+            @click="openForm($t('buttonName.add'))"
+            >{{ $t('buttonName.add') }}{{ $t('overHaulArea.overHaulAreaName') }}</el-button
           >
           <el-button
             icon="Delete"
             v-auth="'delete'"
             :disabled="!selectedListIds.length"
             @click="batchDelete(selectedListIds)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <!-- 表格操作 -->
@@ -44,20 +44,20 @@
           <el-button
             v-auth="'edit'"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             type="primary"
             link
-            @click="openForm('编辑', scope.row)"
-            >编辑</el-button
+            @click="openForm($t('buttonName.edit'), scope.row)"
+            >{{ $t('buttonName.edit') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             type="primary"
             link
             @click="deleteData(scope.row)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
       </kr-pro-table>
@@ -77,6 +77,8 @@ import { getAreaListApi } from '@/api/modules/optCenter/inspectionSet/area';
 import { useRoute } from 'vue-router';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { Dict } from '@/api/modules/appCenter/alarm';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 /*
   巡检区域功能
 */
@@ -120,14 +122,14 @@ const columns: ColumnProps[] = [
       return !e.syncData;
     },
   },
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'objectCode',
-    label: '巡检对象编号',
+    label: t('overHaulArea.objectCode'),
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     search: {
       el: 'input',
       key: 'searchValue',
@@ -137,9 +139,13 @@ const columns: ColumnProps[] = [
             {{
               prepend: () => {
                 return (
-                  <el-select v-model={searchProp.value} placeholder={'请选择'} style={'width: 140px'}>
-                    <el-option label="巡检对象名称" value={'objectName'} />
-                    <el-option label="巡检对象编号" value={'objectCode'} />
+                  <el-select
+                    v-model={searchProp.value}
+                    placeholder={t('inputPlaceholder.placeholderSelect')}
+                    style={'width: 140px'}
+                  >
+                    <el-option label={t('aiInspection.objectName')} value={'objectName'} />
+                    <el-option label={t('overHaulArea.objectCode')} value={'objectCode'} />
                   </el-select>
                 );
               },
@@ -151,24 +157,24 @@ const columns: ColumnProps[] = [
   },
   {
     prop: 'areaName',
-    label: '所属区域',
+    label: t('overHaulArea.areaName'),
   },
   {
     prop: 'startTime',
-    label: '检修开始时间',
+    label: t('overHaulArea.startTime'),
   },
   {
     prop: 'endTime',
-    label: '检修结束时间',
+    label: t('overHaulArea.endTime'),
   },
   {
     prop: 'status',
-    label: '状态',
+    label: t('table.status'),
     filterMultiple: false,
     filters: getDictForColumnFilters(alarm_level),
     enum: alarm_level,
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 // 点击树节点
 let syncData = ref();
@@ -200,27 +206,27 @@ const openForm = (title: string, rowData: any = {}) => {
         title: title,
         areaData: nodeData,
         rowData: { ...rowData },
-        isView: title === '详情',
-        api: title === '新建' ? addApi : title === '编辑' ? editApi : '',
+        isView: title === t('buttonName.detail'),
+        api: title === t('buttonName.add') ? addApi : title === t('buttonName.edit') ? editApi : '',
         getTableList: proTable.value.getTableList,
       };
       formDialogRef.value.acceptParams(params);
     } else {
-      ElMessage.warning('当前节点不可添加巡检对象，请选择正确的巡检区域！');
+      ElMessage.warning(t('overHaulArea.msg1'));
     }
   } else {
-    ElMessage.warning('请选择巡检区域！');
+    ElMessage.warning(t('overHaulArea.msg2') + '！');
   }
 };
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(deleteApi, { ids: id.join() }, '删除所选巡检对象');
+  await useHandleData(deleteApi, { ids: id.join() }, t('overHaulArea.msg3'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(deleteApi, { ids: row.id }, `删除该巡检对象`);
+  await useHandleData(deleteApi, { ids: row.id }, t('overHaulArea.msg4'));
   proTable.value.getTableList();
 };
 </script>

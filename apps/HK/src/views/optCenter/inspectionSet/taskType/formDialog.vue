@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${props.title}任务类型`"
+    :title="`${props.title}${$t('aiInspection.taskTypeName')}`"
     :singleClose="props.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,10 +17,13 @@
       :model="props.rowData"
       :hide-required-asterisk="props.isView"
     >
-      <el-form-item label="任务类型名称" prop="taskType">
-        <el-input v-model="props.rowData!.taskType" placeholder="请输入任务类型名称"></el-input>
+      <el-form-item :label="$t('task.taskTypeName')" prop="taskType">
+        <el-input
+          v-model="props.rowData!.taskType"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('task.taskTypeName')"
+        ></el-input>
       </el-form-item>
-      <el-form-item label="执行优先级" prop="priorityLevel">
+      <el-form-item :label="$t('task.priorityLevel')" prop="priorityLevel">
         <el-slider v-model="props.rowData!.priorityLevel" show-input :step="1" :min="1" :max="10" show-stops />
       </el-form-item>
     </el-form>
@@ -30,10 +33,11 @@
 <script setup lang="ts" name="TaskTypeDialog">
 import { ref, reactive } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  taskType: [{ required: true, message: '请输入任务类型名称' }],
-  priorityLevel: [{ required: true, message: '请设置执行优先级' }],
+  taskType: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('task.taskTypeName') }],
+  priorityLevel: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('task.priorityLevel') }],
 });
 
 interface DialogProps {
@@ -64,7 +68,9 @@ const handleSubmit = () => {
     if (!valid) return;
     try {
       await props.value.api!(props.value.rowData);
-      ElMessage.success({ message: `${props.value.title}任务类型成功！` });
+      ElMessage.success({
+        message: `${props.value.title}${t('aiInspection.taskTypeName')} ${t('buttonName.success')}！`,
+      });
       props.value.getTableList!();
       show.value = false;
     } catch (error) {

@@ -36,7 +36,7 @@
           <template #tableHeader>
             <el-input
               v-model="filterText"
-              placeholder="输入关键字过滤"
+              :placeholder="t('el.patrol.filterPlaceholder')"
               suffix-icon="el-icon-search"
               clearable
               style="margin-bottom: 10px"
@@ -49,7 +49,7 @@
     <el-col v-if="selectable" :span="9" class="h100">
       <kr-filter-list
         componentsType="tableList"
-        header="已选"
+        :header="t('el.patrol.selected')"
         :label="label"
         filterable
         headerBorder
@@ -68,11 +68,13 @@ import type { ColumnProps } from '../../';
 import { isArray } from '../../../utils';
 import '../style/index.scss';
 import KrCard from '../../card';
+import { useLocale } from 'element-plus';
 defineOptions({
   name: 'KrTreeList',
 
   inheritAttrs: false,
 });
+const { t } = useLocale();
 // 接收父组件参数并设置默认值
 interface TreeListProps {
   treeTitle?: string; // 树标题 ==> 非必传，默认为 节点树

@@ -1,6 +1,6 @@
 <template>
   <div class="kr-filter-tree">
-    <el-input v-model="filterText" :placeholder="placeholder" clearable />
+    <el-input v-model="filterText" :placeholder="placeholder || t('el.patrol.filterPlaceholder')" clearable />
     <el-scrollbar style="height: calc(100% - 47px)">
       <!-- :style="{ height: header||$slots.header ? `calc(100% - 95px)` : `calc(100% - 56px)` }" -->
       <el-tree
@@ -37,8 +37,9 @@
 
 <script setup lang="ts" name="KrFilterTree">
 import { ref, watch, onBeforeMount } from 'vue';
-import { ElTree } from 'element-plus';
+import { ElTree, useLocale } from 'element-plus';
 import '../style/index.scss';
+const { t } = useLocale();
 // 接收父组件参数并设置默认值
 interface FilterTreeProps {
   requestApi?: (data?: any) => Promise<any>; // 请求数据的 api ==> 非必传
@@ -55,7 +56,7 @@ interface FilterTreeProps {
 const props = withDefaults(defineProps<FilterTreeProps>(), {
   id: 'id',
   label: 'label',
-  placeholder: '输入关键字进行过滤',
+  placeholder: '',
   multiple: false,
   highlightCurrent: true,
   dea: true,
