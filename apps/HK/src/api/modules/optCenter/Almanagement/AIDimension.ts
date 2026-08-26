@@ -3,9 +3,9 @@ import { PORT_INSPECT } from '@/api/config/servicePort';
 import { ReqPage, ResPage } from '@/api/interface/index';
 export enum PageTypeTitle {
   list = '',
-  add = '新建标注',
-  edit = '数据标注',
-  detail = '标注详情',
+  add = 'model.addPrint',
+  edit = 'model.dataPrint',
+  detail = 'model.printDetail',
 }
 export type RowState = 'todo' | 'finish';
 export type PageType = keyof typeof PageTypeTitle;

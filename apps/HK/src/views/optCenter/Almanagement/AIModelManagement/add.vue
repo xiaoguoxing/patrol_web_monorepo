@@ -10,6 +10,8 @@ import {
 import { reactive, ref } from 'vue';
 import { ElMessage, FormRules } from 'element-plus';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Prop {
   id?: string;
   pageType: PageType;
@@ -32,15 +34,15 @@ async function openDialog() {
 
 const ruleFormRef = ref();
 let formRule = reactive<FormRules<Row>>({
-  algorithmCode: [{ required: true, message: '请输入' }],
-  algorithmName: [{ required: true, message: '请输入' }],
-  algorithmPort: [{ required: true, message: '请输入' }],
-  algorithmUrl: [{ required: true, message: '请输入' }],
-  algorithmVersion: [{ required: true, message: '请输入' }],
-  algorithmSkill: [{ required: false, message: '请输入' }],
-  authenticationUrl: [{ required: true, message: '请输入' }],
-  [identifyType]: [{ required: true, message: '请选择' }],
-  runtimeEnvironment: [{ required: false, message: '请输入' }],
+  algorithmCode: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  algorithmName: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  algorithmPort: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  algorithmUrl: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  algorithmVersion: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  algorithmSkill: [{ required: false, message: t('inputPlaceholder.placeholderBase') }],
+  authenticationUrl: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  [identifyType]: [{ required: true, message: t('inputPlaceholder.placeholderSelect') }],
+  runtimeEnvironment: [{ required: false, message: t('inputPlaceholder.placeholderBase') }],
 });
 let formData = ref<Row>({
   id: '',
@@ -86,7 +88,7 @@ async function confirm() {
   } else {
     await algorithmUpdate(formData.value);
   }
-  ElMessage.success(`${PageTypeTitle[prop.pageType!]}成功!`);
+  ElMessage.success(`${PageTypeTitle[prop.pageType!]}${t('buttonName.success')}!`);
   emit('getList');
   close();
 }
@@ -114,28 +116,52 @@ defineExpose({ openDialog });
       :model="formData"
       :hide-required-asterisk="pageType === 'detail'"
     >
-      <el-form-item label="模型名称" prop="algorithmName">
-        <el-input v-model="formData.algorithmName" placeholder="请输入模型名称" clearable></el-input>
+      <el-form-item :label="$t('model.algorithmName')" prop="algorithmName">
+        <el-input
+          v-model="formData.algorithmName"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('model.algorithmName')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="模型ID" prop="algorithmCode">
-        <el-input v-model="formData.algorithmCode" placeholder="请输入模型ID" clearable></el-input>
+      <el-form-item :label="$t('model.algorithmCode')" prop="algorithmCode">
+        <el-input
+          v-model="formData.algorithmCode"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('model.algorithmCode')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="版本" prop="algorithmVersion">
-        <el-input v-model="formData.algorithmVersion" placeholder="请输入版本" clearable></el-input>
+      <el-form-item :label="$t('model.algorithmVersion')" prop="algorithmVersion">
+        <el-input
+          v-model="formData.algorithmVersion"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('model.algorithmVersion')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="关联技能" prop="algorithmSkill">
-        <el-input v-model="formData.algorithmSkill" placeholder="请输入关联技能" clearable></el-input>
+      <el-form-item :label="$t('linkageSet.relatedSkills')" prop="algorithmSkill">
+        <el-input
+          v-model="formData.algorithmSkill"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('linkageSet.relatedSkills')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="运行环境" prop="runtimeEnvironment">
-        <el-input v-model="formData.runtimeEnvironment" placeholder="请输入运行环境" clearable></el-input>
+      <el-form-item :label="$t('model.runtimeEnvironment')" prop="runtimeEnvironment">
+        <el-input
+          v-model="formData.runtimeEnvironment"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('model.runtimeEnvironment')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="算法URL" prop="algorithmUrl">
-        <el-input v-model="formData.algorithmUrl" placeholder="请输入算法URL" clearable></el-input>
+      <el-form-item :label="t('model.algorithmUrl')" prop="algorithmUrl">
+        <el-input
+          v-model="formData.algorithmUrl"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + t('model.algorithmUrl')"
+          clearable
+        ></el-input>
       </el-form-item>
       <el-form-item label="端口号" v-if="false" prop="algorithmPort">
         <el-input v-model="formData.algorithmPort" placeholder="请输入端口号" clearable></el-input>
       </el-form-item>
-      <el-form-item label="识别类型" prop="identifyType">
+      <el-form-item :label="$t('model.identifyType')" prop="identifyType">
         <el-select clearable v-model="formData[identifyType]">
           <el-option
             :value="item.value"
@@ -145,16 +171,16 @@ defineExpose({ openDialog });
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="业务配置" prop="needBusiness">
+      <el-form-item :label="$t('model.needBusiness')" prop="needBusiness">
         <el-radio-group text-color="#000" v-model="formData.needBusiness">
-          <el-radio :value="true">是</el-radio>
-          <el-radio :value="false">否</el-radio>
+          <el-radio :value="true">{{ $t('common.s') }}</el-radio>
+          <el-radio :value="false">{{ $t('common.f') }}</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="是否需要标注" prop="needBusiness">
+      <el-form-item :label="$t('model.needMarked')" prop="needMarked">
         <el-radio-group text-color="#000" v-model="formData.needMarked">
-          <el-radio :value="true">是</el-radio>
-          <el-radio :value="false">否</el-radio>
+          <el-radio :value="true">{{ $t('common.s') }}</el-radio>
+          <el-radio :value="false">{{ $t('common.f') }}</el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>

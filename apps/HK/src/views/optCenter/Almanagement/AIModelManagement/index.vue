@@ -17,22 +17,28 @@
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="{ selectedListIds }">
-          <el-button icon="CirclePlus" type="primary" v-auth="'import'" @click="pageChange('add')">新建</el-button>
-          <el-button icon="Upload" type="primary" v-auth="'import'" @click="handleHttpUpload">导入模型</el-button>
+          <el-button icon="CirclePlus" type="primary" v-auth="'import'" @click="pageChange('add')">{{
+            $t('buttonName.add')
+          }}</el-button>
+          <el-button icon="Upload" type="primary" v-auth="'import'" @click="handleHttpUpload">{{
+            $t('model.exportModel')
+          }}</el-button>
           <el-button
             icon="Delete"
             v-auth="'delete'"
             :disabled="!selectedListIds.length"
             @click="deleteList(selectedListIds)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <!-- 表格操作 -->
         <template #operation="{ row }">
-          <el-button type="primary" v-auth="'edit'" link @click="pageChange('edit', row)">编辑</el-button>
-          <el-button type="primary" v-auth="'delete'" link @click="deleteList(row['id'] ? [row['id']] : [])"
-            >删除</el-button
-          >
+          <el-button type="primary" v-auth="'edit'" link @click="pageChange('edit', row)">{{
+            $t('buttonName.edit')
+          }}</el-button>
+          <el-button type="primary" v-auth="'delete'" link @click="deleteList(row['id'] ? [row['id']] : [])">{{
+            $t('ui.delete')
+          }}</el-button>
         </template>
       </kr-pro-table>
       <ImportExcel ref="importRef"></ImportExcel>
@@ -57,24 +63,25 @@ import {
 } from '@/api/modules/optCenter/Almanagement/AIModelManagement';
 import addPage from './add.vue';
 let cardTitle = computed(() => useRoute().meta?.title!);
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const proTable = ref();
 const initParam = reactive<Partial<Search>>({});
 const columns: tableProps<Row>[] = [
-  { type: 'selection', label: '序号', width: 70 },
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'selection', label: t('table.sort'), width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'algorithmName',
-    label: '模型名称',
+    label: t('model.algorithmName'),
     isShowInputLabel: false,
     search: {
       el: 'input',
-      props: { placeholder: '请输入您想搜索的模型名称' },
+      props: { placeholder: t('model.exportModelPlaceholder') },
     },
   },
   {
     prop: 'algorithmCode',
-    label: '模型ID',
+    label: t('model.algorithmCode'),
   },
   /* {
     prop: 'algorithmSkill',
@@ -82,19 +89,19 @@ const columns: tableProps<Row>[] = [
   },*/
   {
     prop: 'algorithmVersion',
-    label: '版本',
+    label: t('model.algorithmVersion'),
   },
   {
     prop: 'algorithmSkill',
-    label: '关联技能',
+    label: t('linkageSet.relatedSkills'),
   },
   {
     prop: 'runtimeEnvironment',
-    label: '运行环境',
+    label: t('model.runtimeEnvironment'),
   },
   {
     prop: 'algorithmUrl',
-    label: '算法URL',
+    label: t('model.algorithmUrl'),
   },
   /*{
     prop: 'algorithmPort',
@@ -111,7 +118,7 @@ const columns: tableProps<Row>[] = [
     label: '创建时间',
     isShowInputLabel: true,
   },*/
-  { prop: 'operation', align: 'right', label: '操作', width: 180, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
 ];
 const dataCallback = (data: any) => {
   return {
@@ -128,7 +135,7 @@ const getTableList = async (params: Search) => {
 };
 const deleteList = async (selectedListIds: string[]) => {
   try {
-    await useHandleData<{ ids: string }>(algorithmDelete, { ids: selectedListIds.toString() }, '删除');
+    await useHandleData<{ ids: string }>(algorithmDelete, { ids: selectedListIds.toString() }, t('ui.delete'));
     proTable.value.getTableList();
     proTable.value.clearSelection();
   } catch (e) {
@@ -140,7 +147,7 @@ const deleteList = async (selectedListIds: string[]) => {
 const importRef = ref();
 const handleHttpUpload = () => {
   let params = {
-    title: '数据',
+    title: t('linkageSet.data'),
     tempApi: algorithmTemplate,
     importApi: algorithmImport,
     getTableList: () => {

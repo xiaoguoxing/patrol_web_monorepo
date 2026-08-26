@@ -16,10 +16,12 @@
       >
         <template #tableHeader>
           <div class="operationBtn">
-            <el-button v-auth="'download'" icon="download" type="primary" :disabled="!citiesLength" @click="download"
-              >下载</el-button
-            >
-            <el-button v-auth="'delete'" icon="delete" :disabled="!citiesLength" @click="deleteList">删除</el-button>
+            <el-button v-auth="'download'" icon="download" type="primary" :disabled="!citiesLength" @click="download">{{
+              $t('buttonName.download')
+            }}</el-button>
+            <el-button v-auth="'delete'" icon="delete" :disabled="!citiesLength" @click="deleteList">{{
+              $t('ui.delete')
+            }}</el-button>
             <el-checkbox
               v-auth="'select'"
               class="selectAll"
@@ -34,12 +36,16 @@
               </span>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item link @click="changeSelect('勾选本页')">勾选本页</el-dropdown-item>
-                  <el-dropdown-item link @click="changeSelect('勾选全部')">勾选全部</el-dropdown-item>
+                  <el-dropdown-item link @click="changeSelect($t('model.selectPage'))">{{
+                    $t('model.selectPage')
+                  }}</el-dropdown-item>
+                  <el-dropdown-item link @click="changeSelect($t('model.selectAll'))">{{
+                    $t('model.selectAll')
+                  }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
-            <span class="selectCount">已选{{ citiesLength }}条</span>
+            <span class="selectCount">{{ $t('ui.selected') }} {{ citiesLength }} {{ $t('statistic.item2') }}</span>
           </div>
         </template>
         <template #table="{ tableData, total }">
@@ -56,7 +62,7 @@
                     >
                       <template #error>
                         <img class="errorImg" :src="urlError" alt="图片占位符" />
-                        <div class="el-image__error">加载失败</div>
+                        <div class="el-image__error">{{ $t('model.loadError') }}</div>
                       </template>
                     </el-image>
                     <el-checkbox v-auth="'select'" class="selectItem" :key="item.id" :value="item.id" />
@@ -71,7 +77,7 @@
                   </div>
                   <div class="item_infos">
                     <div class="item_info_item">
-                      <div class="item_info_label">回收时间：</div>
+                      <div class="item_info_label">{{ $t('model.recoveryTime') }}：</div>
                       <div class="item_info_value">
                         <el-tooltip effect="light" :content="item.recoveryTime">
                           {{ item.recoveryTime }}
@@ -79,7 +85,7 @@
                       </div>
                     </div>
                     <div class="item_info_item">
-                      <div class="item_info_label">识别结果：</div>
+                      <div class="item_info_label">{{ $t('aiInspection.recognitionResult') }}：</div>
                       <div class="item_info_value">
                         <el-tooltip effect="light" :content="item.recognitionResult">
                           {{ item.recognitionResult }}
@@ -87,7 +93,7 @@
                       </div>
                     </div>
                     <div class="item_info_item">
-                      <div class="item_info_label">实际结果：</div>
+                      <div class="item_info_label">{{ $t('task.checkResult') }}：</div>
                       <div class="item_info_value">
                         <el-tooltip effect="light" :content="item.realityResult">
                           {{ item.realityResult }}
@@ -98,7 +104,7 @@
                 </div>
               </el-checkbox-group>
             </el-scrollbar>
-            <div class="noData flx-center" v-else>暂无数据</div>
+            <div class="noData flx-center" v-else>{{ $t('table.noData') }}</div>
           </div>
         </template>
       </kr-pro-table>
@@ -120,7 +126,8 @@ import { getCameraTreeApi } from '@/api/modules/camera';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { getDataURL } from '@/utils/util';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const route = useRoute();
 let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 //无用 但不能删
@@ -135,11 +142,11 @@ await getTreeList();
 const stateOption = {
   todo: {
     className: 'title_state1',
-    label: '未使用',
+    label: t('model.title_state1'),
   },
   finish: {
     className: 'title_state2',
-    label: '已使用',
+    label: t('model.title_state2'),
   },
 };
 const proTable = ref();
@@ -151,12 +158,12 @@ const searchDataLocal = ref({});
 const columns: tableProps<any>[] = [
   {
     prop: 'algorithmName',
-    label: '技能名称',
+    label: t('model.algorithmName2'),
     isShowInputLabel: false,
     search: {
       el: 'input',
       key: 'algorithmName',
-      props: { placeholder: '请输入您需要搜索的技能名称' },
+      props: { placeholder: t('model.exportModelPlaceholder2') },
       render(attr) {
         // console.log(searchData);
         return (
@@ -165,9 +172,9 @@ const columns: tableProps<any>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.collectionStatus} style={'width: 140px'}>
-                    <el-option label="全部状态" value={' '} />
-                    <el-option label="未使用" value={'todo'} />
-                    <el-option label="已使用" value={'finish'} />
+                    <el-option label={t('worktop.All')} value={' '} />
+                    <el-option label={t('model.title_state1')} value={'todo'} />
+                    <el-option label={t('model.title_state2')} value={'finish'} />
                   </el-select>
                 );
               },
@@ -214,7 +221,7 @@ const getTableList = async (params: any) => {
 };
 const deleteList = async () => {
   try {
-    await useHandleData<{ ids: string }>(SMCollectDel, { ids: checkedList.value.toString() }, '删除');
+    await useHandleData<{ ids: string }>(SMCollectDel, { ids: checkedList.value.toString() }, t('ui.delete'));
     proTable.value.getTableList();
     handleCheckAllChange(false);
     checkedAllPage.value = false;
@@ -227,7 +234,7 @@ const deleteList = async () => {
 const download = async () => {
   try {
     let res = await SMCollectDownload(
-      selectLabel.value === '勾选全部'
+      selectLabel.value === t('model.selectAll')
         ? {
             ids: '',
             ...searchDataLocal.value,
@@ -240,7 +247,7 @@ const download = async () => {
     let a = document.createElement('a');
     a.href = res1;
     urlArr.add(res1);
-    a.download = '素材下载';
+    a.download = 'download';
     a.click();
     proTable.value.getTableList();
     handleCheckAllChange(false);
@@ -254,7 +261,7 @@ const download = async () => {
 // checked
 let checkedAllPage = ref(false);
 
-let selectLabel = ref('勾选本页');
+let selectLabel = ref(t('model.selectPage'));
 let isIndeterminate = ref(false);
 let checkedList = ref<any[]>([]);
 let listIds = computed(() => list.value.map((i) => i.id));

@@ -17,7 +17,8 @@ import pictureDimension from './components/pictureDimensionArc.vue';
 import useArcChange from './components/useArcChange';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { Warning } from '@element-plus/icons-vue';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Prop {
   id: string;
   pageType: PageType;
@@ -162,7 +163,7 @@ function DialogConfirm() {
   if (showArcDialogValue.value) {
     confirm(showArcDialogValue.value);
   } else {
-    ElMessage.error(`请输入刻度！`);
+    ElMessage.error(t('model.kedu'));
   }
 }
 function moveArc(row: ArcRow, index: number) {
@@ -235,7 +236,7 @@ async function imgSave() {
                 height="18"
               />
             </template>
-            上一步
+            {{ $t('model.undo') }}
           </el-button>
           <el-button @click="redo" :disabled="!canRedo">
             <template #icon>
@@ -248,7 +249,7 @@ async function imgSave() {
                 height="18"
               />
             </template>
-            下一步
+            {{ $t('model.redo') }}
           </el-button>
         </div>
         <pictureDimension
@@ -263,7 +264,7 @@ async function imgSave() {
           :arc-list="arcList"
           :arc-type="radio"
         />
-        <el-empty v-else class="pic-empty" description="目前没有任何预览图">
+        <el-empty v-else class="pic-empty" :description="$t('aiInspection.ImgEmpty')">
           <template #image>
             <img src="@/assets/images/notData.png" alt="1" />
           </template>
@@ -293,46 +294,46 @@ async function imgSave() {
     </div>
     <div class="dimension-right">
       <div class="dimension-right-description-items">
-        <div class="dimension-right-description-items-label">预置位名称：</div>
+        <div class="dimension-right-description-items-label">{{ $t('linkageSet.presetPositionName') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.presetPositionName }}</div>
       </div>
       <div class="dimension-right-description-items">
-        <div class="dimension-right-description-items-label">预置位ID：</div>
+        <div class="dimension-right-description-items-label">{{ $t('position.presetPositionId') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.presetPositionId }}</div>
       </div>
       <div class="dimension-right-description-items">
-        <div class="dimension-right-description-items-label">关联算法：</div>
+        <div class="dimension-right-description-items-label">{{ $t('model.algorithmName3') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.algorithmName }}</div>
       </div>
       <div
         class="dimension-right-description-items"
         v-if="pageType === 'detail' && (state.markType === '1' || state.markType === '2')"
       >
-        <div class="dimension-right-description-items-label">保留小数位：</div>
+        <div class="dimension-right-description-items-label">{{ $t('model.pointNum') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.pointNum }}</div>
       </div>
       <div class="dimension-right-description-items" v-if="pageType === 'detail' && state.markType === '3'">
-        <div class="dimension-right-description-items-label">阈值：</div>
+        <div class="dimension-right-description-items-label">{{ $t('model.threshold') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.threshold }}</div>
       </div>
       <template v-if="pageType === 'edit'">
         <template v-if="state.markType === '2' || state.markType === '1'">
           <div class="dimension-right-description-items" v-if="state.markType === '1'">
             <div class="dimension-right-description-items-label">
-              圆心：
+              {{ $t('model.arcCenter') }}：
               <el-tooltip effect="light" placement="bottom-end">
                 <el-icon>
                   <Warning />
                 </el-icon>
                 <template #content>
-                  <p>只能标注一个;</p>
+                  <p>{{ $t('model.tip1') }};</p>
                 </template>
               </el-tooltip>
             </div>
             <div class="dimension-right-description-items-value flx-align-center">
               <div
                 class="arvOperations flx-center"
-                :title="arcCenterDisable ? '只允许有一个圆心' : ''"
+                :title="arcCenterDisable ? $t('model.tip2') : ''"
                 @click="arcCenterDisable ? undefined : changeArc('arcCenter')"
               >
                 <img
@@ -345,19 +346,19 @@ async function imgSave() {
               </div>
               <div class="arvOperationsDel flx-center" @click="clearArc('arcCenter')">
                 <div class="arc-delete-icon"></div>
-                <div class="arc-delete-text">清空所标圆心</div>
+                <div class="arc-delete-text">{{ $t('model.clearArc') }}</div>
               </div>
             </div>
           </div>
           <div class="dimension-right-description-items">
             <div class="dimension-right-description-items-label">
-              刻度：
+              {{ $t('model.keduLabel') }}：
               <el-tooltip effect="light" placement="bottom-end">
                 <el-icon>
                   <Warning />
                 </el-icon>
                 <template #content>
-                  <p>至少标注10个;</p>
+                  <p>{{ $t('model.tip3') }};</p>
                 </template>
               </el-tooltip>
             </div>
@@ -368,12 +369,12 @@ async function imgSave() {
               </div>
               <div class="arvOperationsDel flx-center" @click="clearArc('arc')">
                 <div class="arc-delete-icon"></div>
-                <div class="arc-delete-text">清空所标刻度</div>
+                <div class="arc-delete-text">{{ $t('model.clearKd') }}</div>
               </div>
             </div>
           </div>
           <div class="dimension-right-description-items">
-            <div class="dimension-right-description-items-label">保留小数位：</div>
+            <div class="dimension-right-description-items-label">{{ $t('model.pointNum') }}：</div>
             <div class="dimension-right-description-items-value">
               <el-select v-model="state!.pointNum" style="width: 132px" clearable>
                 <el-option
@@ -389,13 +390,13 @@ async function imgSave() {
         <template v-if="state.markType === '3'">
           <div class="dimension-right-description-items">
             <div class="dimension-right-description-items-label">
-              点位：
+              {{ $t('model.print') }}：
               <el-tooltip effect="light" placement="bottom-end">
                 <el-icon>
                   <Warning />
                 </el-icon>
                 <template #content>
-                  <p>最多标注4个;</p>
+                  <p>{{ $t('model.tip4') }};</p>
                 </template>
               </el-tooltip>
             </div>
@@ -411,12 +412,12 @@ async function imgSave() {
               </div>
               <div class="arvOperationsDel flx-center" @click="clearArc('position')">
                 <div class="arc-delete-icon"></div>
-                <div class="arc-delete-text">清空所标点位</div>
+                <div class="arc-delete-text">{{ $t('model.clearPrint') }}</div>
               </div>
             </div>
           </div>
           <div class="dimension-right-description-items">
-            <div class="dimension-right-description-items-label">阈值：</div>
+            <div class="dimension-right-description-items-label">{{ $t('model.threshold') }}：</div>
             <div class="dimension-right-description-items-value">
               <el-input-number
                 v-model="state!.threshold"
@@ -432,8 +433,8 @@ async function imgSave() {
         <div class="dimension-right-description-items">
           <div class="dimension-right-description-items-label"></div>
           <div class="dimension-right-description-items-value">
-            <el-button @click="close">取消</el-button>
-            <el-button @click="imgSave" type="primary">保存</el-button>
+            <el-button @click="close">{{ $t('ui.cancel') }}</el-button>
+            <el-button @click="imgSave" type="primary">{{ $t('buttonName.save') }}</el-button>
           </div>
         </div>
       </template>
@@ -441,13 +442,13 @@ async function imgSave() {
     <teleport to="body">
       <div class="AIDimension-dialog" v-if="showArcDialog">
         <div class="dimension-dialog-box" :style="{ transform: `translate(${dialogWH.x}px,${dialogWH.y}px)` }">
-          <div class="dimension-dialog-title">刻度值</div>
+          <div class="dimension-dialog-title">{{ $t('model.keduValue') }}</div>
           <div class="dimension-dialog-input">
             <el-input v-model="showArcDialogValue" type="number"></el-input>
           </div>
           <div class="dimension-dialog-button">
-            <el-button @click="cancel">取消</el-button>
-            <el-button @click="DialogConfirm" type="primary">确定</el-button>
+            <el-button @click="cancel">{{ $t('ui.cancel') }}</el-button>
+            <el-button @click="DialogConfirm" type="primary">{{ $t('ui.confirm') }}</el-button>
           </div>
         </div>
       </div>

@@ -30,10 +30,10 @@
             v-if="row.markStatus === 'finish'"
             link
             @click="pageChange('detail', row)"
-            >详情</el-button
+            >{{ $t('buttonName.detail') }}</el-button
           >
           <el-button type="primary" v-auth="'edit'" link @click="pageChange('edit', row)">{{
-            row.markStatus === 'todo' ? '标注' : '编辑'
+            row.markStatus === 'todo' ? $t('model.marked') : $t('buttonName.edit')
           }}</el-button>
         </template>
 
@@ -69,10 +69,12 @@ import {
 } from '@/api/modules/optCenter/Almanagement/AIDimension';
 import addPage from './add.vue';
 import { getCameraTreeApi } from '@/api/modules/camera';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 let cardTitle: ComputedRef<any> = computed(() =>
-  pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]
+  pageType.value === 'list' ? route.meta?.title! : t(PageTypeTitle[pageType.value])
 );
 const getTreeList = async () => {
   try {
@@ -85,44 +87,44 @@ await getTreeList();
 type StateOption = {
   [p in RowState]: string;
 };
-const stateOption = ref<StateOption>({ todo: '未标注', finish: '已标注' });
+const stateOption = ref<StateOption>({ todo: t('model.markStatus1'), finish: t('model.markStatus2') });
 const stateClassOption = ref<StateOption>({ todo: 'tab1', finish: 'tab2' });
 const proTable = ref();
 const initParam = reactive<Partial<Search>>({});
 const columns: tableProps<Row>[] = [
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'presetPositionName',
-    label: '预置位名称',
+    label: t('linkageSet.presetPositionName'),
   },
   {
     prop: 'presetPositionId',
-    label: '预置位ID',
+    label: t('position.presetPositionId'),
     isShowInputLabel: false,
     search: {
       el: 'input',
-      props: { placeholder: '请输入您想搜索的预置位名称或ID' },
+      props: { placeholder: t('position.presetPositionPlaceholder') },
     },
   },
   {
     prop: 'algorithmName',
     showOverflowTooltip: false,
-    label: '关联技能',
+    label: t('linkageSet.relatedSkills'),
   },
   {
     prop: 'markStatus',
-    label: '标注状态',
+    label: t('model.markStatus'),
     filterMultiple: false,
     filters: [
-      { value: 'todo', text: '未标注' },
-      { value: 'finish', text: '已标注' },
+      { value: 'todo', text: t('model.markStatus1') },
+      { value: 'finish', text: t('model.markStatus2') },
     ],
   },
   {
     prop: 'createTime',
-    label: '创建时间',
+    label: t('linkageSet.createTime'),
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 180, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
 ];
 const dataCallback = (data: any) => {
   return {

@@ -1,7 +1,10 @@
 import { computed, ref, Ref, watch } from 'vue';
 import { ArcType, ArcRow } from '@/api/modules/optCenter/Almanagement/AIDimension';
 import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+
 export default function useArcChange(arcList: Ref<ArcRow[]>) {
+  const { t } = useI18n();
   let radio = ref<ArcType>('default');
   let dimensionDisable = ref<boolean>(true);
   let arcCenterDisable = ref<boolean>(false);
@@ -46,13 +49,13 @@ export default function useArcChange(arcList: Ref<ArcRow[]>) {
   //最后验证
   async function validate(markType: '1' | '2' | '3') {
     if (markType === '1' && arcCenter.value.length !== 1) {
-      throw new Error(`圆心必须标注！`);
+      throw new Error(t('model.tip5'));
     }
     if ((markType === '2' || markType === '1') && arc.value.length < 10) {
-      throw new Error(`刻度点位不能少于10个`);
+      throw new Error(t('model.tip6'));
     }
     if (markType === '3' && position.value.length !== 4) {
-      throw new Error(`点位不能少于4个！`);
+      throw new Error(t('model.tip7'));
     }
     return {
       circle: (markType as '1' | '2') === '1' ? JSON.stringify(arcCenter.value.map((i) => ({ x: i.x, y: i.y }))) : '',
