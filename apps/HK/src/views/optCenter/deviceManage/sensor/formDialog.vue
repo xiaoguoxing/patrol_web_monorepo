@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${paramprops.title}传感器`"
+    :title="`${paramprops.title}${$t('device.sensor')}`"
     :singleClose="paramprops.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,21 +17,21 @@
       :model="paramprops.rowData"
       :hide-required-asterisk="paramprops.isView"
     >
-      <el-form-item label="设备ID号" prop="deviceId">
+      <el-form-item :label="$t('camera.deviceId')" prop="deviceId">
         <el-input-number
           v-model="paramprops.rowData!.deviceId"
           type="number"
           :max="99999"
           :min="1"
           controls-position="right"
-          placeholder="输入范围:1~99999"
+          :placeholder="$t('camera.deviceIdPlaceholder')"
           clearable
         ></el-input-number>
       </el-form-item>
-      <el-form-item label="传感器名称" prop="sensorName">
-        <el-input v-model="paramprops.rowData!.sensorName" placeholder="传感器名称" clearable></el-input>
+      <el-form-item :label="$t('camera.sensorName')" prop="sensorName">
+        <el-input v-model="paramprops.rowData!.sensorName" :placeholder="$t('camera.sensorName')" clearable></el-input>
       </el-form-item>
-      <el-form-item label="传感器状态" prop="sensorStatus">
+      <el-form-item :label="$t('camera.sensorStatus')" prop="sensorStatus">
         <el-select v-model="paramprops.rowData!.sensorStatus" clearable>
           <el-option
             v-for="(item, index) in typeDictlist"
@@ -41,14 +41,27 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="传感器IP地址" prop="sensorHost">
-        <el-input v-model="paramprops.rowData!.sensorHost" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.ip')" prop="sensorHost">
+        <el-input
+          v-model="paramprops.rowData!.sensorHost"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.ip')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="传感器用户名" prop="sensorAccount">
-        <el-input v-model="paramprops.rowData!.sensorAccount" placeholder="请输入用户名" clearable></el-input>
+      <el-form-item :label="$t('inputPlaceholder.username')" prop="sensorAccount">
+        <el-input
+          v-model="paramprops.rowData!.sensorAccount"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.username')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="传感器密码" prop="sensorPassword">
-        <el-input v-model="paramprops.rowData!.sensorPassword" :type="passwordType" placeholder="请输入密码" clearable>
+      <el-form-item :label="$t('inputPlaceholder.password')" prop="sensorPassword">
+        <el-input
+          v-model="paramprops.rowData!.sensorPassword"
+          :type="passwordType"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.password')"
+          clearable
+        >
           <template #suffix>
             <el-icon @click="changeType" style="cursor: pointer">
               <View v-if="passwordType === 'password'" />
@@ -64,13 +77,33 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  deviceId: [{ required: true, message: '请输入设备ID号', trigger: 'blur' }],
-  sensorName: [{ required: true, message: '请选择传感器名称', trigger: 'blur' }],
-  sensorStatus: [{ required: true, message: '请输入传感器状态', trigger: 'blur' }],
-  sensorHost: [{ required: true, message: '请输入传感器IP地址', trigger: 'blur' }],
-  sensorAccount: [{ required: true, message: '请输入传感器用户名', trigger: 'blur' }],
-  sensorPassword: [{ required: true, message: '请输入传感器密码', trigger: 'blur' }],
+  deviceId: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.deviceId'), trigger: 'blur' },
+  ],
+  sensorName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.sensorName'), trigger: 'blur' },
+  ],
+  sensorStatus: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('camera.sensorStatus'), trigger: 'blur' },
+  ],
+  sensorHost: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.ip'), trigger: 'blur' }],
+  sensorAccount: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.username'),
+      trigger: 'blur',
+    },
+  ],
+  sensorPassword: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.password'),
+      trigger: 'blur',
+    },
+  ],
 });
 type dictOption = {
   label: string;
@@ -112,7 +145,7 @@ const handleSubmit = () => {
   ruleFormRef.value!.validate(async (valid) => {
     if (!valid) return;
     try {
-      if (paramprops.value.title !== '编辑') {
+      if (paramprops.value.title !== t('buttonName.edit')) {
         paramprops.value.rowData.areaId = paramprops.value.areaData.id;
         paramprops.value.rowData.areaName = paramprops.value.areaData.areaName;
       }
@@ -122,7 +155,7 @@ const handleSubmit = () => {
         sensorHost: await encryptPassword(paramprops.value.rowData.sensorHost),
         sensorAccount: await encryptPassword(paramprops.value.rowData.sensorAccount),
       });
-      ElMessage.success({ message: `${paramprops.value.title}传感器成功！` });
+      ElMessage.success({ message: `${paramprops.value.title}${t('device.sensor')}${t('buttonName.success')}！` });
       paramprops.value.getTableList!();
       show.value = false;
     } catch (error) {

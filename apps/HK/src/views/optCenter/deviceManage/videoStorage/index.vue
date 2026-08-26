@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1">
-    <kr-card class="flex-1" header="视频存储设备" header-border>
+    <kr-card class="flex-1" :header="cardTitle" header-border>
       <kr-pro-table
         ref="proTable"
         :columns="columns"
@@ -12,13 +12,15 @@
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="scope">
-          <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm('添加')">添加存储设备</el-button>
+          <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm($t('buttonName.add'))"
+            >{{ $t('buttonName.add') }}{{ $t('camera.storageName') }}</el-button
+          >
           <el-button
             v-auth="'batchDelete'"
             icon="Delete"
             @click="batchDelete(scope.selectedListIds)"
             :disabled="!scope.isSelected"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <!-- 表格操作 -->
@@ -27,27 +29,27 @@
             v-auth="'edit'"
             type="primary"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             link
-            @click="openForm('编辑', scope.row)"
-            >编辑</el-button
+            @click="openForm($t('buttonName.edit'), scope.row)"
+            >{{ $t('buttonName.edit') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             type="primary"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             link
             @click="deleteData(scope.row)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             v-show="scope.row.syncData"
             type="primary"
             link
-            @click="openForm('详情', scope.row)"
-            >详情</el-button
+            @click="openForm($t('buttonName.detail'), scope.row)"
+            >{{ $t('buttonName.detail') }}</el-button
           >
         </template>
       </kr-pro-table>
@@ -56,7 +58,7 @@
   </div>
 </template>
 <script setup lang="tsx" name="VideoStorage">
-import { ref, reactive } from 'vue';
+import { ref, reactive, ComputedRef, computed } from 'vue';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
 import type { DefaultDict, FilterDict } from '@/utils/serviceDict';
 import { ColumnProps } from '@patrol/ui';
@@ -71,7 +73,11 @@ import {
   VideoStorage,
 } from '@/api/modules/optCenter/deviceManage/videoStorage';
 import { decryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+import { useRoute } from 'vue-router';
+const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 /*
  **数据字典
  */
@@ -159,20 +165,20 @@ const columns: ColumnProps[] = [
     },
   },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'storageName',
-    label: '存储设备名称',
+    label: t('camera.storageName'),
     search: {
       el: 'input',
       props: {
-        placeholder: '请输入您需要搜索的设备名称',
+        placeholder: t('inputPlaceholder.placeholderEnter2'),
       },
     },
   },
   {
     prop: 'storageType', //TODO:该属性名称未知，问后端
-    label: '设备类型',
+    label: t('camera.storageType'),
     minWidth: 120,
     width: 120,
     filters: dictForFilters(typeDictlist),
@@ -180,21 +186,21 @@ const columns: ColumnProps[] = [
   },
   {
     prop: 'storageHost',
-    label: 'IP地址',
+    label: t('common.ip'),
   },
   {
     prop: 'storagePort',
-    label: '端口号',
+    label: t('common.port'),
   },
   {
     prop: 'storageAccount',
-    label: '用户名',
+    label: t('inputPlaceholder.username'),
   },
   // {
   //   prop: 'storagePassword',
   //   label: '密码',
   // },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 
 // 获取表格数据
@@ -224,8 +230,8 @@ const openForm = async (title: string, rowData: Partial<VideoStorage.ResList> = 
   let params = {
     title,
     rowData: rowData.id ? await getVideoSId(rowData.id) : { ...rowData },
-    isView: title === '详情',
-    api: title === '添加' ? addApi : title === '编辑' ? editApi : '',
+    isView: title === t('buttonName.detail'),
+    api: title === t('buttonName.add') ? addApi : title === t('buttonName.edit') ? editApi : '',
     getTableList: proTable.value.getTableList,
   };
   formDialogRef.value.acceptParams(params);
@@ -241,13 +247,13 @@ async function getVideoSId(id: string) {
 }
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(deleteApi, { ids: id.join() }, '删除所选存储设备');
+  await useHandleData(deleteApi, { ids: id.join() }, t('camera.tip14'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(deleteApi, { ids: row.id }, `删除该存储设备`);
+  await useHandleData(deleteApi, { ids: row.id }, t('camera.tip14'));
   proTable.value.getTableList();
 };
 </script>

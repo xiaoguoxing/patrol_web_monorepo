@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${paramprops.title}轨道机器人`"
+    :title="`${paramprops.title}${$t('device.trackBot')}`"
     :singleClose="paramprops.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,19 +17,35 @@
       :model="paramprops.rowData"
       :hide-required-asterisk="paramprops.isView"
     >
-      <el-form-item label="轨道机器人名称" prop="robotName">
-        <el-input v-model="paramprops.rowData!.robotName" placeholder="轨道机器人名称" clearable></el-input>
+      <el-form-item :label="$t('camera.robotName')" prop="robotName">
+        <el-input
+          v-model="paramprops.rowData!.robotName"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.robotName')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="轨道机器人IP地址" prop="robotHost">
-        <el-input v-model="paramprops.rowData!.robotHost" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.ip')" prop="robotHost">
+        <el-input
+          v-model="paramprops.rowData!.robotHost"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.ip')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="轨道机器人AK码" prop="appKey">
-        <el-input v-model="paramprops.rowData!.appKey" placeholder="请输入轨道机器人AK码" clearable></el-input>
+      <el-form-item :label="$t('camera.akCode')" prop="appKey">
+        <el-input
+          v-model="paramprops.rowData!.appKey"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.akCode')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="轨道机器人SK码" prop="appSecret">
-        <el-input v-model="paramprops.rowData!.appSecret" placeholder="请输入轨道机器人SK码" clearable></el-input>
+      <el-form-item :label="$t('camera.skCode')" prop="appSecret">
+        <el-input
+          v-model="paramprops.rowData!.appSecret"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.skCode')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="关联图片存储设备" prop="attachmentStorageId">
+      <el-form-item :label="$t('camera.attachmentStorageId')" prop="attachmentStorageId">
         <el-select v-model="paramprops.rowData!.attachmentStorageId" clearable>
           <el-option v-for="i in cvrList" :key="i.id" :label="i.storageName" :value="i.id"></el-option>
         </el-select>
@@ -41,11 +57,15 @@
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { getAllListApi, VideoStorage } from '@/api/modules/optCenter/deviceManage/videoStorage';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  robotName: [{ required: true, message: '请选择轨道机器人名称', trigger: 'blur' }],
-  appKey: [{ required: true, message: '请输入端口', trigger: 'blur' }],
-  robotHost: [{ required: true, message: '请输入轨道机器人IP地址', trigger: 'blur' }],
-  appSecret: [{ required: true, message: '请输入轨道机器人用户名', trigger: 'blur' }],
+  robotName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.robotName'), trigger: 'blur' },
+  ],
+  appKey: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.akCode'), trigger: 'blur' }],
+  robotHost: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.ip'), trigger: 'blur' }],
+  appSecret: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.skCode'), trigger: 'blur' }],
 });
 type dictOption = {
   label: string;
@@ -87,12 +107,12 @@ const handleSubmit = () => {
   ruleFormRef.value!.validate(async (valid) => {
     if (!valid) return;
     try {
-      if (paramprops.value.title !== '编辑') {
+      if (paramprops.value.title !== t('buttonName.edit')) {
         paramprops.value.rowData.areaId = paramprops.value.areaData.id;
         paramprops.value.rowData.areaName = paramprops.value.areaData.areaName;
       }
       await paramprops.value.api!(paramprops.value.rowData);
-      ElMessage.success({ message: `${paramprops.value.title}轨道机器人成功！` });
+      ElMessage.success({ message: `${paramprops.value.title}${t('device.trackBot')}${t('buttonName.success')}！` });
       paramprops.value.getTableList!();
       show.value = false;
     } catch (error) {

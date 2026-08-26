@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${paramprops.title} 存储设备`"
+    :title="`${paramprops.title}${$t('camera.storageName')}`"
     :singleClose="paramprops.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,10 +17,14 @@
       :model="paramprops.rowData"
       :hide-required-asterisk="paramprops.isView"
     >
-      <el-form-item label=" 存储设备名称" prop="storageName">
-        <el-input v-model="paramprops.rowData!.storageName" placeholder="请输入 存储设备名称" clearable></el-input>
+      <el-form-item :label="$t('camera.storageName')" prop="storageName">
+        <el-input
+          v-model="paramprops.rowData!.storageName"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.storageName')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label=" 设备类型" prop="storageType">
+      <el-form-item :label="$t('camera.storageType')" prop="storageType">
         <el-select v-model="paramprops.rowData!.storageType" clearable>
           <el-option
             v-for="(item, index) in typeDictlist"
@@ -30,17 +34,34 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="IP地址" prop="storageHost">
-        <el-input v-model="paramprops.rowData!.storageHost" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.ip')" prop="storageHost">
+        <el-input
+          v-model="paramprops.rowData!.storageHost"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.ip')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="端口号" prop="storagePort">
-        <el-input v-model="paramprops.rowData!.storagePort" placeholder="请输入端口号" clearable></el-input>
+      <el-form-item :label="$t('common.port')" prop="storagePort">
+        <el-input
+          v-model="paramprops.rowData!.storagePort"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.port')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="用户名" prop="storageAccount">
-        <el-input v-model="paramprops.rowData!.storageAccount" placeholder="请输入用户名" clearable></el-input>
+      <el-form-item :label="$t('inputPlaceholder.username')" prop="storageAccount">
+        <el-input
+          v-model="paramprops.rowData!.storageAccount"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.username')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="密码" prop="storagePassword">
-        <el-input v-model="paramprops.rowData!.storagePassword" :type="passwordType" placeholder="请输入密码" clearable>
+      <el-form-item :label="$t('inputPlaceholder.password')" prop="storagePassword">
+        <el-input
+          v-model="paramprops.rowData!.storagePassword"
+          :type="passwordType"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.password')"
+          clearable
+        >
           <template #suffix>
             <el-icon @click="changeType" style="cursor: pointer">
               <View v-if="passwordType === 'password'" />
@@ -57,13 +78,17 @@
 import { ref, reactive, nextTick } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  storageName: [{ required: true, message: '请输入 存储设备名称' }],
-  storageType: [{ required: true, message: '请选择 存储设备类型' }],
-  storageHost: [{ required: true, message: '请输入IP地址' }],
-  storagePort: [{ required: true, message: '请输入端口号' }],
-  storageAccount: [{ required: true, message: '请输入用户名' }],
-  storagePassword: [{ required: true, message: '请输入密码' }],
+  storageName: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.storageName') }],
+  storageType: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('camera.storageType') }],
+  storageHost: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.ip') }],
+  storagePort: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.port') }],
+  storageAccount: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.username') }],
+  storagePassword: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.password') },
+  ],
 });
 type dictOption = {
   label: string;
@@ -111,7 +136,7 @@ const handleSubmit = () => {
         storageHost: await encryptPassword(paramprops.value.rowData.storageHost),
         storageAccount: await encryptPassword(paramprops.value.rowData.storageAccount),
       });
-      ElMessage.success({ message: `${paramprops.value.title} 存储设备成功！` });
+      ElMessage.success({ message: `${paramprops.value.title}${t('camera.storageName')}${t('buttonName.success')}！` });
       paramprops.value.getTableList!();
       show.value = false;
     } catch (error) {

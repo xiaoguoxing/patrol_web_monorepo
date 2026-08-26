@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${paramprops.title}听诊器`"
+    :title="`${paramprops.title}${$t('device.auscultation')}`"
     :singleClose="paramprops.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,10 +17,14 @@
       :model="paramprops.rowData"
       :hide-required-asterisk="paramprops.isView"
     >
-      <el-form-item label="听诊器名称" prop="stethoscopeName">
-        <el-input v-model="paramprops.rowData!.stethoscopeName" placeholder="听诊器名称" clearable></el-input>
+      <el-form-item :label="$t('camera.auscultation')" prop="stethoscopeName">
+        <el-input
+          v-model="paramprops.rowData!.stethoscopeName"
+          :placeholder="$t('camera.auscultation')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="听诊器状态" prop="stethoscopeStatus">
+      <el-form-item :label="$t('device.auscultation') + $t('table.status')" prop="stethoscopeStatus">
         <el-select v-model="paramprops.rowData!.stethoscopeStatus" clearable>
           <el-option
             v-for="(item, index) in typeDictlist"
@@ -30,20 +34,32 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="听诊器IP地址" prop="stethoscopeHost">
-        <el-input v-model="paramprops.rowData!.stethoscopeHost" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.ip')" prop="stethoscopeHost">
+        <el-input
+          v-model="paramprops.rowData!.stethoscopeHost"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.ip')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="听诊器端口" prop="stethoscopePort">
-        <el-input v-model="paramprops.rowData!.stethoscopePort" placeholder="请输入端口" clearable></el-input>
+      <el-form-item :label="t('common.port')" prop="stethoscopePort">
+        <el-input
+          v-model="paramprops.rowData!.stethoscopePort"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.port')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="听诊器用户名" prop="stethoscopeAccount">
-        <el-input v-model="paramprops.rowData!.stethoscopeAccount" placeholder="请输入用户名" clearable></el-input>
+      <el-form-item :label="$t('inputPlaceholder.username')" prop="stethoscopeAccount">
+        <el-input
+          v-model="paramprops.rowData!.stethoscopeAccount"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.username')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="听诊器密码" prop="stethoscopePassword">
+      <el-form-item :label="$t('inputPlaceholder.password')" prop="stethoscopePassword">
         <el-input
           v-model="paramprops.rowData!.stethoscopePassword"
           :type="passwordType"
-          placeholder="请输入密码"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.password')"
           clearable
         >
           <template #suffix>
@@ -54,12 +70,12 @@
           </template>
         </el-input>
       </el-form-item>
-      <el-form-item label="通道号" prop="channelNum">
+      <el-form-item :label="$t('camera.channelNum')" prop="channelNum">
         <el-input-number
           v-model="paramprops.rowData!.channelNum"
           type="number"
           controls-position="right"
-          placeholder="通道号"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.channelNum')"
           clearable
         ></el-input-number>
       </el-form-item>
@@ -70,14 +86,42 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  channelNum: [{ required: true, message: '请输入通道号', trigger: 'blur' }],
-  stethoscopeName: [{ required: true, message: '请选择听诊器名称', trigger: 'blur' }],
-  stethoscopePort: [{ required: true, message: '请输入端口', trigger: 'blur' }],
-  stethoscopeStatus: [{ required: true, message: '请输入听诊器状态', trigger: 'blur' }],
-  stethoscopeHost: [{ required: true, message: '请输入听诊器IP地址', trigger: 'blur' }],
-  stethoscopeAccount: [{ required: true, message: '请输入听诊器用户名', trigger: 'blur' }],
-  stethoscopePassword: [{ required: true, message: '请输入听诊器密码', trigger: 'blur' }],
+  channelNum: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.channelNum'), trigger: 'blur' },
+  ],
+  stethoscopeName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.auscultation'), trigger: 'blur' },
+  ],
+  stethoscopePort: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('common.port'), trigger: 'blur' },
+  ],
+  stethoscopeStatus: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderSelect') + t('device.auscultation') + t('table.status'),
+      trigger: 'blur',
+    },
+  ],
+  stethoscopeHost: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('common.ip'), trigger: 'blur' },
+  ],
+  stethoscopeAccount: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.username'),
+      trigger: 'blur',
+    },
+  ],
+  stethoscopePassword: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.password'),
+      trigger: 'blur',
+    },
+  ],
 });
 type dictOption = {
   label: string;
@@ -119,7 +163,7 @@ const handleSubmit = () => {
   ruleFormRef.value!.validate(async (valid) => {
     if (!valid) return;
     try {
-      if (paramprops.value.title !== '编辑') {
+      if (paramprops.value.title !== t('buttonName.edit')) {
         paramprops.value.rowData.areaId = paramprops.value.areaData.id;
         paramprops.value.rowData.areaName = paramprops.value.areaData.areaName;
       }
@@ -129,7 +173,9 @@ const handleSubmit = () => {
         stethoscopeHost: await encryptPassword(paramprops.value.rowData.stethoscopeHost),
         stethoscopeAccount: await encryptPassword(paramprops.value.rowData.stethoscopeAccount),
       });
-      ElMessage.success({ message: `${paramprops.value.title}听诊器成功！` });
+      ElMessage.success({
+        message: `${paramprops.value.title}${t('device.auscultation')}${t('buttonName.success')}！`,
+      });
       paramprops.value.getTableList!();
       show.value = false;
     } catch (error) {

@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1">
-    <kr-card class="flex-1 two-col-page" header="摄像头管理" header-border>
+    <kr-card class="flex-1 two-col-page" :header="cardTitle" header-border>
       <kr-filter-tree
         class="two-col-page-lf"
         ref="leftTree"
@@ -25,24 +25,24 @@
         <template #tableHeader="scope">
           <el-button
             v-auth="'add'"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             icon="CirclePlus"
             :disabled="syncData"
             type="primary"
-            @click="openForm('添加')"
-            >添加摄像头</el-button
+            @click="openForm($t('buttonName.add'))"
+            >{{ $t('camera.addCamera') }}</el-button
           >
           <el-button
             v-auth="'batchDelete'"
             icon="Delete"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             @click="batchDelete(scope.selectedListIds)"
             :disabled="syncData || !scope.isSelected"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <template #setPreset="{ row }">
-          {{ row.setPreset ? '是' : '否' }}
+          {{ row.setPreset ? $t('common.s') : $t('common.f') }}
         </template>
         <!-- 表格操作 -->
         <template #operation="scope">
@@ -51,26 +51,26 @@
             :disabled="scope.row.syncData"
             type="primary"
             link
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
-            @click="openForm('编辑', scope.row)"
-            >编辑</el-button
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
+            @click="openForm($t('buttonName.edit'), scope.row)"
+            >{{ $t('buttonName.edit') }}</el-button
           >
           <el-button
             v-auth="'delete'"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             :disabled="scope.row.syncData"
             type="primary"
             link
             @click="deleteData(scope.row)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             v-show="scope.row.syncData"
             type="primary"
             link
-            @click="openForm('详情', scope.row)"
-            >详情</el-button
+            @click="openForm($t('buttonName.detail'), scope.row)"
+            >{{ $t('buttonName.detail') }}</el-button
           >
         </template>
       </kr-pro-table>
@@ -79,7 +79,7 @@
   </div>
 </template>
 <script setup lang="tsx">
-import { ref, reactive } from 'vue';
+import { ref, reactive, ComputedRef, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
@@ -91,6 +91,11 @@ import { getListApi, deleteApi, editApi, addApi, Camera } from '@/api/modules/op
 import { getAreaListApi } from '@/api/modules/optCenter/inspectionSet/area';
 import { cameraInfoApi } from '@/api/modules/camera';
 import { decryptPassword, encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+import { useRoute } from 'vue-router';
+const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 /*
  **数据字典
  */
@@ -143,61 +148,61 @@ const columns: ColumnProps[] = [
     },
   },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'cameraName',
-    label: '摄像头名称',
+    label: t('camera.cameraName'),
     minWidth: 120,
     search: {
       el: 'input',
       props: {
-        placeholder: '请输入您需要搜索的设备名称',
+        placeholder: t('inputPlaceholder.placeholderEnter2'),
       },
     },
   },
   {
     prop: 'cameraType',
-    label: '监控设备类型',
+    label: t('camera.cameraType'),
     minWidth: 150,
     filters: dictForFilters(typeDictlist),
     enum: typeDictlist,
   },
   {
     prop: 'cameraStatus',
-    label: '状态',
+    label: t('table.status'),
     minWidth: 120,
     filters: dictForFilters(statusDictlist),
     enum: statusDictlist,
   },
   {
     prop: 'areaName',
-    label: '所属区域',
+    label: t('overHaulArea.areaName'),
     minWidth: 120,
   },
   {
     prop: 'cameraHost',
-    label: 'IP地址',
+    label: t('common.ip'),
     minWidth: 120,
   },
   {
     prop: 'cameraPort',
-    label: '端口号',
+    label: t('common.port'),
   },
   {
     prop: 'cameraAccount',
-    label: '用户名',
+    label: t('inputPlaceholder.username'),
   },
   {
     prop: 'channelNum',
-    label: '通道号',
+    label: t('camera.channelNum'),
     minWidth: 120,
   },
   {
     prop: 'setPreset',
-    label: '是否支持预置位',
+    label: t('camera.setPreset'),
     minWidth: 120,
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 // 点击树节点
 let syncData = ref();
@@ -234,7 +239,7 @@ const formDialogRef = ref();
 
 const openForm = async (title: string, rowData: Partial<Camera.ResList> = {}) => {
   let nodeData = leftTree.value.element.getCurrentNode();
-  if (title === '添加') {
+  if (title === t('buttonName.add')) {
     if (nodeData) {
       /* if (nodeData.areaType == 2) { */
       let params = {
@@ -247,7 +252,7 @@ const openForm = async (title: string, rowData: Partial<Camera.ResList> = {}) =>
       };
       formDialogRef.value.acceptParams(params);
     } else {
-      ElMessage.warning('当前节点不可添加摄像头，请选择正确的巡检区域！');
+      ElMessage.warning(t('camera.tip1'));
     }
     /* } else {
       ElMessage.warning('请选择巡检区域！');
@@ -256,8 +261,8 @@ const openForm = async (title: string, rowData: Partial<Camera.ResList> = {}) =>
     let params = {
       title,
       areaData: nodeData,
-      isView: title == '详情',
-      api: title == '编辑' ? editApi : '',
+      isView: title == t('buttonName.detail'),
+      api: title == t('buttonName.edit') ? editApi : '',
       getTableList: proTable.value.getTableList,
       rowData: await getCameraId(rowData.id!),
     };
@@ -275,13 +280,13 @@ async function getCameraId(id: string) {
 }
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(deleteApi, { ids: id.join() }, '删除所选摄像头');
+  await useHandleData(deleteApi, { ids: id.join() }, t('camera.tip2'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(deleteApi, { ids: row.id }, `删除该摄像头`);
+  await useHandleData(deleteApi, { ids: row.id }, t('camera.tip3'));
   proTable.value.getTableList();
 };
 </script>

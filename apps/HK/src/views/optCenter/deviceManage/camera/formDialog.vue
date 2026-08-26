@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${paramprops.title}摄像头`"
+    :title="`${paramprops.title}${$t('device.camera')}`"
     :singleClose="paramprops.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,10 +17,14 @@
       :model="paramprops.rowData"
       :hide-required-asterisk="paramprops.isView"
     >
-      <el-form-item label="摄像头名称" prop="cameraName">
-        <el-input v-model="paramprops.rowData!.cameraName" placeholder="请输入摄像头名称" clearable></el-input>
+      <el-form-item :label="$t('camera.cameraName')" prop="cameraName">
+        <el-input
+          v-model="paramprops.rowData!.cameraName"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.cameraName')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="摄像头类型" prop="cameraType">
+      <el-form-item :label="$t('camera.cameraType')" prop="cameraType">
         <el-select v-model="paramprops.rowData!.cameraType" clearable>
           <el-option
             v-for="(item, index) in typeDictlist"
@@ -30,26 +34,42 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="IP地址" prop="cameraHost">
-        <el-input v-model="paramprops.rowData!.cameraHost" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.ip')" prop="cameraHost">
+        <el-input
+          v-model="paramprops.rowData!.cameraHost"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.ip')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="端口号" prop="cameraPort">
-        <el-input v-model="paramprops.rowData!.cameraPort" placeholder="请输入端口号" clearable></el-input>
+      <el-form-item :label="$t('common.port')" prop="cameraPort">
+        <el-input
+          v-model="paramprops.rowData!.cameraPort"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.port')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="通道号" prop="channelNum">
+      <el-form-item :label="$t('camera.channelNum')" prop="channelNum">
         <el-input-number
           v-model="paramprops.rowData!.channelNum"
-          placeholder="请输入通道号"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.channelNum')"
           clearable
           controls-position="right"
         />
         <!-- <el-input v-model="paramprops.rowData!.channelNum" placeholder="请输入通道号" clearable></el-input> -->
       </el-form-item>
-      <el-form-item label="用户名" prop="cameraAccount">
-        <el-input v-model="paramprops.rowData!.cameraAccount" placeholder="请输入用户名" clearable></el-input>
+      <el-form-item :label="$t('inputPlaceholder.username')" prop="cameraAccount">
+        <el-input
+          v-model="paramprops.rowData!.cameraAccount"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.username')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="密码" prop="cameraPassword">
-        <el-input v-model="paramprops.rowData!.cameraPassword" :type="passwordType" placeholder="请输入密码">
+      <el-form-item :label="$t('inputPlaceholder.password')" prop="cameraPassword">
+        <el-input
+          v-model="paramprops.rowData!.cameraPassword"
+          :type="passwordType"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.password')"
+        >
           <template #suffix>
             <el-icon @click="changeType" style="cursor: pointer">
               <View v-if="passwordType === 'password'" />
@@ -58,20 +78,20 @@
           </template>
         </el-input>
       </el-form-item>
-      <el-form-item label="关联视频存储设备" prop="storageId">
+      <el-form-item :label="$t('camera.storageId')" prop="storageId">
         <el-select v-model="paramprops.rowData!.storageId" clearable>
           <el-option v-for="i in cvrList" :key="i.id" :label="i.storageName" :value="i.id"></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="关联图片存储设备" prop="attachmentStorageId">
+      <el-form-item :label="$t('camera.attachmentStorageId')" prop="attachmentStorageId">
         <el-select v-model="paramprops.rowData!.attachmentStorageId" clearable>
           <el-option v-for="i in cvrList" :key="i.id" :label="i.storageName" :value="i.id"></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="是否支持预置位" prop="setPreset">
+      <el-form-item :label="$t('camera.setPreset')" prop="setPreset">
         <el-radio-group text-color="#000" v-model="paramprops.rowData!.setPreset">
-          <el-radio :value="true">是</el-radio>
-          <el-radio :value="false">否</el-radio>
+          <el-radio :value="true">{{ $t('common.s') }}</el-radio>
+          <el-radio :value="false">{{ $t('common.f') }}</el-radio>
         </el-radio-group>
       </el-form-item>
     </el-form>
@@ -85,16 +105,44 @@ import { ref, reactive, onMounted } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { getAllListApi, VideoStorage } from '@/api/modules/optCenter/deviceManage/videoStorage';
 import { encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  cameraName: [{ required: true, message: '请输入摄像头名称', trigger: 'blur' }],
-  cameraType: [{ required: true, message: '请选择摄像头类型', trigger: 'blur' }],
-  cameraHost: [{ required: true, message: '请输入IP地址', trigger: 'blur' }],
-  cameraPort: [{ required: true, message: '请输入端口号', trigger: 'blur' }],
-  channelNum: [{ required: true, message: '请输入通道号', trigger: 'blur' }],
-  cameraAccount: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  cameraPassword: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  storageId: [{ required: false, message: '请选择CVR', trigger: 'blur' }],
-  attachmentStorageId: [{ required: false, message: '请选择CVR', trigger: 'blur' }],
+  cameraName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.cameraName'), trigger: 'blur' },
+  ],
+  cameraType: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('camera.cameraType'), trigger: 'blur' },
+  ],
+  cameraHost: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.ip'), trigger: 'blur' }],
+  cameraPort: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.port'), trigger: 'blur' }],
+  channelNum: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.channelNum'), trigger: 'blur' },
+  ],
+  cameraAccount: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.username'),
+      trigger: 'blur',
+    },
+  ],
+  cameraPassword: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.password'),
+      trigger: 'blur',
+    },
+  ],
+  storageId: [
+    { required: false, message: t('inputPlaceholder.placeholderSelect') + t('camera.storageId'), trigger: 'blur' },
+  ],
+  attachmentStorageId: [
+    {
+      required: false,
+      message: t('inputPlaceholder.placeholderSelect') + t('camera.attachmentStorageId'),
+      trigger: 'blur',
+    },
+  ],
 });
 type dictOption = {
   label: string;
@@ -142,14 +190,15 @@ const handleSubmit = () => {
   ruleFormRef.value!.validate(async (valid) => {
     if (!valid) return;
     try {
-      if (paramprops.value.title !== '编辑') paramprops.value.rowData.areaId = paramprops.value.areaData.id;
+      if (paramprops.value.title !== t('buttonName.edit'))
+        paramprops.value.rowData.areaId = paramprops.value.areaData.id;
       await paramprops.value.api!({
         ...paramprops.value.rowData,
         cameraPassword: await encryptPassword(paramprops.value.rowData.cameraPassword),
         cameraHost: await encryptPassword(paramprops.value.rowData.cameraHost),
         cameraAccount: await encryptPassword(paramprops.value.rowData.cameraAccount),
       });
-      ElMessage.success({ message: `${paramprops.value.title}摄像头成功！` });
+      ElMessage.success({ message: `${paramprops.value.title}${t('device.camera')}${t('buttonName.success')}！` });
       paramprops.value.getTableList!();
       show.value = false;
     } catch (error) {

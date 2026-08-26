@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${paramprops.title}无人机`"
+    :title="`${paramprops.title}${$t('device.drone')}`"
     :singleClose="paramprops.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,10 +17,14 @@
       :model="paramprops.rowData"
       :hide-required-asterisk="paramprops.isView"
     >
-      <el-form-item label="无人机名称" prop="droneName">
-        <el-input v-model="paramprops.rowData!.droneName" placeholder="传感器名称" clearable></el-input>
+      <el-form-item :label="$t('camera.droneName')" prop="droneName">
+        <el-input
+          v-model="paramprops.rowData!.droneName"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.droneName')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="无人机状态" prop="droneStatus">
+      <el-form-item :label="$t('camera.droneStatus')" prop="droneStatus">
         <el-select v-model="paramprops.rowData!.droneStatus" clearable>
           <el-option
             v-for="(item, index) in typeDictlist"
@@ -30,17 +34,34 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="无人机IP地址" prop="droneHost">
-        <el-input v-model="paramprops.rowData!.droneHost" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.ip')" prop="droneHost">
+        <el-input
+          v-model="paramprops.rowData!.droneHost"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.ip')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="无人机端口" prop="dronePort">
-        <el-input v-model="paramprops.rowData!.dronePort" placeholder="请输入IP地址" clearable></el-input>
+      <el-form-item :label="$t('common.port')" prop="dronePort">
+        <el-input
+          v-model="paramprops.rowData!.dronePort"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('common.port')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="无人机用户名" prop="droneAccount">
-        <el-input v-model="paramprops.rowData!.droneAccount" placeholder="请输入用户名" clearable></el-input>
+      <el-form-item :label="$t('inputPlaceholder.username')" prop="droneAccount">
+        <el-input
+          v-model="paramprops.rowData!.droneAccount"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.username')"
+          clearable
+        ></el-input>
       </el-form-item>
-      <el-form-item label="无人机密码" prop="dronePassword">
-        <el-input v-model="paramprops.rowData!.dronePassword" :type="passwordType" placeholder="请输入密码" clearable>
+      <el-form-item :label="$t('inputPlaceholder.password')" prop="dronePassword">
+        <el-input
+          v-model="paramprops.rowData!.dronePassword"
+          :type="passwordType"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('inputPlaceholder.password')"
+          clearable
+        >
           <template #suffix>
             <el-icon @click="changeType" style="cursor: pointer">
               <View v-if="passwordType === 'password'" />
@@ -50,12 +71,20 @@
         </el-input>
       </el-form-item>
 
-      <el-form-item label="无人机命令下发" prop="topicCmd">
-        <el-input v-model="paramprops.rowData!.topicCmd" placeholder="请输入无人机命令下发" clearable></el-input>
+      <el-form-item :label="$t('camera.topicCmd')" prop="topicCmd">
+        <el-input
+          v-model="paramprops.rowData!.topicCmd"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.topicCmd')"
+          clearable
+        ></el-input>
       </el-form-item>
 
-      <el-form-item label="无人机命令响应" prop="topicCmdReply">
-        <el-input v-model="paramprops.rowData!.topicCmdReply" placeholder="请输入无人机命令响应" clearable></el-input>
+      <el-form-item :label="$t('camera.topicCmdReply')" prop="topicCmdReply">
+        <el-input
+          v-model="paramprops.rowData!.topicCmdReply"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('camera.topicCmdReply')"
+          clearable
+        ></el-input>
       </el-form-item>
     </el-form>
   </kr-public-dialog>
@@ -64,15 +93,37 @@
 import { ref, reactive } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  droneName: [{ required: true, message: '请输入无人机名称', trigger: 'blur' }],
-  droneStatus: [{ required: true, message: '请选择无人机状态', trigger: 'blur' }],
-  droneHost: [{ required: true, message: '请输入无人机IP地址', trigger: 'blur' }],
-  dronePort: [{ required: true, message: '请输入无人机端口', trigger: 'blur' }],
-  droneAccount: [{ required: true, message: '请输入无人机用户名', trigger: 'blur' }],
-  dronePassword: [{ required: true, message: '请输入无人机密码', trigger: 'blur' }],
-  topicCmd: [{ required: true, message: '请输入无人机命令下发', trigger: 'blur' }],
-  topicCmdReply: [{ required: true, message: '请输入无人机命令响应', trigger: 'blur' }],
+  droneName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.droneName'), trigger: 'blur' },
+  ],
+  droneStatus: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('camera.droneStatus'), trigger: 'blur' },
+  ],
+  droneHost: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.ip'), trigger: 'blur' }],
+  dronePort: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('common.port'), trigger: 'blur' }],
+  droneAccount: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.username'),
+      trigger: 'blur',
+    },
+  ],
+  dronePassword: [
+    {
+      required: true,
+      message: t('inputPlaceholder.placeholderBase') + t('inputPlaceholder.password'),
+      trigger: 'blur',
+    },
+  ],
+  topicCmd: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.topicCmd'), trigger: 'blur' },
+  ],
+  topicCmdReply: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('camera.topicCmdReply'), trigger: 'blur' },
+  ],
 });
 type dictOption = {
   label: string;
@@ -114,7 +165,7 @@ const handleSubmit = () => {
   ruleFormRef.value!.validate(async (valid) => {
     if (!valid) return;
     try {
-      if (paramprops.value.title !== '编辑') {
+      if (paramprops.value.title !== t('buttonName.edit')) {
         paramprops.value.rowData.areaId = paramprops.value.areaData.id;
         paramprops.value.rowData.areaName = paramprops.value.areaData.areaName;
       }
@@ -124,7 +175,7 @@ const handleSubmit = () => {
         droneHost: await encryptPassword(paramprops.value.rowData.droneHost),
         droneAccount: await encryptPassword(paramprops.value.rowData.droneAccount),
       });
-      ElMessage.success({ message: `${paramprops.value.title}传感器成功！` });
+      ElMessage.success({ message: `${paramprops.value.title}${t('device.drone')}${t('buttonName.success')}！` });
       paramprops.value.getTableList!();
       show.value = false;
     } catch (error) {

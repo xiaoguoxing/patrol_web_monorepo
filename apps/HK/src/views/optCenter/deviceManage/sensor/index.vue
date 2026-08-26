@@ -25,24 +25,24 @@
         <template #tableHeader="scope">
           <el-button
             v-auth="'add'"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             :disabled="syncData"
             icon="CirclePlus"
             type="primary"
-            @click="openForm('添加')"
-            >添加传感器</el-button
+            @click="openForm($t('buttonName.add'))"
+            >{{ $t('buttonName.add') }}{{ $t('device.sensor') }}</el-button
           >
           <el-button
             v-auth="'batchDelete'"
             icon="Delete"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             @click="batchDelete(scope.selectedListIds)"
             :disabled="syncData || !scope.isSelected"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <template #setPreset="{ row }">
-          {{ row.setPreset ? '是' : '否' }}
+          {{ row.setPreset ? $t('common.s') : $t('common.f') }}
         </template>
         <!-- 表格操作 -->
         <template #operation="scope">
@@ -50,27 +50,27 @@
             v-auth="'edit'"
             type="primary"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             link
-            @click="openForm('编辑', scope.row)"
-            >编辑</el-button
+            @click="openForm($t('buttonName.edit'), scope.row)"
+            >{{ $t('buttonName.edit') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             type="primary"
             link
             @click="deleteData(scope.row)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             v-show="scope.row.syncData"
             type="primary"
             link
-            @click="openForm('详情', scope.row)"
-            >详情</el-button
+            @click="openForm($t('buttonName.detail'), scope.row)"
+            >{{ $t('buttonName.detail') }}</el-button
           >
         </template>
       </kr-pro-table>
@@ -96,7 +96,8 @@ import { getAreaListApi } from '@/api/modules/optCenter/inspectionSet/area';
 import { useRoute, useRouter } from 'vue-router';
 import formDialog from './formDialog.vue';
 import { decryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 /*
  **数据字典
  */
@@ -150,15 +151,15 @@ const columns: tableProps<Row>[] = [
     },
   },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'sensorName',
-    label: '传感器名称',
+    label: t('camera.sensorName'),
     minWidth: 120,
     search: {
       el: 'input',
       props: {
-        placeholder: '请输入您需要搜索的设备名称',
+        placeholder: t('inputPlaceholder.placeholderEnter2'),
       },
     },
   },
@@ -169,26 +170,26 @@ const columns: tableProps<Row>[] = [
   },*/
   {
     prop: 'sensorStatus',
-    label: '状态',
+    label: t('table.status'),
     minWidth: 120,
     filters: dictForFilters(typeDictlist),
     enum: typeDictlist,
   },
   {
     prop: 'areaName',
-    label: '所属区域',
+    label: t('overHaulArea.areaName'),
     minWidth: 120,
   },
   {
     prop: 'sensorHost',
-    label: 'IP地址',
+    label: t('common.ip'),
     minWidth: 120,
   },
   {
     prop: 'sensorAccount',
-    label: '用户名',
+    label: t('inputPlaceholder.username'),
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 // 点击树节点
 let syncData = ref();
@@ -224,7 +225,7 @@ const getTableList = (params: any) => {
 const formDialogRef = ref();
 const openForm = async (title: string, rowData: {} = {}) => {
   let nodeData = leftTree.value.element.getCurrentNode();
-  if (title === '添加') {
+  if (title === t('buttonName.add')) {
     // if (nodeData) {
     if (nodeData.areaType == 2) {
       let params = {
@@ -237,7 +238,7 @@ const openForm = async (title: string, rowData: {} = {}) => {
       };
       formDialogRef.value.acceptParams(params);
     } else {
-      ElMessage.warning('当前节点不可添加传感器，请选择正确的巡检区域！');
+      ElMessage.warning(t('camera.tip10'));
     }
     /* } else {
       ElMessage.warning('请选择巡检区域！');
@@ -247,8 +248,8 @@ const openForm = async (title: string, rowData: {} = {}) => {
       title,
       areaData: nodeData,
       rowData: await getSensorId(rowData.id),
-      isView: title == '详情',
-      api: title == '编辑' ? sensorUpdate : '',
+      isView: title == t('buttonName.detail'),
+      api: title == t('buttonName.edit') ? sensorUpdate : '',
       getTableList: proTable.value.getTableList,
     };
     formDialogRef.value.acceptParams(params);
@@ -265,13 +266,13 @@ async function getSensorId(id: string) {
 }
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(sensorDelete, { ids: id.join() }, '删除所选传感器');
+  await useHandleData(sensorDelete, { ids: id.join() }, t('camera.tip11'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(sensorDelete, { ids: row.id }, `删除所选传感器`);
+  await useHandleData(sensorDelete, { ids: row.id }, t('camera.tip11'));
   proTable.value.getTableList();
 };
 </script>

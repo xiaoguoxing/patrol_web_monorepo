@@ -9,17 +9,17 @@
       max-height="50vh"
       :tree-props="{ children: '_children' }"
     >
-      <el-table-column prop="label" align="center" label="列名" />
-      <el-table-column prop="isShow" align="center" label="显示" v-slot="scope">
+      <el-table-column prop="label" align="center" :label="t('el.patrol.columnName')" />
+      <el-table-column prop="isShow" align="center" :label="t('el.patrol.show')" v-slot="scope">
         <el-switch v-model="scope.row.isShow" @change="setConfig" />
       </el-table-column>
-      <el-table-column prop="sortable" align="center" label="排序" v-slot="scope">
+      <el-table-column prop="sortable" align="center" :label="t('el.patrol.sort')" v-slot="scope">
         <el-switch v-model="scope.row.sortable" />
       </el-table-column>
       <template #empty>
         <div class="table-empty">
           <img src="../assets/images/notData.png" alt="notData" />
-          <div>暂无可配置列</div>
+          <div>{{ t('el.patrol.noColSet') }}</div>
         </div>
       </template>
     </el-table>
@@ -29,7 +29,8 @@
 <script setup lang="ts" name="colSetting">
 import { ref } from 'vue';
 import type { ColumnProps } from '../pro-table';
-
+import { useLocale } from 'element-plus';
+const { t } = useLocale();
 defineProps<{ colSetting: ColumnProps[]; setConfig: () => void }>();
 
 const drawerVisible = ref<boolean>(false);
