@@ -1,14 +1,14 @@
 <template>
   <kr-tree-list-select
     ref="treeListSel"
-    :dialog-title="`${props.title}巡检对象`"
+    :dialog-title="`${props.title}${$t('overHaulArea.object')}`"
     v-model:visible="show"
     :getTreeApi="getSelTreeApi"
     :getListApi="getTableList"
     :defaultValue="defaultValue"
     :column="column"
-    tree-title="生产设备台账"
-    table-title="生产设备列表"
+    :tree-title="$t('overHaulArea.title1')"
+    :table-title="$t('overHaulArea.title2')"
     tree-label="name"
     tree-id="id"
     label="name"
@@ -24,7 +24,8 @@ import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { getSelTreeApi, getSelListApi } from '@/api/modules/optCenter/inspectionSet/area';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 // 弹窗状态
 const show = ref(false);
 //树数据
@@ -64,11 +65,11 @@ const column: ColumnProps[] = [
   },
   {
     prop: 'code',
-    label: '生产设备编号',
+    label: t('overHaulArea.code'),
   },
   {
     prop: 'name',
-    label: '生产设备名称',
+    label: t('overHaulArea.name'),
   },
 ];
 
@@ -102,7 +103,7 @@ const onConfirm = async (ids: string[], arr: any[]) => {
   };
   await props.value.api!(postParams);
 
-  ElMessage.success({ message: `${props.value.title}成功！` });
+  ElMessage.success({ message: `${props.value.title}${t('buttonName.success')}！` });
   props.value.getTableList!();
   show.value = false;
 };

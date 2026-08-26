@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1">
-    <kr-card class="flex-1 two-col-page" header="巡检区域管理" header-border>
+    <kr-card class="flex-1 two-col-page" :header="cardTitle" header-border>
       <kr-filter-tree
         class="two-col-page-lf"
         v-dragLine
@@ -17,14 +17,14 @@
             <!-- </el-tooltip> -->
 
             <span class="custom-tree-node-btns" v-if="data.syncData === false">
-              <a class="mr12" v-auth="'addNode'" @click.stop="openTreeDialog('新建', node, data)">
+              <a class="mr12" v-auth="'addNode'" @click.stop="openTreeDialog($t('buttonName.add'), node, data)">
                 <el-icon><CirclePlus /></el-icon>
               </a>
               <a
                 class="mr12"
                 v-auth="'editNode'"
                 v-if="data.areaType == 2"
-                @click.stop="openTreeDialog('编辑', node, data)"
+                @click.stop="openTreeDialog($t('buttonName.edit'), node, data)"
               >
                 <el-icon><Edit /></el-icon>
               </a>
@@ -50,28 +50,28 @@
           <el-button
             v-auth="'new'"
             icon="CirclePlus"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             :disabled="syncData"
             type="primary"
-            @click="openForm('新建')"
-            >新建巡检对象</el-button
+            @click="openForm($t('buttonName.add'))"
+            >{{ $t('buttonName.add') }}{{ $t('overHaulArea.object') }}</el-button
           >
           <el-button
             v-auth="'add'"
             icon="CirclePlus"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             :disabled="syncData"
             type="primary"
-            @click="openForm('添加')"
-            >添加巡检对象</el-button
+            @click="openForm($t('buttonName.add2'))"
+            >{{ $t('buttonName.add2') }}{{ $t('overHaulArea.object') }}</el-button
           >
           <el-button
             v-auth="'batchDelete'"
             icon="Delete"
-            :title="syncData ? '同步的数据不支持此操作' : ''"
+            :title="syncData ? $t('buttonName.syncData') : ''"
             @click="batchDelete(scope.selectedListIds)"
             :disabled="syncData || !scope.isSelected"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
         </template>
         <!-- 表格操作 -->
@@ -80,28 +80,28 @@
             v-auth="'edit'"
             v-if="scope.row.objectSource == 'add'"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             type="primary"
             link
-            @click="openForm('编辑', scope.row)"
-            >编辑</el-button
+            @click="openForm($t('buttonName.edit'), scope.row)"
+            >{{ $t('buttonName.edit') }}</el-button
           >
           <el-button
             v-auth="'delete'"
             :disabled="scope.row.syncData"
-            :title="scope.row.syncData ? '同步的数据不支持此操作' : ''"
+            :title="scope.row.syncData ? $t('buttonName.syncData') : ''"
             type="primary"
             link
             @click="deleteData(scope.row)"
-            >删除</el-button
+            >{{ $t('ui.delete') }}</el-button
           >
           <el-button
             v-auth="'edit'"
             v-show="scope.row.syncData"
             type="primary"
             link
-            @click="openForm('详情', scope.row)"
-            >详情</el-button
+            @click="openForm($t('buttonName.detail'), scope.row)"
+            >{{ $t('buttonName.detail') }}</el-button
           >
         </template>
       </kr-pro-table>
@@ -112,7 +112,7 @@
   </div>
 </template>
 <script setup lang="tsx" name="areaManage">
-import { ref, reactive, onBeforeMount, nextTick } from 'vue';
+import { ref, reactive, onBeforeMount, nextTick, ComputedRef, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
@@ -133,6 +133,11 @@ import {
   Area,
   InspectionObj,
 } from '@/api/modules/optCenter/inspectionSet/area';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+import { useRoute } from 'vue-router';
+const route = useRoute();
+let cardTitle: ComputedRef<any> = computed(() => route.meta?.title!);
 /*
   巡检区域功能
 */
@@ -170,7 +175,7 @@ const openTreeDialog = (title: string, node: any = {}, data: any = {}) => {
   let parentData,
     api,
     rowData = {};
-  if (title === '新建') {
+  if (title === t('buttonName.add')) {
     parentData = { ...data };
     rowData = {
       areaName: '',
@@ -188,7 +193,7 @@ const openTreeDialog = (title: string, node: any = {}, data: any = {}) => {
     title,
     parentData,
     rowData,
-    isView: title === '详情',
+    isView: title === t('buttonName.detail'),
     api,
     getList: getTreeList,
   };
@@ -197,7 +202,7 @@ const openTreeDialog = (title: string, node: any = {}, data: any = {}) => {
 
 //删除树节点区域
 const deleteTreeData = async (node: any) => {
-  await useHandleData(deleteAreaApi, { id: node.id }, `删除该巡检区域`);
+  await useHandleData(deleteAreaApi, { id: node.id }, t('linkageSet.msg4'));
   let { data } = await getAreaListApi();
   dataSource.value = data;
   if (initParam.areaId == node.id) {
@@ -243,14 +248,14 @@ const columns: ColumnProps[] = [
     },
   },
 
-  { type: 'index', label: '序号', width: 60 },
+  { type: 'index', label: t('table.sort'), width: 60 },
   {
     prop: 'objectCode',
-    label: '巡检对象编号',
+    label: t('overHaulArea.objectCode'),
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     search: {
       el: 'input',
       key: 'searchValue',
@@ -260,9 +265,13 @@ const columns: ColumnProps[] = [
             {{
               prepend: () => {
                 return (
-                  <el-select v-model={searchProp.value} placeholder="请选择" style={'width: 140px'}>
-                    <el-option label="巡检对象名称" value={'objectName'} />
-                    <el-option label="巡检对象编号" value={'objectCode'} />
+                  <el-select
+                    v-model={searchProp.value}
+                    placeholder={t('inputPlaceholder.placeholderSelect')}
+                    style={'width: 140px'}
+                  >
+                    <el-option label={t('aiInspection.objectName')} value={'objectName'} />
+                    <el-option label={t('overHaulArea.objectCode')} value={'objectCode'} />
                   </el-select>
                 );
               },
@@ -275,9 +284,9 @@ const columns: ColumnProps[] = [
 
   {
     prop: 'areaName',
-    label: '所属区域',
+    label: t('overHaulArea.areaName'),
   },
-  { prop: 'operation', label: '操作', width: 200, fixed: 'right' },
+  { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
 ];
 // 点击树节点
 let syncData = ref();
@@ -311,31 +320,38 @@ const openForm = (title: string, rowData: Partial<InspectionObj.ResList> = {}) =
         title: title,
         areaData: nodeData,
         rowData: { ...rowData },
-        isView: title === '详情',
-        api: title === '添加' ? addSeledApi : title === '新建' ? addApi : title === '编辑' ? editApi : '',
+        isView: title === t('buttonName.detail'),
+        api:
+          title === t('buttonName.add2')
+            ? addSeledApi
+            : title === t('buttonName.add')
+            ? addApi
+            : title === t('buttonName.edit')
+            ? editApi
+            : '',
         getTableList: proTable.value.getTableList,
       };
-      if (title === '添加') {
+      if (title === t('buttonName.add2')) {
         selDialogRef.value.acceptParams(params);
       } else {
         formDialogRef.value.acceptParams(params);
       }
     } else {
-      ElMessage.warning('当前节点不可添加巡检对象，请选择正确的巡检区域！');
+      ElMessage.warning(t('overHaulArea.msg1'));
     }
   } else {
-    ElMessage.warning('请选择巡检区域！');
+    ElMessage.warning(t('overHaulArea.msg2'));
   }
 };
 // 批量删除表格数据
 const batchDelete = async (id: string[]) => {
-  await useHandleData(deleteApi, { ids: id.join() }, '删除所选巡检对象');
+  await useHandleData(deleteApi, { ids: id.join() }, t('overHaulArea.msg3'));
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
 //删除表格数据
 const deleteData = async (row: any) => {
-  await useHandleData(deleteApi, { ids: row.id }, `删除该巡检对象`);
+  await useHandleData(deleteApi, { ids: row.id }, t('overHaulArea.msg4'));
   proTable.value.getTableList();
 };
 </script>

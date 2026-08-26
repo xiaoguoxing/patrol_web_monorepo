@@ -1,7 +1,7 @@
 <template>
   <kr-public-dialog
     v-model="show"
-    :title="`${props.title}巡检对象`"
+    :title="`${props.title}${$t('overHaulArea.object')}`"
     :singleClose="props.isView"
     @doSubmit="handleSubmit"
     @doClose="show = false"
@@ -17,11 +17,14 @@
       :model="props.rowData"
       :hide-required-asterisk="props.isView"
     >
-      <el-form-item label="巡检对象编码" prop="objectCode">
-        <el-input v-model="props.rowData!.objectCode" disabled placeholder="自动生成"></el-input>
+      <el-form-item :label="$t('overHaulArea.objectCode')" prop="objectCode">
+        <el-input v-model="props.rowData!.objectCode" disabled :placeholder="$t('overHaulArea.autoPrint')"></el-input>
       </el-form-item>
-      <el-form-item label="巡检对象名称" prop="objectName">
-        <el-input v-model="props.rowData!.objectName" placeholder="请输入巡检对象名称"></el-input>
+      <el-form-item :label="$t('aiInspection.objectName')" prop="objectName">
+        <el-input
+          v-model="props.rowData!.objectName"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + $t('aiInspection.objectName')"
+        ></el-input>
       </el-form-item>
     </el-form>
   </kr-public-dialog>
@@ -30,9 +33,10 @@
 <script setup lang="ts" name="ObjFormDialog">
 import { ref, reactive } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const rules = reactive({
-  objectName: [{ required: true, message: '请输入巡检对象名称' }],
+  objectName: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('aiInspection.objectName') }],
 });
 
 interface DialogProps {
@@ -64,7 +68,7 @@ const handleSubmit = () => {
     if (!valid) return;
     try {
       await props.value.api!(props.value.rowData);
-      ElMessage.success({ message: `${props.value.title}巡检对象成功！` });
+      ElMessage.success({ message: `${props.value.title}${t('overHaulArea.object')}${t('buttonName.success')}！` });
       props.value.getTableList!();
       show.value = false;
     } catch (error) {
