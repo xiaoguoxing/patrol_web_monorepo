@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   objectList: any[];
   showBtn?: boolean;
@@ -20,21 +22,23 @@ const emit = defineEmits<Emit>();
 //表格
 const proTable = ref();
 const resColumns = [
-  ...[props.showBtn ? { type: 'selection', label: '序号', width: 70 } : {}],
-  { type: 'index', label: '序号', width: 70 },
+  ...[props.showBtn ? { type: 'selection', label: t('table.sort'), width: 70 } : {}],
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
   },
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
   },
-  ...[props.showBtn ? { prop: 'operation', align: 'right', label: '操作', width: 180, fixed: 'right' } : {}],
+  ...[
+    props.showBtn ? { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' } : {},
+  ],
 ];
 const initParam = {};
 watch(
@@ -84,18 +88,24 @@ function next(itemId: string) {
   >
     <!-- 表格 header 按钮 -->
     <template v-if="props.showBtn" #tableHeader="{ selectedListIds }">
-      <el-button icon="CirclePlus" type="primary" @click="openDialogChange()">新建巡检项</el-button>
-      <el-button icon="Delete" :disabled="!selectedListIds.length" @click="deleteList(selectedListIds)">删除</el-button>
+      <el-button icon="CirclePlus" type="primary" @click="openDialogChange()">{{
+        $t('inspection.AddInspection')
+      }}</el-button>
+      <el-button icon="Delete" :disabled="!selectedListIds.length" @click="deleteList(selectedListIds)">{{
+        $t('ui.delete')
+      }}</el-button>
     </template>
     <!-- 表格操作 -->
     <template #operation="{ row }">
-      <el-button type="primary" link v-if="showMove && !(firstId === row.itemId)" @click="prev(row['itemId'])"
-        >上移</el-button
-      >
-      <el-button type="primary" link v-if="showMove && !(lastId === row.itemId)" @click="next(row['itemId'])"
-        >下移</el-button
-      >
-      <el-button type="primary" link @click="deleteList(row['itemId'] ? [row['itemId']] : [])">删除</el-button>
+      <el-button type="primary" link v-if="showMove && !(firstId === row.itemId)" @click="prev(row['itemId'])">{{
+        $t('inspection.prev')
+      }}</el-button>
+      <el-button type="primary" link v-if="showMove && !(lastId === row.itemId)" @click="next(row['itemId'])">{{
+        $t('inspection.next')
+      }}</el-button>
+      <el-button type="primary" link @click="deleteList(row['itemId'] ? [row['itemId']] : [])">{{
+        $t('ui.delete')
+      }}</el-button>
     </template>
   </kr-pro-table>
 </template>

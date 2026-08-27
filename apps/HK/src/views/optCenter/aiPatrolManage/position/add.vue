@@ -21,6 +21,8 @@ import { usePicture, useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks
 import { algorithmGetAll, Row as AIRow } from '@/api/modules/optCenter/Almanagement/AIModelManagement';
 import { getNeedBusinessApi, NeedBusiness } from '@/api/modules/common';
 import { videoNodeType } from '@optCenter/hooks/use-video';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   id?: Id;
   cameraId?: string;
@@ -72,7 +74,7 @@ async function skillChange(val: string, isClear: boolean = true) {
     if (isClear) {
       itemRules.value = [
         {
-          algorithmRecognitionResults: '正常',
+          algorithmRecognitionResults: t('task.badgeItem2'),
           algorithmResults: '',
         },
       ];
@@ -93,9 +95,13 @@ async function scadaChange(val: string) {
 }
 //表单
 const rules = reactive<FormRules<PositionListRows>>({
-  presetPositionName: [{ required: true, message: '请输入预置位名称' }],
-  relatedSkillsId: [{ required: false, message: '请选择关联技能' }],
-  scadaCode: [{ required: false, message: '请选择SCADA点位' }],
+  presetPositionName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('linkageSet.presetPositionName') },
+  ],
+  relatedSkillsId: [
+    { required: false, message: t('inputPlaceholder.placeholderSelect') + t('linkageSet.relatedSkills') },
+  ],
+  scadaCode: [{ required: false, message: t('inputPlaceholder.placeholderSelect') + t('position.scadaCode') }],
 });
 let formData = ref<PositionListRows>({
   presetPositionName: '',
@@ -138,7 +144,7 @@ async function getDetail() {
     url2.value = '';
     itemRules.value = [
       {
-        algorithmRecognitionResults: '正常',
+        algorithmRecognitionResults: t('task.badgeItem2'),
         algorithmResults: '',
       },
     ];
@@ -172,8 +178,8 @@ async function confirm() {
       form.append('position', JSON.stringify(position.value));
     }
     if (!url2.value || position.value.width === 0) {
-      ElMessage.error(`请抓图并框选`);
-      throw new Error(`请抓图并框选`);
+      ElMessage.error(t('position.msg2'));
+      throw new Error(t('position.msg2'));
     }
     if (props.pageType === 'edit') {
       form.append('updateImage', `${updateImage.value}`);
@@ -182,7 +188,7 @@ async function confirm() {
     //
     if (itemRules.value) form.append('algorithmResultBeanListStr', JSON.stringify(itemRules.value));
     await addPositionApi(form);
-    ElMessage.success(`保存成功`);
+    ElMessage.success(`${t('buttonName.SaveSuccessful')}`);
     emit('openDialogChange', 'list', undefined);
     await close();
   } catch (e) {
@@ -214,9 +220,9 @@ function showUrl(is: boolean = true) {
 }
 // 规则操作
 const rulesArr = reactive<FormRules<AlgorithmResultBeanList>>({
-  algorithmResults: [{ required: true, message: '请选择' }],
-  algorithmScada: [{ required: false, message: '请输入' }],
-  algorithmRecognitionResults: [{ required: true, message: '请输入' }],
+  algorithmResults: [{ required: true, message: t('inputPlaceholder.placeholderSelect') }],
+  algorithmScada: [{ required: false, message: t('inputPlaceholder.placeholderBase') }],
+  algorithmRecognitionResults: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
 });
 let itemRules = ref<AlgorithmResultBeanList[]>([]);
 let skillList = ref<NeedBusiness.itemObj[]>([]);
@@ -229,7 +235,7 @@ const clearScadaFn = () => {
 };
 function addRules() {
   let rules: AlgorithmResultBeanList = {
-    algorithmRecognitionResults: '正常',
+    algorithmRecognitionResults: t('task.badgeItem2'),
     algorithmResults: '',
     algorithmScada: null,
   };
@@ -259,17 +265,23 @@ defineExpose({
 </script>
 
 <template>
-  <KrPublicDialog :title="`${typeTitle}预置位`" v-model="open" @doSubmit="confirm" width="1180" @doClose="close">
+  <KrPublicDialog
+    :title="`${typeTitle} ${$t('position.position')}`"
+    v-model="open"
+    @doSubmit="confirm"
+    width="1180"
+    @doClose="close"
+  >
     <div class="position-add-page">
       <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="formData" label-width="auto">
         <el-row>
           <el-col :span="12">
-            <el-form-item label="预置位名称" prop="presetPositionName">
+            <el-form-item :label="$t('linkageSet.presetPositionName')" prop="presetPositionName">
               <el-input v-model="formData.presetPositionName" clearable></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="关联技能" prop="relatedSkillsId">
+            <el-form-item :label="$t('linkageSet.relatedSkills')" prop="relatedSkillsId">
               <el-select v-model="formData.relatedSkillsId" filterable clearable @change="skillChange">
                 <el-option
                   :label="item.algorithmName"
@@ -282,7 +294,7 @@ defineExpose({
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="对应SCADA点位" prop="scadaCode">
+            <el-form-item :label="$t('position.scadaCode2')" prop="scadaCode">
               <el-select-v2
                 v-model="formData.scadaCode"
                 :options="scadaList"
@@ -298,12 +310,12 @@ defineExpose({
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="formData.scadaCode !== ''">
-            <el-form-item label="对比允许误差" prop="errorRange">
+            <el-form-item :label="$t('position.errorRange')" prop="errorRange">
               <el-input-number :controls="false" :precision="2" v-model="formData.errorRange" clearable />
             </el-form-item>
           </el-col>
           <el-col :span="12" v-if="isAutoAdd">
-            <el-form-item label="巡检对象" prop="errorRange">
+            <el-form-item :label="$t('overHaulArea.object')" prop="errorRange">
               <el-select v-model="formData.objectId" :disabled="pageType === 'edit'" filterable clearable>
                 <el-option
                   :label="item.objectName"
@@ -315,7 +327,7 @@ defineExpose({
             </el-form-item>
           </el-col>
           <el-col :span="24" class="video-content">
-            <div class="video-title">监控视频</div>
+            <div class="video-title">{{ $t('position.realVideo') }}</div>
             <div class="video">
               <videoControls
                 class="videoEl"
@@ -326,7 +338,7 @@ defineExpose({
               />
               <div class="img-main">
                 <div class="img-content">
-                  <div class="img-title">技能参考图</div>
+                  <div class="img-title">{{ $t('position.skillImg') }}</div>
                   <div class="img">
                     <el-image
                       style="width: 100%; height: 100%"
@@ -341,12 +353,12 @@ defineExpose({
                   </div>
                 </div>
                 <div class="img-content">
-                  <div class="img-title">预置位抓图</div>
+                  <div class="img-title">{{ $t('position.attachmentId') }}</div>
                   <div class="img-add" v-if="!url2" @click="openPictureDialog(true)">
                     <el-icon>
                       <CirclePlus />
                     </el-icon>
-                    <span class="info">设定预置位抓图</span>
+                    <span class="info">{{ $t('position.attachmentIdSet') }}</span>
                   </div>
                   <div class="img" v-else>
                     <el-image
@@ -360,12 +372,16 @@ defineExpose({
                     />
                     <div class="img-Edit-delete">
                       <template v-if="pageType !== 'detail'">
-                        <el-icon size="24" title="查看" @click="showUrl"><ZoomIn /></el-icon>
-                        <el-icon size="24" title="编辑" @click="openPictureDialog(false)"><EditPen /></el-icon>
-                        <el-icon size="24" title="重新抓图" @click="openPictureDialog(true)"><Refresh /></el-icon>
+                        <el-icon size="24" :title="$t('buttonName.check')" @click="showUrl"><ZoomIn /></el-icon>
+                        <el-icon size="24" :title="$t('buttonName.edit')" @click="openPictureDialog(false)"
+                          ><EditPen
+                        /></el-icon>
+                        <el-icon size="24" :title="$t('position.reloadImg')" @click="openPictureDialog(true)"
+                          ><Refresh
+                        /></el-icon>
                       </template>
                       <template v-else>
-                        <el-icon size="24" title="查看" @click="showUrl"><ZoomIn /></el-icon>
+                        <el-icon size="24" :title="$t('buttonName.check')" @click="showUrl"><ZoomIn /></el-icon>
                       </template>
                     </div>
                     <el-image-viewer :url-list="[url2]" v-if="showUrl2" @close="showUrl(false)"></el-image-viewer>
@@ -388,7 +404,7 @@ defineExpose({
       >
         <el-row>
           <el-col :span="24" class="rules-list">
-            <div class="rules-title">识别结果</div>
+            <div class="rules-title">{{ $t('aiInspection.recognitionResult') }}</div>
             <div class="rules-list-item" ref="rulesListItemRef" :key="index" v-for="(item, index) in itemRules">
               <div class="select-item">
                 <el-form-item
@@ -398,17 +414,22 @@ defineExpose({
                   <el-input
                     v-model="item.algorithmRecognitionResults"
                     clearable
-                    placeholder="请输入文字描述"
+                    :placeholder="$t('position.presetPositionPlaceholder3')"
                   ></el-input>
                 </el-form-item>
               </div>
               <div class="subWidth">
                 <el-form-item
                   :prop="`${index}.algorithmResults`"
-                  label="对应算法结果"
+                  :label="$t('position.skillRes')"
                   :rules="rulesArr.algorithmResults"
                 >
-                  <el-select v-model="item.algorithmResults" filterable clearable placeholder="请选择">
+                  <el-select
+                    v-model="item.algorithmResults"
+                    filterable
+                    clearable
+                    :placeholder="$t('inputPlaceholder.placeholderSelect')"
+                  >
                     <el-option
                       :label="item.value"
                       :value="item.key"
@@ -419,7 +440,11 @@ defineExpose({
                 </el-form-item>
               </div>
               <div class="subWidth" v-if="formData.scadaCode !== ''">
-                <el-form-item :prop="`${index}.algorithmScada`" label="对应scada结果" :rules="rulesArr.algorithmScada">
+                <el-form-item
+                  :prop="`${index}.algorithmScada`"
+                  :label="$t('position.scadaCode3')"
+                  :rules="rulesArr.algorithmScada"
+                >
                   <el-input-number :controls="false" :precision="2" v-model="item.algorithmScada" clearable />
                 </el-form-item>
               </div>
@@ -438,7 +463,7 @@ defineExpose({
     </div>
   </KrPublicDialog>
   <KrPublicDialog
-    :title="`框选`"
+    :title="$t('position.picRect')"
     width="900px"
     v-model="openPicture"
     :beforeClose="beforeClose"
@@ -459,9 +484,9 @@ defineExpose({
     ref="formDialogRef"
     :list="orgData"
     @confirm="orgConfirm"
-    treeTitle="区域"
-    tableTitle="待选对象"
-    title="选择巡检对象"
+    :treeTitle="$t('position.area')"
+    :tableTitle="$t('position.daiXuanObj')"
+    :title="$t('position.XuanXJObj')"
   ></objectDialog>
 </template>
 

@@ -105,7 +105,7 @@ const columns: tableProps<ReportListRows>[] = [
   { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'inspectionTaskName',
-    label: t('task.inspectionTaskName'),
+    label: t('aiInspection.inspectionTaskName'),
     isShowInputLabel: false,
     width: 250,
     search: {
@@ -119,7 +119,7 @@ const columns: tableProps<ReportListRows>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.selectProp} style={'width: 140px'}>
-                    <el-option label={t('task.inspectionTaskName')} value={'taskName'} />
+                    <el-option label={t('aiInspection.inspectionTaskName')} value={'taskName'} />
                     <el-option label={t('common.orgName')} value={'orgName'} />
                     <el-option label={t('aiInspection.areaName')} value={'areaName'} />
                     <el-option label={t('aiInspection.objectName')} value={'objectName'} />

@@ -9,6 +9,8 @@ import { getIndexListApi } from '@/api/modules/optCenter/inspectionSet/alarm';
 import { getNeedBusiness, getDict } from '@/utils/serviceDict';
 import { Warning } from '@element-plus/icons-vue';
 import formDialog from './formDialog.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   id?: Id;
   objectId: string;
@@ -25,18 +27,20 @@ onMounted(() => {
   getDetail();
 });
 const rules = reactive<FormRules<addRows>>({
-  itemName: [{ required: true, message: '请输入巡检项名称' }],
-  presetPositionId: [{ required: true, message: '请输入关联预置位' }],
-  itemAttribute: [{ required: true, message: '请输入告警属性' }],
-  alarmLevel: [{ required: true, message: '请输入告警等级' }],
-  indexId: [{ required: true, message: '请选中参数' }],
-  needAlarm: [{ required: true, message: '是否需要告警', type: 'boolean' }],
-  isPopup: [{ required: true, message: '是否告警弹框推送', type: 'boolean' }],
+  itemName: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('task.itemName') }],
+  presetPositionId: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('inspection.presetPositionName') },
+  ],
+  itemAttribute: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('inspection.itemAttribute') }],
+  alarmLevel: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('alarm.alarmGrade') }],
+  indexId: [{ required: true, message: t('inspection.indexId') }],
+  needAlarm: [{ required: true, message: t('inspection.needAlarm'), type: 'boolean' }],
+  isPopup: [{ required: true, message: t('inspection.isPopupMsg'), type: 'boolean' }],
 });
 const rulesArr = reactive<FormRules<ItemRules>>({
-  alarmIndex: [{ required: true, message: '请选择' }],
-  alarmRule: [{ required: true, message: '请选择' }],
-  ruleValue: [{ required: true, message: '请输入' }],
+  alarmIndex: [{ required: true, message: t('inputPlaceholder.placeholderSelect') }],
+  alarmRule: [{ required: true, message: t('inputPlaceholder.placeholderSelect') }],
+  ruleValue: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
 });
 class formDataBase {
   alarmId = '';
@@ -236,12 +240,12 @@ function close() {
           <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="formData" label-width="auto">
             <el-row>
               <el-col :span="24">
-                <el-form-item label="巡检项名称" prop="itemName">
+                <el-form-item :label="$t('task.itemName')" prop="itemName">
                   <el-input v-model="formData.itemName" :readonly="pageType === 'detail'" clearable></el-input>
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="关联预置位" prop="presetPositionId">
+                <el-form-item :label="$t('inspection.presetPositionName')" prop="presetPositionId">
                   <el-input
                     v-model="formData.presetPositionName"
                     @click.prevent="selectClick"
@@ -251,14 +255,14 @@ function close() {
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="关联技能" prop="relatedSkillsName">
+                <el-form-item :label="$t('linkageSet.relatedSkills')" prop="relatedSkillsName">
                   <el-input v-model="formData.relatedSkillsName" readonly />
                 </el-form-item>
               </el-col>
               <el-col :span="24">
                 <el-row :gutter="15">
                   <el-col :span="14">
-                    <el-form-item label="巡检项属性" prop="itemAttribute">
+                    <el-form-item :label="$t('inspection.inspectionProps')" prop="itemAttribute">
                       <template #label="{ label }">
                         <div>
                           {{ label }}
@@ -268,9 +272,9 @@ function close() {
                             </el-icon>
                             <template #content>
                               <p>
-                                参数类:针对电流、电压、压力等具体读数识别;
+                                {{ $t('inspection.Msg1') }}
                                 <br />
-                                状态类:针对指示灯、旋钮等状态识别。
+                                {{ $t('inspection.Msg2') }}
                               </p>
                             </template>
                           </el-tooltip>
@@ -282,8 +286,8 @@ function close() {
                         clearable
                         @change="itemAttributeChange"
                       >
-                        <el-option label="状态类" value="state"></el-option>
-                        <el-option label="参数类" value="param"></el-option>
+                        <el-option :label="$t('inspection.state')" value="state"></el-option>
+                        <el-option :label="$t('inspection.param')" value="param"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -307,16 +311,16 @@ function close() {
                 </el-row>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="是否需要告警" prop="needAlarm">
+                <el-form-item :label="$t('inspection.needAlarm')" prop="needAlarm">
                   <el-radio-group :disabled="pageType === 'detail'" text-color="#000" v-model="formData.needAlarm">
-                    <el-radio :value="true" size="large">是</el-radio>
-                    <el-radio :value="false" size="large">否</el-radio>
+                    <el-radio :value="true" size="large">{{ $t('common.s') }}</el-radio>
+                    <el-radio :value="false" size="large">{{ $t('common.f') }}</el-radio>
                   </el-radio-group>
                 </el-form-item>
               </el-col>
               <template v-if="formData.needAlarm">
                 <el-col :span="24">
-                  <el-form-item label="告警等级" prop="alarmLevel">
+                  <el-form-item :label="$t('alarm.alarmGrade')" prop="alarmLevel">
                     <el-select v-model="formData.alarmLevel" :disabled="pageType === 'detail'" clearable>
                       <el-option
                         v-for="(item, index) in alarm_level"
@@ -328,7 +332,7 @@ function close() {
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="弹框推送" prop="isPopup">
+                  <el-form-item :label="$t('inspection.isPopup')" prop="isPopup">
                     <template #label="{ label }">
                       <div>
                         {{ label }}
@@ -338,9 +342,9 @@ function close() {
                           </el-icon>
                           <template #content>
                             <p>
-                              弹框推送关闭，则告警发生时默认仅推送消息提醒;
+                              {{ $t('inspection.Msg3') }}
                               <br />
-                              弹框推送开启，则告警发生时同步推送消息提醒和告警单框。
+                              {{ $t('inspection.Msg4') }}
                             </p>
                           </template>
                         </el-tooltip>
@@ -356,8 +360,10 @@ function close() {
                 </el-col>
                 <el-col :span="24" v-if="itemAttribute">
                   <div class="rules-title">
-                    告警规则
-                    <span class="rules-title-sub" v-if="itemAttribute === 'param'">（满足如下条件范围）</span>
+                    {{ $t('alarm.alarmRules') }}
+                    <span class="rules-title-sub" v-if="itemAttribute === 'param'">{{
+                      $t('inspection.alarmRules1')
+                    }}</span>
                   </div>
                   <el-form-item label="123" class="labelHide" v-if="itemAttribute === 'param'" prop="ruleCondition">
                     <el-radio-group
@@ -365,8 +371,8 @@ function close() {
                       text-color="#000"
                       v-model="formData.ruleCondition"
                     >
-                      <el-radio :value="1" size="large">且(满足全部条件)</el-radio>
-                      <el-radio :value="0" size="large">或(满足任意条件)</el-radio>
+                      <el-radio :value="1" size="large">{{ $t('inspection.alarmRules2') }}</el-radio>
+                      <el-radio :value="0" size="large">{{ $t('inspection.alarmRules3') }}</el-radio>
                     </el-radio-group>
                   </el-form-item>
                 </el-col>
@@ -387,7 +393,7 @@ function close() {
                 <div class="rules-list">
                   <div class="rules-list-item" ref="rulesListItemRef" :key="index" v-for="(item, index) in itemRules">
                     <template v-if="itemAttribute === 'state'">
-                      <div class="rules-label is-required">告警状态 :</div>
+                      <div class="rules-label is-required">{{ $t('alarm.alarmStatus') }} :</div>
                       <div class="select-item">
                         <el-form-item :prop="`${index}.alarmIndex`" :rules="rulesArr.alarmIndex">
                           <el-select v-model="item.alarmIndex" clearable>
@@ -406,7 +412,7 @@ function close() {
                       <div class="select-item">
                         <el-form-item :prop="`${index}.alarmIndex`" :rules="rulesArr.alarmIndex">
                           <el-select
-                            placeholder="请选择指标"
+                            :placeholder="$t('inputPlaceholder.placeholderSelect') + $t('inspection.zb')"
                             v-model="item.alarmIndex"
                             clearable
                             @change="alarmIndexChange($event, index)"
@@ -422,7 +428,11 @@ function close() {
                       </div>
                       <div class="select-item">
                         <el-form-item :prop="`${index}.alarmRule`" :rules="rulesArr.alarmRule">
-                          <el-select placeholder="请选择规则" v-model="item.alarmRule" clearable>
+                          <el-select
+                            :placeholder="$t('inputPlaceholder.placeholderSelect') + $t('inspection.rules')"
+                            v-model="item.alarmRule"
+                            clearable
+                          >
                             <el-option label=">" value=">"></el-option>
                             <el-option label=">=" value=">="></el-option>
                             <el-option label="=" value="="></el-option>
@@ -434,7 +444,11 @@ function close() {
                       </div>
                       <div class="select-item">
                         <el-form-item :prop="`${index}.ruleValue`" :rules="rulesArr.alarmRule">
-                          <el-input placeholder="请输入" v-model="item.ruleValue" clearable>
+                          <el-input
+                            :placeholder="$t('inputPlaceholder.placeholderBase')"
+                            v-model="item.ruleValue"
+                            clearable
+                          >
                             <template #suffix>
                               <i class="el-icon" style="color: var(--el-text-color-regular)">
                                 {{ item.alarmIndexUnit }}
@@ -461,15 +475,17 @@ function close() {
       </el-scrollbar>
     </div>
     <div class="bottomBtn">
-      <el-button class="button-size" @click="close">取消</el-button>
-      <el-button class="button-size" v-if="pageType !== 'detail'" @click="confirm" type="primary">保存</el-button>
+      <el-button class="button-size" @click="close">{{ $t('ui.cancel') }}</el-button>
+      <el-button class="button-size" v-if="pageType !== 'detail'" @click="confirm" type="primary">{{
+        $t('buttonName.save')
+      }}</el-button>
     </div>
     <formDialog
       ref="formDialogRef"
       :pageType="pageType"
       @confirm="formDialogConfirm"
       :list="dialogArr"
-      title="关联预置位"
+      :title="$t('inspection.needPosition')"
     ></formDialog>
   </div>
 </template>

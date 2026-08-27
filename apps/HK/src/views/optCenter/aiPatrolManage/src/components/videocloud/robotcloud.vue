@@ -5,6 +5,8 @@ import basePopover from './baseComp/basePopover.vue';
 import baseRobotCloud from './robotComp/baserobotcloud.vue';
 import baseCloud from './robotComp/basecloud.vue';
 import { CloudCommand } from '@/api/modules/robotTrack';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
   loginData?: Partial<CloudCommand>;
   cameraId: string;
@@ -18,8 +20,8 @@ function close() {
 
 let robot = ref('1');
 const options1 = [
-  { label: '摄像机', value: '1' },
-  { label: '轨道机', value: '2' },
+  { label: t('device.camera'), value: '1' },
+  { label: t('device.robot'), value: '2' },
 ];
 </script>
 

@@ -31,7 +31,7 @@ defineExpose({
   >
     <template #reference>
       <div class="Controls-button">
-        <span>控制云台</span>
+        <span>{{ $t('camera.cloud') }}</span>
         <el-icon>
           <component :is="isControls ? 'ArrowDown' : 'ArrowUp'" />
         </el-icon>

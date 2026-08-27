@@ -12,9 +12,9 @@ export interface listProp {
 }
 export enum PageTypeTitle {
   list = '',
-  add = '新建巡检任务',
-  edit = '编辑巡检任务',
-  detail = '巡检任务详情',
+  add = 'inspection.AddInspectionTask',
+  edit = 'inspection.EditInspection',
+  detail = 'inspection.InspectionDetail',
 }
 export type Id = string;
 export type PageType = keyof typeof PageTypeTitle;

@@ -33,25 +33,25 @@ let isTube = ref(false);
           <div class="shan shan-item1" @mousedown="start('上')" @mouseup="end('上')">
             <div class="shan-text-arrow top">
               <el-icon class="arrow"><component :is="'CaretTop'" /></el-icon>
-              <span class="text">上升</span>
+              <span class="text">{{ $t('camera.cloudBtn1') }}</span>
             </div>
           </div>
           <div class="shan shan-item2">
             <div class="shan-text-arrow right" @mousedown="start('右')" @mouseup="end('右')">
               <el-icon class="arrow"><component :is="'CaretRight'" /></el-icon>
-              <span class="text">后退</span>
+              <span class="text">{{ $t('camera.cloudBtn2') }}</span>
             </div>
           </div>
           <div class="shan shan-item3">
             <div class="shan-text-arrow left" @mousedown="start('左')" @mouseup="end('左')">
               <el-icon class="arrow"><component :is="'CaretLeft'" /></el-icon>
-              <span class="text">前进</span>
+              <span class="text">{{ $t('camera.cloudBtn3') }}</span>
             </div>
           </div>
           <div class="shan shan-item4">
             <div class="shan-text-arrow bottom" @mousedown="start('下')" @mouseup="end('下')">
               <el-icon class="arrow"><component :is="'CaretBottom'" /></el-icon>
-              <span class="text">下降</span>
+              <span class="text">{{ $t('camera.cloudBtn4') }}</span>
             </div>
           </div>
           <div class="shan-center"></div>
@@ -59,7 +59,7 @@ let isTube = ref(false);
       </div>
     </div>
     <div class="operationBtnCenter">
-      <span class="label">转速</span>
+      <span class="label">{{ $t('camera.speed') }}</span>
       <div class="speedProgress">
         <el-slider :size="'small'" :disabled="isTube" :show-tooltip="false" v-model="speedValue" />
       </div>

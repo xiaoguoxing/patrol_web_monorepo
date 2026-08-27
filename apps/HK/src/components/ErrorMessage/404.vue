@@ -4,7 +4,7 @@
     <div class="not-detail">
       <h2>404</h2>
       <h4>{{ $t('error.page404Msg') }}</h4>
-      <el-button type="primary" @click="router.push(HOME_URL)">{{ $t('errpr.goHome') }}</el-button>
+      <el-button type="primary" @click="router.push(HOME_URL)">{{ $t('error.goHome') }}</el-button>
     </div>
   </div>
 </template>

@@ -5,6 +5,7 @@ import { btnStr, btnStr2, cameraInfoApi } from '@/api/modules/camera';
 import { ElMessage } from 'element-plus';
 import { useElementSize, useWebSocket, UseWebSocketReturn } from '@vueuse/core';
 import { PORT_INSPECT } from '@/api/config/servicePort';
+import { useI18n } from 'vue-i18n';
 const webSocketUrl =
   //@ts-ignore
   import.meta.env.VITE_ONLINE_URL.replace('https://', 'wss://').replace('http://', 'ws://') +
@@ -20,6 +21,7 @@ interface Position {
 }
 function usePicture(capture: any) {
   //抓图
+  const { t } = useI18n();
   let openPicture = ref(false);
   let updateImage = ref(false);
   let pictureDimensionRef = ref();
@@ -50,7 +52,7 @@ function usePicture(capture: any) {
       await nextTick();
       openPicture.value = false;
     } else {
-      ElMessage.error(`请框选`);
+      ElMessage.error(t('position.qkx'));
     }
   }
   async function closePicture() {
@@ -115,6 +117,7 @@ function useRemoveURLObject() {
 }
 function useMouseDelayCloud(callBack: (a: any, b: boolean) => any, option: { timeOut?: number; cameraId?: string }) {
   const { cameraId = '' } = option;
+  const { t } = useI18n();
   type btn = btnStr | btnStr2;
   let inTask = ref(true);
   let isTrueSent = false; // true是否成功发送并响应
@@ -152,7 +155,7 @@ function useMouseDelayCloud(callBack: (a: any, b: boolean) => any, option: { tim
       inTask: false,
     };*/
     inTask.value = data.inTask;
-    return data.inTask ? Promise.reject('该摄像头正在执行智能巡检任务，请稍后尝试') : Promise.resolve();
+    return data.inTask ? Promise.reject(t('position.msg3')) : Promise.resolve();
   }
   return {
     start,

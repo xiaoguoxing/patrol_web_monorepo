@@ -3,6 +3,8 @@ import { reactive, ref, onMounted } from 'vue';
 import { PageType, addRows, detailTaskApi, Cron } from '@/api/modules/optCenter/aiPatrolManage/task';
 import addObjectList from '../add/addObjectList.vue';
 import { getDict } from '@/utils/serviceDict';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 defineExpose({
   openDialogChange() {
     emit('openDialogChange', 'edit', { id: props.id! });
@@ -14,8 +16,8 @@ const executeCycleNames = (await getDict('task_execute_cycle')) as unknown as {
   method: () => Cron[];
 }[];
 const model = [
-  { label: '顺序执行', value: 'serial' },
-  { label: '并行执行', value: 'parallel' },
+  { label: t('linkageSet.serial'), value: 'serial' },
+  { label: t('linkageSet.parallel'), value: 'parallel' },
 ];
 interface props {
   id?: string;
@@ -47,32 +49,32 @@ let formData = ref<addRows>({
 type FormProps = { label: string; prop: keyof addRows; format?: (val: string, obj: addRows) => any }[];
 type FormProps2 = { timing: FormProps; cycle: FormProps };
 let formProps: FormProps = [
-  { label: '任务名称：', prop: 'taskPlanName' },
-  { label: '所属组织：', prop: 'orgName' },
-  { label: '任务类型：', prop: 'taskTypeName' },
+  { label: t('aiInspection.inspectionTaskName') + '：', prop: 'taskPlanName' },
+  { label: t('common.orgName') + '：', prop: 'orgName' },
+  { label: t('aiInspection.taskTypeName') + '：', prop: 'taskTypeName' },
   {
-    label: '巡检模式：',
+    label: t('task.inspectionModel') + '：',
     prop: 'executeMode',
     format(val) {
       let obj = model.find((i) => i.value === val);
       return obj?.label;
     },
   },
-  { label: '巡检方式：', prop: 'inspectionWayName' },
-  { label: '任务执行类型：', prop: 'executeTypeName' },
+  { label: t('inspection.inspectionWay') + '：', prop: 'inspectionWayName' },
+  { label: t('aiInspection.executeTypeName') + '：', prop: 'executeTypeName' },
 ];
 let executeTypeConfig: FormProps2 = {
-  timing: [{ label: '任务执行时间：', prop: 'taskStartTime' }],
+  timing: [{ label: t('aiInspection.taskStartTime') + '：', prop: 'taskStartTime' }],
   cycle: [
     {
-      label: '任务执行频率：',
+      label: t('inspection.executeFrequency') + '：',
       prop: 'executeFrequency',
       format(val, obj) {
         return `每 ${val} ${executeCycleNames.find((i) => i.value === obj.executeCycle)?.label}`;
       },
     },
-    { label: '任务开始时间：', prop: 'taskStartTime' },
-    { label: '任务结束时间：', prop: 'taskEndTime' },
+    { label: t('aiInspection.taskStartTime') + '：', prop: 'taskStartTime' },
+    { label: t('aiInspection.taskEndTime') + '：', prop: 'taskEndTime' },
   ],
 };
 
@@ -97,7 +99,7 @@ function cancel() {
 
 <template>
   <div class="detailPage">
-    <div class="detail-title kr-font-medium" style="margin-bottom: 16px">任务信息</div>
+    <div class="detail-title kr-font-medium" style="margin-bottom: 16px">{{ $t('task.taskInfo') }}</div>
     <div class="detail-description">
       <div class="detail-description-items" :key="item.prop" v-for="item in formProps">
         <div class="detail-description-label">{{ item.label }}</div>
@@ -106,7 +108,7 @@ function cancel() {
         </div>
       </div>
     </div>
-    <div class="detail-title kr-font-medium">巡检对象</div>
+    <div class="detail-title kr-font-medium">{{ $t('overHaulArea.object') }}</div>
     <div class="detail-table">
       <addObjectList :objectList="objectList" :show-btn="false"></addObjectList>
     </div>

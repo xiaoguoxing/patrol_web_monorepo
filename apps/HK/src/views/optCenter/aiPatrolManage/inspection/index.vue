@@ -1,7 +1,9 @@
 <template>
   <kr-card class="flex-1 two-col-page" :header="cardTitle" header-border>
     <template #headerRight v-if="pageType === 'list'">
-      <el-button v-auth="'indexSet'" icon="Operation" type="primary" link @click="openDrawer">参数设置</el-button>
+      <el-button v-auth="'indexSet'" icon="Operation" type="primary" link @click="openDrawer">{{
+        $t('inspection.paramsSet')
+      }}</el-button>
     </template>
     <kr-filter-tree
       v-show="pageType === 'list'"
@@ -9,7 +11,7 @@
       label="nodeName"
       v-dragLine
       :data="dataSource"
-      placeholder="请输入您想搜索的巡检对象名称"
+      :placeholder="$t('alarm.placeholder')"
       @change="changeTreeFilter"
       :defaultValue="defaultValue"
     />
@@ -35,7 +37,7 @@
           :disabled="nodeType !== 3"
           type="primary"
           @click="openDialogChange('add')"
-          >新建巡检项</el-button
+          >{{ $t('inspection.AddInspection') }}</el-button
         >
         <el-button
           v-auth="'batchOn'"
@@ -43,7 +45,7 @@
           @click="batchChange(selectedListIds, true)"
           :disabled="!isSelected"
           class="el-button--primary2"
-          >开启弹窗推送</el-button
+          >{{ $t('inspection.batchOn') }}</el-button
         >
         <el-button
           v-auth="'batchOff'"
@@ -51,17 +53,21 @@
           class="el-button--primary2"
           @click="batchChange(selectedListIds, false)"
           :disabled="!isSelected"
-          >关闭弹框推送</el-button
+          >{{ $t('inspection.batchOff') }}</el-button
         >
-        <el-button icon="Delete" v-auth="'delete'" :disabled="!isSelected" @click="deleteList(selectedListIds)"
-          >删除</el-button
-        >
+        <el-button icon="Delete" v-auth="'delete'" :disabled="!isSelected" @click="deleteList(selectedListIds)">{{
+          $t('ui.delete')
+        }}</el-button>
       </template>
       <!-- 表格操作 -->
       <template #operation="{ row }">
-        <el-button type="primary" link @click="openDialogChange('detail', row)">查看</el-button>
-        <el-button type="primary" link v-auth="'edit'" @click="openDialogChange('edit', row)">编辑</el-button>
-        <el-button type="primary" link v-auth="'delete'" @click="deleteList([row['id']])">删除</el-button>
+        <el-button type="primary" link @click="openDialogChange('detail', row)">{{ $t('buttonName.check') }}</el-button>
+        <el-button type="primary" link v-auth="'edit'" @click="openDialogChange('edit', row)">{{
+          $t('buttonName.edit')
+        }}</el-button>
+        <el-button type="primary" link v-auth="'delete'" @click="deleteList([row['id']])">{{
+          $t('ui.delete')
+        }}</el-button>
       </template>
     </kr-pro-table>
     <addPage
@@ -99,9 +105,11 @@ import alarmDrawer from './alarmDrawer.vue';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { PageTypeTitle } from '@/api/modules/optCenter/aiPatrolManage/task';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
-let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]));
+let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : t(PageTypeTitle[pageType.value])));
 // 树操作
 const dataSource = ref<Tree[]>([]);
 const currentTreeNode = ref<Tree>();
@@ -132,52 +140,48 @@ const dataCallback = (data: any) => {
   };
 };
 const columns: tableProps<rows>[] = [
-  { type: 'selection', label: '序号', width: 70 },
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'selection', label: t('table.sort'), width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
     isShowInputLabel: false,
     search: {
       el: 'input',
-      props: { placeholder: '请输入您想搜索的巡检项名称' },
+      props: { placeholder: t('inspection.placeholder') },
     },
     minWidth: 200,
   },
   {
     prop: 'cameraName',
-    label: '监控设备名称',
+    label: t('linkageSet.cameraName'),
     minWidth: 200,
   },
   {
     prop: 'cameraType',
-    label: '监控设备类型',
+    label: t('linkageSet.cameraType'),
     filters: getDictForColumnFilters(cameraTypeNames),
     enum: cameraTypeNames,
     minWidth: 200,
   },
   {
     prop: 'presetPositionName',
-    label: '关联预置位名称',
+    label: t('inspection.presetPositionName'),
     minWidth: 200,
   },
   {
     prop: 'relatedSkillsName',
-    label: '关联技能',
+    label: t('linkageSet.relatedSkills'),
     minWidth: 200,
   },
   {
     prop: 'isPopup',
-    label: '告警弹框推送',
+    label: t('inspection.isPopup'),
     headerRender: (scope) => {
       return (
         <span>
-          弹框推送
-          <el-tooltip
-            content="弹框推送关闭，则告警发生时默认仅推送消息提醒；弹框推送开启，则告警发生时同步推送消息提醒和告警弹框。"
-            effect="light"
-            placement="right"
-          >
+          {t('inspection.isPopup')}
+          <el-tooltip content={t('inspection.isPopupInfo')} effect="light" placement="right">
             <el-icon>
               <QuestionFilled />
             </el-icon>
@@ -207,7 +211,7 @@ const columns: tableProps<rows>[] = [
     },
     minWidth: 200,
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 180, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
 ];
 const getTableList = async (params: any) => {
   let { pageNum, ...searchData } = params;
@@ -216,7 +220,7 @@ const getTableList = async (params: any) => {
 };
 const deleteList = async (selectedListIds: string[]) => {
   try {
-    await useHandleData<{ ids: string }>(deleteInspectionApi, { ids: selectedListIds.toString() }, '删除');
+    await useHandleData<{ ids: string }>(deleteInspectionApi, { ids: selectedListIds.toString() }, t('ui.delete'));
     proTable.value.clearSelection();
     proTable.value.getTableList();
   } catch (e) {
@@ -225,7 +229,11 @@ const deleteList = async (selectedListIds: string[]) => {
   }
 };
 const batchChange = async (id: string[], isPopup: boolean) => {
-  await useHandleData(turnApi, { ids: id.join(), isPopup: isPopup }, (isPopup ? '开启' : '关闭') + '所选告警弹窗推送');
+  await useHandleData(
+    turnApi,
+    { ids: id.join(), isPopup: isPopup },
+    isPopup ? t('inspection.batchOn2') : t('inspection.batchOff2')
+  );
   proTable.value.clearSelection();
   proTable.value.getTableList();
 };
@@ -251,7 +259,7 @@ async function openDialogChange(page: PageType, row?: rows) {
 const alarmDrawerRef = ref();
 const openDrawer = () => {
   alarmDrawerRef.value.acceptParams({
-    title: '告警指标设置',
+    title: t('inspection.alarmZbSet'),
   });
 };
 

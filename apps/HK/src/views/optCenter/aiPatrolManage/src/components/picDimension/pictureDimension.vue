@@ -5,6 +5,8 @@ import type { Canvas, IEvent, Image, IPoint, Object as FObject, Transform, ICirc
 import deleteImg from '@/assets/images/videoControls/gqd.png';
 import { dataURLtoFile } from '@/utils/util';
 import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Position {
   top: number;
   left: number;
@@ -182,7 +184,7 @@ function initCanvasControls() {
 // 设置图形
 function setCurrentType(value: string) {
   if (canvas._objects.length >= 1) {
-    return ElMessage.warning('仅允许框选一处');
+    return ElMessage.warning(t('msg4'));
   }
   currentType.value = value;
   typeChange(value);
@@ -538,11 +540,11 @@ defineExpose({
       <div class="area-right">
         <div class="area-right-btn" v-if="false" @click="removeObj">
           <div class="icon icon1"></div>
-          <span>撤回</span>
+          <span>{{ $t('ui.reloadMsg') }}</span>
         </div>
         <div class="area-right-btn" @click="clearCanvas">
           <div class="icon icon2"></div>
-          <span>清空</span>
+          <span>{{ $t('ui.clear') }}</span>
         </div>
       </div>
     </div>

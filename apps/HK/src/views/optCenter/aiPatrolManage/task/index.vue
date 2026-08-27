@@ -9,9 +9,9 @@
           <span class="title kr-font-medium">{{ cardTitle }}</span>
         </div>
         <div v-auth="'edit'">
-          <el-button v-if="pageType === 'detail'" icon="EditPen" @click="$refs.detailRef?.openDialogChange()"
-            >编辑</el-button
-          >
+          <el-button v-if="pageType === 'detail'" icon="EditPen" @click="$refs.detailRef?.openDialogChange()">{{
+            $t('buttonName.edit')
+          }}</el-button>
         </div>
       </template>
       <template v-if="pageType === 'list'">
@@ -38,33 +38,40 @@
         >
           <!-- 表格 header 按钮 -->
           <template #tableHeader="{ selectedListIds }">
-            <el-button icon="CirclePlus" type="primary" v-auth="'add'" @click="openDialogChange('add')"
-              >新建巡检任务</el-button
-            >
+            <el-button icon="CirclePlus" type="primary" v-auth="'add'" @click="openDialogChange('add')">{{
+              $t('inspection.AddInspectionTask')
+            }}</el-button>
             <el-button
               v-auth="'enableStop'"
               :disabled="!selectedListIds.length"
               @click="swEnableChange(selectedListIds)"
-              >启用</el-button
+              >{{ $t('buttonName.on') }}</el-button
             >
-            <el-button v-auth="'enableStop'" :disabled="!selectedListIds.length" @click="swStopChange(selectedListIds)"
-              >禁用</el-button
+            <el-button
+              v-auth="'enableStop'"
+              :disabled="!selectedListIds.length"
+              @click="swStopChange(selectedListIds)"
+              >{{ $t('buttonName.off') }}</el-button
             >
             <el-button
               icon="Delete"
               v-auth="'delete'"
               :disabled="!selectedListIds.length"
               @click="deleteList(selectedListIds)"
-              >删除</el-button
+              >{{ $t('ui.delete') }}</el-button
             >
           </template>
           <!-- 表格操作 -->
           <template #operation="{ row }">
-            <el-button type="primary" link @click="openDialogChange('detail', row)">查看</el-button>
-            <el-button type="primary" v-auth="'edit'" link @click="openDialogChange('edit', row)">编辑</el-button>
-            <el-button type="primary" v-auth="'delete'" link @click="deleteList(row['id'] ? [row['id']] : [])"
-              >删除</el-button
-            >
+            <el-button type="primary" link @click="openDialogChange('detail', row)">{{
+              $t('buttonName.check')
+            }}</el-button>
+            <el-button type="primary" v-auth="'edit'" link @click="openDialogChange('edit', row)">{{
+              $t('buttonName.edit')
+            }}</el-button>
+            <el-button type="primary" v-auth="'delete'" link @click="deleteList(row['id'] ? [row['id']] : [])">{{
+              $t('ui.delete')
+            }}</el-button>
           </template>
         </kr-pro-table>
       </template>
@@ -109,6 +116,8 @@ import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { AuthStore } from '@/stores/modules/auth';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const authStore = AuthStore();
 const currentPageRoles = authStore.authButtonListGet[authStore.routeName] ?? [];
 const swAuth: string = 'enableStop';
@@ -116,7 +125,9 @@ const swAuthShow = ref<boolean>(false);
 if (!currentPageRoles.includes(swAuth)) {
   swAuthShow.value = true;
 }
-let cardTitle = computed(() => (pageType.value === 'list' ? useRoute().meta?.title! : PageTypeTitle[pageType.value]));
+let cardTitle = computed(() =>
+  pageType.value === 'list' ? useRoute().meta?.title! : t(PageTypeTitle[pageType.value])
+);
 const executeNames = (await getDict('task_execute_type')) as { label: string; value: string; remark: string }[];
 const taskTypeSelectNames = ((await taskTypeSelectApi()).data as any[]).map((i: any) => ({
   label: i.taskType,
@@ -127,11 +138,11 @@ let pageType = ref<PageType>('list');
 const proTable = ref();
 const initParam = reactive<Partial<searchForm>>({ taskStatus: 'bc', selectProp: 'taskPlanName' });
 const columns: tableProps<rows>[] = [
-  { type: 'selection', label: '序号', width: 70 },
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'selection', label: t('table.sort'), width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'taskPlanName',
-    label: '任务名称',
+    label: t('aiInspection.inspectionTaskName'),
     isShowInputLabel: false,
     search: {
       el: 'input',
@@ -144,9 +155,9 @@ const columns: tableProps<rows>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.selectProp} style={'width: 140px'}>
-                    <el-option label="任务名称" value={'taskPlanName'} />
-                    <el-option label="巡检区域" value={'areaName'} />
-                    <el-option label="巡检对象名称" value={'objectName'} />
+                    <el-option label={t('aiInspection.inspectionTaskName')} value={'taskPlanName'} />
+                    <el-option label={t('aiInspection.areaName')} value={'areaName'} />
+                    <el-option label={t('aiInspection.objectName')} value={'objectName'} />
                   </el-select>
                 );
               },
@@ -158,7 +169,7 @@ const columns: tableProps<rows>[] = [
   },
   {
     prop: 'taskType',
-    label: '任务类型',
+    label: t('aiInspection.taskTypeName'),
     filterMultiple: false,
     filters: getDictForColumnFilters(taskTypeSelectNames),
     enum: taskTypeSelectNames,
@@ -166,27 +177,27 @@ const columns: tableProps<rows>[] = [
   },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     minWidth: 200,
   },
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
     minWidth: 200,
   },
   {
     prop: 'orgName',
-    label: '所属组织',
+    label: t('common.orgName'),
   },
   {
     prop: 'executeType',
-    label: '任务执行类型',
+    label: t('aiInspection.executeTypeName'),
     filters: getDictForColumnFilters(executeNames),
     enum: executeNames,
   },
   {
     prop: 'taskStartTime',
-    label: '任务发布时间',
+    label: t('aiInspection.taskStartTime2'),
     isShowInputLabel: true,
     search: {
       el: 'date-picker',
@@ -200,7 +211,7 @@ const columns: tableProps<rows>[] = [
   },
   {
     prop: 'taskStatus',
-    label: '任务状态',
+    label: t('aiInspection.taskStatus'),
     render(scope) {
       return (
         <>
@@ -226,7 +237,7 @@ const columns: tableProps<rows>[] = [
       );
     },
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 180, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
 ];
 
 const dataCallback = (data: any) => {
@@ -248,7 +259,7 @@ const getTableList = async (params: any) => {
 };
 const deleteList = async (selectedListIds: string[]) => {
   try {
-    await useHandleData<{ ids: string }>(deleteTaskApi, { ids: selectedListIds.toString() }, '删除');
+    await useHandleData<{ ids: string }>(deleteTaskApi, { ids: selectedListIds.toString() }, t('ui.delete'));
     proTable.value.getTableList();
     proTable.value.clearSelection();
   } catch (e) {}
@@ -286,9 +297,9 @@ function openDialogChange(page: PageType, row?: rows) {
 }
 // tabs
 const options1 = [
-  { label: '全部', value: 'bc' },
-  { label: '启用', value: '1' },
-  { label: '禁用', value: '0' },
+  { label: t('worktop.All'), value: 'bc' },
+  { label: t('buttonName.on'), value: '1' },
+  { label: t('buttonName.off'), value: '0' },
 ];
 </script>
 <style scoped lang="scss">

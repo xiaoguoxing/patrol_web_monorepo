@@ -2,9 +2,9 @@ import http from '@/api';
 import { PORT_INSPECT } from '@/api/config/servicePort';
 export enum PageTypeTitle {
   list = '',
-  add = '新建',
-  edit = '编辑',
-  detail = '详情',
+  add = 'buttonName.add',
+  edit = 'buttonName.edit',
+  detail = 'buttonName.detail',
 }
 export type Id = string;
 export type PageType = keyof typeof PageTypeTitle;

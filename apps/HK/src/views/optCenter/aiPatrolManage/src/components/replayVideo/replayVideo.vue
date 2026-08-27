@@ -4,6 +4,8 @@ import timeLine from './timeLine.vue';
 import { VideoPlay, VideoPause } from '@element-plus/icons-vue';
 import { useDateFormat, useIntervalFn, useDebounceFn, useEventListener } from '@vueuse/core';
 import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface props {
   videoRef: HTMLVideoElement | undefined;
 }
@@ -27,7 +29,7 @@ let addTimeDe = useDebounceFn(() => {
     emits('change', startTime.value);
   } else {
     // startTime.value = new Date(new Date().toLocaleDateString()).getTime();
-    ElMessage.error(`无效时间`);
+    ElMessage.error(t('camera.err4'));
   }
 }, 1000);
 function timeChange() {

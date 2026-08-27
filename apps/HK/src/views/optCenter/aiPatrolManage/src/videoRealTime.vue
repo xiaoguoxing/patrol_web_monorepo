@@ -8,6 +8,8 @@ import { computed, DefineComponent, nextTick, onMounted, onUnmounted, ref, watch
 import { PlayType, Quality } from './videoType';
 import type { PlayKey } from './videoType';
 import { useFullscreen } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 //
 export interface Props {
   playType?: PlayType;
@@ -49,7 +51,7 @@ const emit = defineEmits<Emit>();
 let currentComponentName = ref();
 onMounted(() => {
   if (!props.cameraId) {
-    err('摄像头id未传！');
+    err(t('camera.cameraIdNot'));
     return;
   }
   props.cameraId && init();

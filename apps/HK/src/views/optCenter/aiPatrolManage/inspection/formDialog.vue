@@ -8,8 +8,8 @@
       :treeData="dataSource"
       :getListApi="getTList"
       :column="column"
-      tree-title="监控设备列表"
-      table-title="待添加预置位"
+      :tree-title="$t('inspection.realVideoList')"
+      :table-title="$t('inspection.addPosition')"
       tree-label="nodeName"
       label="presetPositionName"
       id="id"
@@ -40,7 +40,8 @@ import {
 import { getCameraTreeApi, Tree } from '@/api/modules/camera';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { videoNodeType } from '@optCenter/hooks/use-video';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface DialogProps {
   title: string;
   pageType: string;
@@ -110,15 +111,15 @@ const getTList = async (params: any) => {
 const column: ColumnProps[] = [
   {
     prop: 'presetPositionName',
-    label: '预置位名称',
+    label: t('linkageSet.presetPositionName'),
   },
   {
     prop: 'relatedSkillsName',
-    label: '关联技能',
+    label: t('linkageSet.relatedSkills'),
   },
   {
     prop: 'attachmentId',
-    label: '预置位抓图',
+    label: t('position.attachmentId'),
     showOverflowTooltip: false,
     render(scope) {
       return (

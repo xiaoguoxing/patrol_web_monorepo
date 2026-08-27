@@ -24,7 +24,8 @@
 import { ref, computed, onUnmounted, onMounted, onBeforeMount } from 'vue';
 import { ColumnProps } from '@patrol/ui';
 import { orgTree, OrgTree, orgTreeList } from '@/api/modules/optCenter/aiPatrolManage/task';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface DialogProps {
   title: string;
   treeTitle: string;
@@ -76,7 +77,7 @@ const getTList = async (params: any) => {
 const column: ColumnProps[] = [
   {
     prop: 'name',
-    label: '名称',
+    label: t('common.name'),
   },
 ];
 const onClose = () => {

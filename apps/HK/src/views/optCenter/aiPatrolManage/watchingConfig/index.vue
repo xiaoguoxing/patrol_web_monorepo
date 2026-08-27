@@ -6,7 +6,7 @@
       label="nodeName"
       v-dragLine
       :data="dataSource"
-      placeholder="请输入您想搜索的巡检对象名称"
+      :placeholder="$t('alarm.placeholder')"
       @change="changeTreeFilter"
       :defaultValue="defaultValue"
     />
@@ -33,21 +33,25 @@
           :disabled="currentCameraTreeNode?.nodeType !== 3"
           type="primary"
           @click="openDialogChange('add')"
-          >关联技能</el-button
+          >{{ $t('linkageSet.relatedSkills') }}</el-button
         >
         <el-button
           icon="Delete"
           v-auth="'delete'"
           :disabled="!selectedListIds.length"
           @click="deleteList(selectedListIds)"
-          >删除</el-button
+          >{{ $t('ui.delete') }}</el-button
         >
       </template>
       <!-- 表格操作 -->
       <template #operation="{ row }">
         <!--        <el-button type="primary" link @click="openDialogChange('detail', row)">查看</el-button>-->
-        <el-button v-auth="'edit'" type="primary" link @click="openDialogChange('edit', row)">编辑</el-button>
-        <el-button v-auth="'delete'" type="primary" link @click="deleteList([row['id']])">删除</el-button>
+        <el-button v-auth="'edit'" type="primary" link @click="openDialogChange('edit', row)">{{
+          $t('buttonName.edit')
+        }}</el-button>
+        <el-button v-auth="'delete'" type="primary" link @click="deleteList([row['id']])">{{
+          $t('ui.delete')
+        }}</el-button>
       </template>
       <template #monitorStatus="{ row }">
         <el-switch
@@ -96,8 +100,10 @@ import { getCameraTreeApi, Tree } from '@/api/modules/camera';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const route = useRoute();
-let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]));
+let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : t(PageTypeTitle[pageType.value])));
 // 树操作
 const dataSource = ref<Tree[]>([]);
 const currentCameraTreeNode = ref<Tree>();
@@ -119,45 +125,45 @@ const changeTreeFilter = (val: string, node: Tree) => {
 const proTable = ref();
 const initParam = reactive<Partial<searchForm>>({ cameraId: defaultValue.value });
 const columns: tableProps<rows>[] = [
-  { type: 'selection', label: '序号', width: 70 },
-  { type: 'index', label: '序号', width: 70 },
+  { type: 'selection', label: t('table.sort'), width: 70 },
+  { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'orgName',
-    label: '所属组织',
+    label: t('common.orgName'),
     minWidth: 100,
   },
   {
     prop: 'areaName',
-    label: '巡检区域',
+    label: t('aiInspection.areaName'),
     minWidth: 100,
   },
   {
     prop: 'cameraName',
-    label: '监控点位',
+    label: t('linkageSet.cameraName'),
     minWidth: 100,
   },
   {
     prop: 'relatedSkillsName',
-    label: '技能名称',
+    label: t('model.algorithmName2'),
     isShowInputLabel: false,
     search: {
       el: 'input',
-      props: { placeholder: '请输入您需要搜索的技能名称' },
+      props: { placeholder: t('model.exportModelPlaceholder2') },
     },
     minWidth: 200,
   },
   {
     prop: 'alarmStatusName',
-    label: '告警规则',
+    label: t('alarm.alarmRules'),
     minWidth: 200,
   },
   {
     prop: 'monitorStatus',
-    label: '监控状态',
+    label: t('camera.monitorStatus'),
     showOverflowTooltip: false,
     minWidth: 200,
   },
-  { prop: 'operation', align: 'right', label: '操作', width: 150, fixed: 'right' },
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 150, fixed: 'right' },
 ];
 let checkListCode = ref('');
 const dataCallback = (data: any) => {
@@ -176,7 +182,7 @@ const getTableList = async (params: any) => {
 };
 const deleteList = async (selectedListIds: string[]) => {
   try {
-    await useHandleData<{ ids: string }>(deleteWatchingApi, { ids: selectedListIds.toString() }, '删除');
+    await useHandleData<{ ids: string }>(deleteWatchingApi, { ids: selectedListIds.toString() }, t('ui.delete'));
     proTable.value.clearSelection();
     proTable.value.getTableList();
   } catch (e) {

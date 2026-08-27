@@ -13,6 +13,8 @@ import orgDialog from '../orgDialog.vue';
 import addObjectList from './addObjectList.vue';
 import addObjectDialog from './addObjectDialog.vue';
 import { getDict } from '@/utils/serviceDict';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const taskTypeSelectNames = ((await taskTypeSelectApi()).data as any[]).map((i: any) => ({
   label: i.taskType,
   value: i.id,
@@ -25,8 +27,8 @@ const executeCycleNames = (await getDict('task_execute_cycle')) as unknown as {
   method: () => Cron[];
 }[];
 const model = [
-  { label: '顺序执行', value: 'serial' },
-  { label: '并行执行', value: 'parallel' },
+  { label: t('linkageSet.serial'), value: 'serial' },
+  { label: t('linkageSet.parallel'), value: 'parallel' },
 ];
 
 interface props {
@@ -46,17 +48,26 @@ const active = ref(1);
 onMounted(() => {
   getDetail();
 });
+('aiInspection.inspectionTaskName');
 const rules = reactive<FormRules<addRows>>({
-  taskPlanName: [{ required: true, message: '请输入任务名称' }],
-  orgName: [{ required: true, message: '请选择所属组织' }],
-  taskType: [{ required: true, message: '请选择任务类型' }],
-  inspectionWay: [{ required: true, message: '请选择巡检方式' }],
-  executeType: [{ required: true, message: '请选择任务执行类型' }],
-  executeCycle: [{ required: true, message: '请选择任务执行周期 ' }],
-  executeFrequency: [{ required: true, message: '请选择任务执行频率' }],
-  taskStartTime: [{ required: true, message: '请选择任务开始时间' }],
-  taskEndTime: [{ required: false, message: '请选择任务结束时间' }],
-  executeMode: [{ required: true, message: '请选择巡检模式' }],
+  taskPlanName: [
+    { required: true, message: t('inputPlaceholder.placeholderBase') + t('aiInspection.inspectionTaskName') },
+  ],
+  orgName: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('common.orgName') }],
+  taskType: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('aiInspection.taskTypeName') }],
+  inspectionWay: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('inspection.inspectionWay') }],
+  executeType: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('aiInspection.executeTypeName') },
+  ],
+  executeCycle: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('inspection.executeCycle') }],
+  executeFrequency: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('inspection.executeFrequency') },
+  ],
+  taskStartTime: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('aiInspection.taskStartTime') },
+  ],
+  taskEndTime: [{ required: false, message: t('inputPlaceholder.placeholderSelect') + t('aiInspection.taskEndTime') }],
+  executeMode: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('task.inspectionModel') }],
 });
 let formData = reactive<addRows>({
   taskPlanName: '',
@@ -101,16 +112,13 @@ function setArr(num: number): Cron[] {
   return new Array(num).fill({}).map((i, index) => ({ label: `${index + 1}`, value: `${index + 1}` }));
 }
 interface CronDayName {
-  小时: () => Cron[];
-  天: () => Cron[];
-  周: () => Cron[];
-  月: () => Cron[];
+  [key: string]: () => Cron[];
 }
 const cronDayMethod: CronDayName = {
-  小时: () => setArr(24),
-  天: () => setArr(7),
-  周: () => setArr(4),
-  月: () => setArr(12),
+  [t('common.hour')]: () => setArr(24),
+  [t('common.today2')]: () => setArr(7),
+  [t('common.week3')]: () => setArr(4),
+  [t('common.month3')]: () => setArr(12),
 };
 let cronValue = ref<Cron>({ value: '', label: '' });
 function cronChange(value: string, first: boolean = true) {
@@ -181,8 +189,8 @@ function cancel() {
     <div class="addPageCont">
       <div class="stepMargin">
         <el-steps :active="active">
-          <el-step title="设置任务信息" />
-          <el-step title="选择巡检项" />
+          <el-step :title="$t('task.step1')" />
+          <el-step :title="$t('task.step2')" />
         </el-steps>
       </div>
       <el-row class="formCenter">
@@ -191,17 +199,25 @@ function cancel() {
             <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="formData" label-width="auto">
               <el-row>
                 <el-col :span="24">
-                  <el-form-item label="任务名称" prop="taskPlanName">
-                    <el-input v-model="formData.taskPlanName" placeholder="请输入"></el-input>
+                  <el-form-item :label="$t('aiInspection.inspectionTaskName')" prop="taskPlanName">
+                    <el-input
+                      v-model="formData.taskPlanName"
+                      :placeholder="$t('inputPlaceholder.placeholderBase')"
+                    ></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="所属组织" prop="orgName">
-                    <el-input v-model="formData.orgName" placeholder="请选择" readonly @click="selectClick"></el-input>
+                  <el-form-item :label="$t('common.orgName')" prop="orgName">
+                    <el-input
+                      v-model="formData.orgName"
+                      :placeholder="t('inputPlaceholder.placeholderSelect')"
+                      readonly
+                      @click="selectClick"
+                    ></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="任务类型" prop="taskType">
+                  <el-form-item :label="$t('aiInspection.taskTypeName')" prop="taskType">
                     <el-select v-model="formData.taskType">
                       <el-option
                         :label="item.label"
@@ -213,7 +229,7 @@ function cancel() {
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="巡检模式" prop="executeMode">
+                  <el-form-item :label="$t('task.inspectionModel')" prop="executeMode">
                     <el-select v-model="formData.executeMode">
                       <el-option
                         :label="item.label"
@@ -225,7 +241,7 @@ function cancel() {
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="巡检方式" prop="inspectionWay">
+                  <el-form-item :label="$t('inspection.inspectionWay')" prop="inspectionWay">
                     <el-select v-model="formData.inspectionWay">
                       <el-option
                         :label="item.label"
@@ -237,7 +253,7 @@ function cancel() {
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item label="任务执行类型" prop="executeType">
+                  <el-form-item :label="$t('aiInspection.executeTypeName')" prop="executeType">
                     <el-select v-model="formData.executeType">
                       <el-option
                         :label="item.label"
@@ -249,19 +265,19 @@ function cancel() {
                   </el-form-item>
                 </el-col>
                 <el-col v-if="formData.executeType === 'timing'" :span="24">
-                  <el-form-item label="任务执行时间" prop="taskStartTime">
+                  <el-form-item :label="$t('aiInspection.taskStartTime')" prop="taskStartTime">
                     <el-date-picker
                       v-model="formData.taskStartTime"
                       value-format="YYYY-MM-DD HH:mm"
                       format="YYYY-MM-DD HH:mm"
                       time-format="HH:mm"
                       type="datetime"
-                      placeholder="请选择任务执行时间"
+                      :placeholder="$t('inputPlaceholder.placeholderSelect') + $t('aiInspection.taskStartTime')"
                     />
                   </el-form-item>
                 </el-col>
                 <el-col v-if="formData.executeType === 'cycle'" :span="24">
-                  <el-form-item label="任务执行周期" prop="executeCycle">
+                  <el-form-item :label="$t('inspection.executeCycle')" prop="executeCycle">
                     <el-radio-group v-model="formData.executeCycle" class="ml-4" @change="cronChange">
                       <el-radio v-for="item in executeCycleNames" :key="item.value" :value="item.value">{{
                         item.label
@@ -273,15 +289,19 @@ function cancel() {
                   <div class="input-sub-content">
                     <div class="input-sub-content-left"></div>
                     <div class="input-sub-content-right">
-                      <el-form-item label="任务执行频率" prop="executeFrequency">
-                        <span class="beforeText">每</span>
+                      <el-form-item :label="$t('inspection.executeFrequency')" prop="executeFrequency">
+                        <span class="beforeText">{{ $t('task.m') }}</span>
                         <!--                    <el-time-picker
                           v-if="cronValue.label === '小时'"
                           value-format="HH:mm:ss"
                           v-model="formData.executeFrequency"
                         />-->
                         <el-select
-                          v-if="['小时', '天', '周', '月'].includes(cronValue.label)"
+                          v-if="
+                            [$t('common.hour'), $t('common.today2'), $t('common.week3'), $t('common.month3')].includes(
+                              cronValue.label
+                            )
+                          "
                           v-model="formData.executeFrequency"
                           clearable
                         >
@@ -293,27 +313,27 @@ function cancel() {
                           ></el-option>
                         </el-select>
                         <el-date-picker
-                          v-else-if="cronValue.label === '年'"
+                          v-else-if="cronValue.label === $t('common.year')"
                           type="year"
                           value-format="YYYY"
                           v-model="formData.executeFrequency"
                         />
                         <span class="afterText">{{ cronValue.label }}</span>
                       </el-form-item>
-                      <el-form-item label="任务开始时间" prop="taskStartTime">
+                      <el-form-item :label="$t('aiInspection.taskStartTime')" prop="taskStartTime">
                         <el-date-picker
                           v-model="formData.taskStartTime"
                           value-format="YYYY-MM-DD HH:mm"
                           type="datetime"
-                          placeholder="请选择开始时间"
+                          :placeholder="$t('inputPlaceholder.placeholderSelect') + $t('aiInspection.taskStartTime')"
                         />
                       </el-form-item>
-                      <el-form-item label="任务结束时间" prop="taskEndTime">
+                      <el-form-item :label="$t('aiInspection.taskEndTime')" prop="taskEndTime">
                         <el-date-picker
                           v-model="formData.taskEndTime"
                           value-format="YYYY-MM-DD HH:mm"
                           type="datetime"
-                          placeholder="请选择结束时间"
+                          :placeholder="$t('inputPlaceholder.placeholderSelect') + $t('aiInspection.taskEndTime')"
                         />
                       </el-form-item>
                     </div>
@@ -330,9 +350,9 @@ function cancel() {
                     ref="formDialogRef"
                     :list="orgData"
                     @confirm="orgConfirm"
-                    treeTitle="组织架构"
-                    tableTitle="待选组织"
-                    title="选择所属组织"
+                    :treeTitle="$t('common.orgNameGroup')"
+                    :tableTitle="$t('common.orgNameGroup2')"
+                    :title="$t('common.orgNameGroupSelect')"
                   ></orgDialog>
                 </el-col>
               </el-row>
@@ -352,9 +372,9 @@ function cancel() {
             <div class="listBtn"></div>
           </div>
           <addObjectDialog
-            title="添加巡检项"
-            treeTitle="巡检对象列表"
-            tableTitle="待添加巡检项"
+            :title="$t('linkageSet.addItem')"
+            :treeTitle="$t('linkageSet.objectNameList')"
+            :tableTitle="$t('inspection.addInspection2')"
             :list="objectList"
             @confirm="addObjectDialogConfirm"
             ref="addObjectDialogRef"
@@ -363,19 +383,21 @@ function cancel() {
       </el-row>
       <div class="addBtn" v-if="active === 2 && !objectList.length">
         <img src="@/assets/images/notData.png" />
-        <span class="addText">您还没有添加任何巡检对象</span>
-        <el-button type="primary" icon="CirclePlus" @click="addObj">立即添加</el-button>
+        <span class="addText">{{ $t('inspection.Msg6') }}</span>
+        <el-button type="primary" icon="CirclePlus" @click="addObj">{{ $t('buttonName.add3') }}</el-button>
       </div>
     </div>
     <div class="bottomBtn">
       <template v-if="active === 1">
-        <el-button class="button-size" @click="cancel">取消</el-button>
-        <el-button class="button-size" @click="stepOne" type="primary">下一步</el-button>
+        <el-button class="button-size" @click="cancel">{{ $t('ui.cancel') }}</el-button>
+        <el-button class="button-size" @click="stepOne" type="primary">{{ $t('model.redo') }}</el-button>
       </template>
       <template v-else-if="active === 2">
-        <el-button class="button-size" @click="next(1)">上一步</el-button>
-        <el-button class="button-size" @click="cancel">取消</el-button>
-        <el-button class="button-size" v-if="objectList.length" @click="save" type="primary">保存并提交</el-button>
+        <el-button class="button-size" @click="next(1)"> {{ $t('model.undo') }}</el-button>
+        <el-button class="button-size" @click="cancel">{{ $t('ui.cancel') }}</el-button>
+        <el-button class="button-size" v-if="objectList.length" @click="save" type="primary">{{
+          $t('buttonName.add4')
+        }}</el-button>
       </template>
     </div>
   </div>

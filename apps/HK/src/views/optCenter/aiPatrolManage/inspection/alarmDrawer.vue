@@ -4,7 +4,7 @@
     v-model="drawerVisible"
     :destroy-on-close="true"
     size="480px"
-    title="告警指标设置"
+    :title="$t('inspection.alarmZbSet')"
   >
     <!-- <el-form ref="ruleFormRef" label-width="0" :model="tableSource"> -->
     <el-table ref="proTable" :data="tableSource.indexList">
@@ -31,19 +31,21 @@
         </template>
       </el-table-column>
       <!-- 表格操作 -->
-      <el-table-column label="操作" width="180">
+      <el-table-column :label="$t('table.operation')" width="180">
         <template #default="scope">
-          <el-button type="primary" link @click="deleteData(scope.row, scope.$index)">删除</el-button>
+          <el-button type="primary" link @click="deleteData(scope.row, scope.$index)">{{ $t('ui.delete') }}</el-button>
         </template>
       </el-table-column>
       <template #append>
-        <el-button class="add-btn" icon="CirclePlus" type="primary" link @click="addData()">添加</el-button>
+        <el-button class="add-btn" icon="CirclePlus" type="primary" link @click="addData()">{{
+          $t('buttonName.add2')
+        }}</el-button>
       </template>
     </el-table>
     <!-- </el-form> -->
     <template #footer>
-      <el-button @click="drawerVisible = false">取消</el-button>
-      <el-button type="primary" @click="handleSubmit">保存</el-button>
+      <el-button @click="drawerVisible = false">{{ $t('ui.cancel') }}</el-button>
+      <el-button type="primary" @click="handleSubmit">{{ $t('buttonName.save') }}</el-button>
     </template>
   </el-drawer>
 </template>
@@ -61,7 +63,8 @@ import {
   addIndexApi,
   AlarmIndex,
 } from '@/api/modules/optCenter/inspectionSet/alarm';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface DrawerProps {
   title: string;
 }
@@ -94,12 +97,12 @@ const tableSource = ref<{ indexList: AlarmIndex.ReqPostParams[] }>({
 const columns: ColumnProps[] = [
   {
     prop: 'indexName',
-    label: '指标名称',
+    label: t('inspection.indexName'),
   },
 
   {
     prop: 'indexUnit',
-    label: '指标单位',
+    label: t('inspection.indexUnit'),
   },
 ];
 //删除表格数据
@@ -108,7 +111,7 @@ const deleteData = async (row: any, index: number) => {
     //TODO
     //1、记录删除的id;保存时才删除
     //2、直接提示删除，确定直接删除
-    await useHandleData(deleteIndexApi, { id: row.id }, '删除当前警告指标');
+    await useHandleData(deleteIndexApi, { id: row.id }, t('inspection.indexDel'));
     tableSource.value.indexList.splice(index, 1);
   } else {
     tableSource.value.indexList.splice(index, 1);
@@ -130,7 +133,7 @@ const handleSubmit = async () => {
     })
   ) {
     ElMessage.warning({
-      message: '请填写完整或删除空数据',
+      message: t('inspection.Msg5'),
     });
     return false;
   }
@@ -144,7 +147,7 @@ const handleSubmit = async () => {
       await editIndexApi(item);
     });
     ElMessage.success({
-      message: `${drawerProps.value.title}成功！`,
+      message: `${drawerProps.value.title} ${t('buttonName.success')}！`,
     });
     drawerVisible.value = false;
   } catch (error) {

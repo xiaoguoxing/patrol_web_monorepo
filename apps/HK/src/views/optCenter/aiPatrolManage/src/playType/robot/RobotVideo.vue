@@ -8,6 +8,8 @@ import { useIsTask } from '@optCenter/hooks/use-video';
 import { ElMessage } from 'element-plus';
 import { Row, trackDetail } from '@/api/modules/optCenter/deviceManage/track';
 import { capturePic, cameraRotate, getStreamRTSP } from '@/api/modules/robotTrack';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface props {
   playType: PlayType;
   cameraId: string;
@@ -59,16 +61,16 @@ async function init() {
           setPlay().then(() => runPlay());
         } catch (e) {
           console.log(e);
-          emit('err', '设备登陆失败');
+          emit('err', t('camera.deviceSb'));
         }
       } else {
-        throw new Error('设备不在线');
+        throw new Error(t('camera.deviceNotOnline'));
       }
     } catch (e) {
-      emit('err', '该设备不在线');
+      emit('err', t('camera.deviceNotOnline'));
     }
   } catch (e) {
-    emit('err', '获取设备信息失败');
+    emit('err', t('camera.getDeviceInfoSb'));
   }
 }
 
@@ -96,7 +98,7 @@ async function setPlay() {
       emit('err', '');
     });
     play.on('streamError', () => {
-      emit('err', `媒体流获取失败`);
+      emit('err', t('camera.getStreamSb'));
       unFlv();
     });
     resolve('1');

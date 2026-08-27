@@ -3,6 +3,7 @@ import { btnStr, btnStr2, cameraInfoApi } from '@/api/modules/camera';
 import { trackDetail } from '@/api/modules/optCenter/deviceManage/track';
 import { ElMessage } from 'element-plus';
 import { useElementSize } from '@vueuse/core';
+import { useI18n } from 'vue-i18n';
 
 function useMouseDelayCloud(
   callBack: (a: any, b: boolean) => any,
@@ -62,8 +63,9 @@ function useMouseDelayCloud(
 }
 
 async function useIsTask(cameraId: string) {
+  const { t } = useI18n();
   let { data } = await cameraInfoApi({ id: cameraId });
-  return data.inTask ? Promise.reject('该摄像头正在执行智能巡检任务，请稍后尝试') : Promise.resolve();
+  return data.inTask ? Promise.reject(t('position.msg3')) : Promise.resolve();
 }
 
 function useVideoRect(videoRef: Ref<HTMLVideoElement | undefined>) {

@@ -13,7 +13,8 @@ import { ElMessage, FormInstance, FormRules } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import { algorithmGetAll, Row as AIRow } from '@/api/modules/optCenter/Almanagement/AIModelManagement';
 import { getDict, getNeedBusiness } from '@/utils/serviceDict';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface props {
   id?: Id;
   cameraId: string;
@@ -67,10 +68,12 @@ function alarmStatusChange(val: string) {
 }
 
 const rules = reactive<FormRules<addRows>>({
-  relatedSkillsId: [{ required: true, message: '请选择关联技能' }],
-  alarmLevel: [{ required: true, message: '请选择告警等级' }],
-  isPopup: [{ required: true, message: '请选择是否弹窗' }],
-  alarmStatus: [{ required: true, message: '请选择技能规则' }],
+  relatedSkillsId: [
+    { required: true, message: t('inputPlaceholder.placeholderSelect') + t('linkageSet.relatedSkills') },
+  ],
+  alarmLevel: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('alarm.alarmGrade') }],
+  isPopup: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('inspection.batchOffOn') }],
+  alarmStatus: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('linkageSet.relatedSkills') }],
 });
 class formBase {
   relatedSkillsId = '';
@@ -123,7 +126,7 @@ const close = () => {
           <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="formData" label-width="auto">
             <el-row>
               <el-col :span="24">
-                <el-form-item label="技能名称" prop="relatedSkillsId">
+                <el-form-item :label="$t('linkageSet.relatedSkills')" prop="relatedSkillsId">
                   <el-select
                     v-model="formData.relatedSkillsId"
                     :disabled="pageType === 'detail'"
@@ -141,14 +144,14 @@ const close = () => {
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="监控方位设置">
+                <el-form-item :label="$t('camera.monitorLocation')">
                   <div class="videoFormControls">
                     <videoControls :cameraId="cameraId" ref="videoControlsRef" />
                   </div>
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="告警等级" prop="alarmLevel">
+                <el-form-item :label="$t('alarm.alarmGrade')" prop="alarmLevel">
                   <el-select v-model="formData.alarmLevel" :disabled="pageType === 'detail'" clearable>
                     <el-option
                       v-for="(item, index) in alarm_level"
@@ -160,7 +163,7 @@ const close = () => {
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <el-form-item label="弹框推送" prop="isPopup">
+                <el-form-item :label="$t('inspection.isPopup')" prop="isPopup">
                   <template #label="{ label }">
                     <div>
                       {{ label }}
@@ -170,9 +173,9 @@ const close = () => {
                         </el-icon>
                         <template #content>
                           <p>
-                            弹框推送关闭，则告警发生时默认仅推送消息提醒;
+                            {{ $t('inspection.Msg3') }}
                             <br />
-                            弹框推送开启，则告警发生时同步推送消息提醒和告警单框。
+                            {{ $t('inspection.Msg4') }}
                           </p>
                         </template>
                       </el-tooltip>
@@ -187,12 +190,12 @@ const close = () => {
                 </el-form-item>
               </el-col>
               <el-col :span="24">
-                <div class="rules-title">告警规则</div>
+                <div class="rules-title">{{ $t('alarm.alarmRules') }}</div>
               </el-col>
               <el-col :span="24">
                 <div class="rules-list">
                   <div class="rules-list-item" ref="rulesListItemRef">
-                    <div class="rules-label is-required">告警状态 :</div>
+                    <div class="rules-label is-required">{{ $t('alarm.alarmStatus') }} :</div>
                     <div class="select-item">
                       <el-form-item :prop="`alarmStatus`">
                         <el-select v-model="formData.alarmStatus" @change="alarmStatusChange" clearable>
@@ -214,8 +217,10 @@ const close = () => {
       </el-scrollbar>
     </div>
     <div class="bottomBtn">
-      <el-button class="button-size" @click="close">取消</el-button>
-      <el-button class="button-size" v-if="pageType !== 'detail'" @click="confirm" type="primary">保存</el-button>
+      <el-button class="button-size" @click="close">{{ $t('ui.cancel') }}</el-button>
+      <el-button class="button-size" v-if="pageType !== 'detail'" @click="confirm" type="primary">{{
+        $t('buttonName.save')
+      }}</el-button>
     </div>
   </div>
 </template>

@@ -75,7 +75,7 @@ const sliderMax = props.speedNum ? props.speedNum * (props.speedNum - 1) : undef
       </div>
     </div>
     <div class="operationBtnCenter">
-      <span class="label">转速</span>
+      <span class="label">{{ $t('camera.speed') }}</span>
       <div class="speedProgress">
         <el-slider
           :size="'small'"

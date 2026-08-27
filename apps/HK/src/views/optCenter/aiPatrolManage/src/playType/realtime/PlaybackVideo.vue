@@ -8,6 +8,8 @@ import { detailApi as videoStorageDetail, VideoStorage } from '@/api/modules/opt
 import { useDateFormat } from '@vueuse/core';
 import replayVideo from '../../components/replayVideo/replayVideo.vue';
 import { decryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface props {
   playType: PlayType;
   cameraId: string;
@@ -76,13 +78,13 @@ async function init() {
         replayVideoRef.value?.setTime(currentStartTime);
         setPlay().then(() => runPlay());
       } catch (e) {
-        emit('err', '获取存储设备失败');
+        emit('err', t('camera.err1'));
       }
     } else {
-      emit('err', '该摄像头未关联存储设备');
+      emit('err', t('camera.err2'));
     }
   } catch (e) {
-    emit('err', '获取设备信息失败');
+    emit('err', t('camera.err3'));
   }
 }
 
@@ -108,7 +110,7 @@ async function setPlay() {
       emit('err', '');
     });
     play.on('streamError', () => {
-      emit('err', `媒体流获取失败`);
+      emit('err', t('camera.getStreamSb'));
       unFlv();
     });
     resolve('1');

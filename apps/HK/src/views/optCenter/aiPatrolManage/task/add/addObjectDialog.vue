@@ -31,6 +31,8 @@ import {
   getInspectionListApi,
   getInspectionListAllApi,
 } from '@/api/modules/optCenter/aiPatrolManage/inspection';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface DialogProps {
   title: string;
   treeTitle: string;
@@ -86,11 +88,11 @@ const getTList = async (params: any) => {
 const column: ColumnProps[] = [
   {
     prop: 'objectName',
-    label: '巡检对象名称',
+    label: t('aiInspection.objectName'),
   },
   {
     prop: 'itemName',
-    label: '巡检项名称',
+    label: t('task.itemName'),
   },
 ];
 const onClose = () => {

@@ -24,7 +24,8 @@
 import { ref, computed, onUnmounted, onBeforeMount } from 'vue';
 import { ColumnProps } from '@patrol/ui';
 import { getAreaListApi, getListApi, Area } from '@/api/modules/optCenter/inspectionSet/area';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface DialogProps {
   title: string;
   treeTitle: string;
@@ -78,7 +79,7 @@ const getTList = async (params: any) => {
 const column: ColumnProps[] = [
   {
     prop: 'objectName',
-    label: '名称',
+    label: t('common.name'),
   },
 ];
 const onClose = () => {
