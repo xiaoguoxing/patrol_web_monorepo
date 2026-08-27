@@ -1,6 +1,20 @@
 import { ElMessageBox, ElMessage } from 'element-plus';
 import { HandleData } from './interface';
 
+type TranslateParams = Record<string, string | number>;
+type HandleDataTranslator = (key: string, params?: TranslateParams) => string | undefined;
+
+let translator: HandleDataTranslator | undefined;
+
+/**
+ * 注入宿主应用的翻译能力，避免共享包反向依赖具体应用或 vue-i18n。
+ */
+export const provideHandleDataTranslator = (value: HandleDataTranslator) => {
+  translator = value;
+};
+
+const translate = (key: string, fallback: string, params?: TranslateParams) => translator?.(key, params) || fallback;
+
 /**
  * @description 操作单条数据信息(二次确认【删除、禁用、启用、重置密码】)
  * @param {Function} api 操作数据接口的api方法(必传)
@@ -18,9 +32,10 @@ export const useHandleData = <P = any, R = any>(
   confirmType: HandleData.MessageType = 'warning'
 ) => {
   return new Promise((resolve, reject) => {
-    ElMessageBox.confirm(messageAll ? messageAll : `是否${message}?`, '温馨提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    const confirmMessage = messageAll || translate('messageTip.confirmMessage', `是否${message}?`, { message });
+    ElMessageBox.confirm(confirmMessage, translate('messageTip.logoutMsg2', '温馨提示'), {
+      confirmButtonText: translate('ui.confirm', '确定'),
+      cancelButtonText: translate('ui.cancel', '取消'),
       type: confirmType,
       draggable: true,
     })
@@ -29,7 +44,7 @@ export const useHandleData = <P = any, R = any>(
         if (!res) return reject(false);
         ElMessage({
           type: 'success',
-          message: `${message}成功!`,
+          message: translate('messageTip.successMessage', `${message}成功!`, { message }),
         });
         resolve(true);
       })

@@ -170,9 +170,7 @@ onUnmounted(() => {
     <div ref="alarmDialogContentRef" class="alarmDialogContent">
       <div class="alarmDialogInfo">
         <div class="infoLeft">
-          {{ $t('messageTip.jin') }}{{ hours }}{{ $t('messageTip.alarmNum') }}：<span class="red">{{
-            parseInt(os)
-          }}</span>
+          {{ $t('messageTip.jin', { hours }) }}：<span class="red">{{ parseInt(os) }}</span>
         </div>
         <div class="infoRight">
           <el-input

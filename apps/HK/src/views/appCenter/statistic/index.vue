@@ -89,7 +89,7 @@
               <div class="alarm-span">
                 <span class="span" v-for="(item, index) of rightData" :key="index">
                   <span class="span-before" :style="'background-color:' + item.color"> </span>{{ item.name }}
-                  {{ item.data }}{{ $t('statistic.item') }}
+                  {{ $t('statistic.item', { num: item.data }) }}
                 </span>
               </div>
             </div>
@@ -325,7 +325,7 @@ const getTableList = (params: any) => {
           rightData.value = yData1.value;
           energyChartOption1.value = ChartsConfig.default.pieOptions(
             t('worktop.count'),
-            title1 + t('statistic.item2'),
+            t('statistic.item2', { num: title1 }),
             yData1.value
           );
         }

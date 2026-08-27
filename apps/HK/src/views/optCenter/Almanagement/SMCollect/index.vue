@@ -45,7 +45,7 @@
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
-            <span class="selectCount">{{ $t('ui.selected') }} {{ citiesLength }} {{ $t('statistic.item2') }}</span>
+            <span class="selectCount">{{ $t('ui.selected') }} {{ $t('statistic.item2', { num: citiesLength }) }}</span>
           </div>
         </template>
         <template #table="{ tableData, total }">

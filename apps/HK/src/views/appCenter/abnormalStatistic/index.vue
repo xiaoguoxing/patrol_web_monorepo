@@ -233,8 +233,7 @@ const columns: ColumnProps[] = [
         <div style={'display:inline-flex;gap:10px'}>
           {scope.row.reasonList.map((item, index) => (
             <div>
-              {item.reason}：{item.count || 123}
-              {t('statistic.item')}
+              {item.reason}：{t('statistic.item', { num: item.count || 123 })}
             </div>
           ))}
         </div>

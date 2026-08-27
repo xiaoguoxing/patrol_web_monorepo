@@ -21,7 +21,7 @@
             </template>
           </div>
           <div class="day-more" v-if="item.isCurM && item.nums > 3" @click="showDateAll(item, index)">
-            <span>{{ $t('task.hy') }}{{ item.nums - 3 }}{{ $t('task.itemTasks') }}</span>
+            <span>{{ $t('task.hy', { num: item.nums - 3 }) }}</span>
             <el-icon class="more-icon" :ref="(el:any) => el?(dayMoreAllRef[index] = el):''"><ArrowDown /></el-icon>
           </div>
           <div class="day-none" v-if="!item.isCurM || !item.nums">{{ $t('task.NoTasks') }}</div>
