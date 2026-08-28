@@ -34,7 +34,6 @@
           titleBorder
           showReset
           :outBorder="false"
-          colSetAble
         >
           <!-- 表格 header 按钮 -->
           <template #tableHeader="{ selectedListIds }">
@@ -137,7 +136,7 @@ const taskTypeSelectNames = ((await taskTypeSelectApi()).data as any[]).map((i: 
 let pageType = ref<PageType>('list');
 const proTable = ref();
 const initParam = reactive<Partial<searchForm>>({ taskStatus: 'bc', selectProp: 'taskPlanName' });
-const columns: tableProps<rows>[] = [
+const columns = computed<tableProps<rows>[]>(() => [
   { type: 'selection', label: t('table.sort'), width: 70 },
   { type: 'index', label: t('table.sort'), width: 70 },
   {
@@ -238,7 +237,7 @@ const columns: tableProps<rows>[] = [
     },
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
-];
+]);
 
 const dataCallback = (data: any) => {
   return {

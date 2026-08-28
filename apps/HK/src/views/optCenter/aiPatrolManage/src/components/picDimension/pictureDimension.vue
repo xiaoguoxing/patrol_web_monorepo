@@ -46,7 +46,7 @@ let historyCount: number = 0;
 let img: Image;
 let imgUrl: string;
 let functionBtn = [
-  { label: '矩形', value: 'rect' },
+  { label: t('position.rect'), value: 'rect' },
   /*  { label: '圆形', value: 'circle' },
   { label: '不规则', value: 'pencil' },*/
 ];

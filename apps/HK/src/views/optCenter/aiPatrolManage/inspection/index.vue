@@ -27,7 +27,6 @@
       title="预置位配置"
       titleBorder
       :outBorder="false"
-      colSetAble
     >
       <!-- 表格 header 按钮 -->
       <template #tableHeader="{ selectedListIds, isSelected }">
@@ -139,7 +138,7 @@ const dataCallback = (data: any) => {
     pageSize: data.pageSize,
   };
 };
-const columns: tableProps<rows>[] = [
+const columns = computed<tableProps<rows>[]>(() => [
   { type: 'selection', label: t('table.sort'), width: 70 },
   { type: 'index', label: t('table.sort'), width: 70 },
   {
@@ -212,7 +211,7 @@ const columns: tableProps<rows>[] = [
     minWidth: 200,
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
-];
+]);
 const getTableList = async (params: any) => {
   let { pageNum, ...searchData } = params;
   searchData.page = pageNum;

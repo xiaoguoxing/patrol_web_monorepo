@@ -611,6 +611,7 @@ export default {
     qkx: '请框选',
     msg3: '该摄像头正在执行智能巡检任务，请稍后尝试',
     msg4: '仅允许框选一处',
+    rect: '矩形',
   },
   inspection: {
     inspection: '巡检项',

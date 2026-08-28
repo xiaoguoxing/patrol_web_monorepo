@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts" name="AlarmDrawer">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
@@ -94,7 +94,7 @@ const tableSource = ref<{ indexList: AlarmIndex.ReqPostParams[] }>({
   ],
 });
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns = computed<ColumnProps[]>(() => [
   {
     prop: 'indexName',
     label: t('inspection.indexName'),
@@ -104,7 +104,7 @@ const columns: ColumnProps[] = [
     prop: 'indexUnit',
     label: t('inspection.indexUnit'),
   },
-];
+]);
 //删除表格数据
 const deleteData = async (row: any, index: number) => {
   if (row.id) {
