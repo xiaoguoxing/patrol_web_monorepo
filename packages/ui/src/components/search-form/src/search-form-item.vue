@@ -10,9 +10,9 @@
     :options="column.search?.el === 'cascader' ? columnEnum : []"
     :placeholder="placeholder(column)"
     :clearable="clearable(column)"
-    range-separator="至"
-    start-placeholder="开始时间"
-    end-placeholder="结束时间"
+    :range-separator="t('el.patrol.rangeSeparator')"
+    :start-placeholder="t('el.patrol.sTime')"
+    :end-placeholder="t('el.patrol.eTime')"
   >
     <template #prepend v-if="isPrependInput">
       <search-form-item :column="prependOption" style="width: 140px" :searchParam="searchParam"></search-form-item>
@@ -37,7 +37,8 @@
 import { computed, inject, ref } from 'vue';
 import { handleProp } from '../../../utils';
 import type { ColumnProps } from '../../pro-table';
-
+import { useLocale } from 'element-plus';
+const { t } = useLocale();
 interface SearchFormItem {
   column: ColumnProps; // 具体每一个搜索项的配置
   searchParam: { [key: string]: any }; // 搜索参数
@@ -66,7 +67,10 @@ const fieldNames = () => {
 
 // 判断 placeholder
 const placeholder = (column: ColumnProps) => {
-  return column.search?.props?.placeholder ?? (column.search?.el === 'input' ? '请输入' : '请选择');
+  return (
+    column.search?.props?.placeholder ??
+    (column.search?.el === 'input' ? t('el.patrol.placeholderBase') : t('el.patrol.placeholderSelect'))
+  );
 };
 
 // 是否有清除按钮 (当搜索项有默认值时，清除按钮不显示)

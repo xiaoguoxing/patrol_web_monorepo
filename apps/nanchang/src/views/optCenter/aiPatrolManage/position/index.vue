@@ -9,7 +9,11 @@
         :data="dataSource"
         :defaultValue="defaultValue"
         @change="changeTreeFilter"
-      />
+      >
+        <template #default="{ node, data }">
+          <cameraTreeTemp :node="node" :data="data"></cameraTreeTemp>
+        </template>
+      </kr-filter-tree>
       <kr-pro-table
         ref="proTable"
         :columns="columns"
@@ -96,6 +100,7 @@ import { useRouter } from 'vue-router';
 import { algorithmDetail } from '@/api/modules/optCenter/Almanagement/AIDimension';
 import { videoNodeType } from '@optCenter/hooks/use-video';
 
+import cameraTreeTemp from '@optCenter/components/cameraTreeTemp/index.vue';
 const { copy } = useClipboard({ legacy: true });
 const { replace } = useRouter();
 //树操作

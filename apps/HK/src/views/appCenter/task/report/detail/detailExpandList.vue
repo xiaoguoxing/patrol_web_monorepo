@@ -33,7 +33,7 @@ const proTable = ref();
 const proTableEl = computed(() => proTable.value.element);
 const proTableSubRef = ref();
 const urlArr = useRemoveURLObject();
-const resColumns = [
+const resColumns = computed(() => [
   { type: 'expand', label: '', width: 1 },
   { type: 'index', label: t('table.sort'), width: 70 },
   {
@@ -52,11 +52,12 @@ const resColumns = [
     prop: 'conclusion',
     label: t('aiInspection.inspectionResult'),
   },
-];
-const resColumnsSub = [
+]);
+const resColumnsSub = computed(() => [
   {
     prop: 'itemName',
     label: t('task.itemName'),
+    minWidth: 180,
   },
   {
     prop: 'recognitionResult',
@@ -83,6 +84,7 @@ const resColumnsSub = [
         </div>
       );
     },
+    minWidth: 150,
   },
   {
     prop: 'scadaResult',
@@ -96,10 +98,11 @@ const resColumnsSub = [
         </div>
       );
     },
+    minWidth: 120,
   },
   ...props.column,
-  { prop: 'operation', align: 'right', label: t('table.operation'), width: 120 },
-];
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 130 },
+]);
 let subList = ref<any[]>([]);
 let subListId = ref<any[]>([]);
 const initParam = {};

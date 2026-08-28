@@ -6,8 +6,8 @@ import { PORT_INSPECT } from '@/api/config/servicePort';
 
 export enum pageTypeTitle {
   list = '',
-  add = '新建',
-  edit = '编辑',
+  add = 'buttonName.add',
+  edit = 'buttonName.edit',
   detail = '',
 }
 

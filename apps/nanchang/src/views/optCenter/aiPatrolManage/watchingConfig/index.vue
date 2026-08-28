@@ -9,7 +9,11 @@
       placeholder="请输入您想搜索的巡检对象名称"
       @change="changeTreeFilter"
       :defaultValue="defaultValue"
-    />
+    >
+      <template #default="{ node, data }">
+        <cameraTreeTemp :node="node" :data="data"></cameraTreeTemp>
+      </template>
+    </kr-filter-tree>
     <kr-pro-table
       v-show="pageType === 'list'"
       ref="proTable"
@@ -96,6 +100,7 @@ import { getCameraTreeApi, Tree } from '@/api/modules/camera';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
+import cameraTreeTemp from '@optCenter/components/cameraTreeTemp/index.vue';
 const route = useRoute();
 let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]));
 // 树操作

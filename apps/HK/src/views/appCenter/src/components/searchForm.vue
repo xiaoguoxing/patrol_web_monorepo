@@ -14,7 +14,7 @@
         clearable
       ></el-input>
     </el-form-item>
-    <el-form-item :label="$t('aiInspection.item')" prop="itemName">
+    <el-form-item :label="$t('inspection.inspection')" prop="itemName">
       <el-input
         v-model="searchParam!.itemName"
         :placeholder="$t('inputPlaceholder.placeholderBase')"
@@ -24,7 +24,7 @@
     <el-form-item :label="$t('aiInspection.itemStatus')" prop="itemStatus">
       <el-select v-model="searchParam!.itemStatus" clearable>
         <el-option
-          v-for="(item, index) in itemDictlist"
+          v-for="(item, index) in itemDictlist2"
           :key="index"
           :label="item.label"
           :value="item.value"
@@ -39,7 +39,7 @@
   </el-form>
 </template>
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
 import type { DefaultDict, FilterDict } from '@/utils/serviceDict';
 import { ElMessage, FormInstance } from 'element-plus';
@@ -55,7 +55,8 @@ const props = withDefaults(defineProps<Props>(), {
   searchParam: () => ({}),
 });
 //巡检项状态数据字典
-const itemDictlist = [{ label: t('worktop.All'), value: 'all' }, ...((await getDict('item_status')) as DefaultDict)];
+const itemDictlist = [...((await getDict('item_status')) as DefaultDict)];
+const itemDictlist2 = computed(() => [{ label: t('worktop.All'), value: 'all' }, ...itemDictlist]);
 // 提交数据（新增/编辑）
 const formRef = ref<FormInstance>();
 // const reset = () => {};

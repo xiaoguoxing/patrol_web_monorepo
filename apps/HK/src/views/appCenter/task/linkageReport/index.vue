@@ -22,7 +22,6 @@
         :outBorder="false"
         :showMicrophone="false"
         :showReset="true"
-        :colSetAble="false"
         :operationBtn="false"
         @resetFn="resetFn"
       >
@@ -30,6 +29,7 @@
         <template #operation="{ row }">
           <el-button type="primary" link @click="toDetailPage('detail', row)">{{ $t('buttonName.detail') }}</el-button>
         </template>
+        <template #taskUseTime="{ row }"> {{ row.taskUseTime }} {{ $t('common.minute') }} </template>
         <template #orgNameHeader>
           <OrgNameHeaderSearch
             ref="OrgNameHeaderSearchRef"
@@ -101,7 +101,7 @@ onMounted(() => {
 
 const proTable = ref();
 const initParam = reactive<Partial<ReportListParams>>({ selectProp: 'linkageSignalCode' });
-const columns: tableProps<ReportListRows>[] = [
+const columns = computed<tableProps<ReportListRows>[]>(() => [
   { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'linkageSignalCode',
@@ -190,11 +190,11 @@ const columns: tableProps<ReportListRows>[] = [
     label: t('task.taskUseTime'),
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
-];
+]);
 const dataCallback = (data: any) => {
   return {
     datalist: data.list.map((i: ReportListRows) => {
-      i.taskUseTime = ((i.taskUseTime as unknown as number) / 60).toFixed(2) + t('common.minute');
+      i.taskUseTime = ((i.taskUseTime as unknown as number) / 60).toFixed(2);
       return i;
     }),
     total: data.total,

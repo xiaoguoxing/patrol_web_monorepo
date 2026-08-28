@@ -22,11 +22,11 @@
         :outBorder="false"
         :showMicrophone="true"
         :showReset="true"
-        :colSetAble="false"
         :operationBtn="false"
         @resetFn="resetFn"
       >
         <!-- 表格操作 -->
+        <template #taskUseTime="{ row }"> {{ row.taskUseTime }} {{ t('common.minute') }} </template>
         <template #operation="{ row }">
           <el-button type="primary" link @click="toDetailPage('detail', row)">{{ $t('buttonName.detail') }}</el-button>
         </template>
@@ -101,7 +101,7 @@ onMounted(() => {
 
 const proTable = ref();
 const initParam = reactive<Partial<ReportListParams>>({ selectProp: 'taskName' });
-const columns: tableProps<ReportListRows>[] = [
+const columns = computed<tableProps<ReportListRows>[]>(() => [
   { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'inspectionTaskName',
@@ -134,6 +134,7 @@ const columns: tableProps<ReportListRows>[] = [
   },
   {
     prop: 'orgName',
+    minWidth: 150,
     label: t('common.orgName'),
   },
   {
@@ -141,32 +142,39 @@ const columns: tableProps<ReportListRows>[] = [
     label: t('aiInspection.taskTypeName'),
     filters: getDictForColumnFilters(taskTypeSelectNames),
     enum: taskTypeSelectNames,
+    minWidth: 150,
   },
   {
     prop: 'inspectionModel',
     label: t('task.inspectionModel'),
     filters: getDictForColumnFilters(inspectionNames),
     enum: inspectionNames,
+    minWidth: 180,
   },
   {
     prop: 'areaName',
     label: t('aiInspection.areaName'),
+    minWidth: 150,
   },
   {
     prop: 'objectName',
     label: t('aiInspection.objectName'),
+    minWidth: 220,
   },
   {
     prop: 'itemNum',
     label: t('aiInspection.itemNum'),
+    minWidth: 200,
   },
   {
     prop: 'abnormalNum',
     label: t('task.abnormalNum'),
+    minWidth: 200,
   },
   {
     prop: 'noDoneNum',
     label: t('aiInspection.abnormalNum'),
+    minWidth: 200,
   },
   /*{
     prop: 'abnormalInspectionNum',
@@ -186,17 +194,19 @@ const columns: tableProps<ReportListRows>[] = [
         timeFormat: 'HH:mm',
       },
     },
+    minWidth: 200,
   },
   {
     prop: 'taskUseTime',
     label: t('task.taskUseTime'),
+    minWidth: 200,
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
-];
+]);
 const dataCallback = (data: any) => {
   return {
     datalist: data.list.map((i: ReportListRows) => {
-      i.taskUseTime = ((i.taskUseTime as unknown as number) / 60).toFixed(2) + t('common.minute');
+      i.taskUseTime = ((i.taskUseTime as unknown as number) / 60).toFixed(2);
       return i;
     }),
     total: data.total,

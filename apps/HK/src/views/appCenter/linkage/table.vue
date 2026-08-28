@@ -1,7 +1,7 @@
 <template>
   <div class="mb20 two-col-page">
     <div class="flx-align-center">
-      <Tabs :options="tabOptions" buttonType="bottom-line" @change="changeTab"></Tabs>
+      <Tabs :options="taboptions2" buttonType="bottom-line" @change="changeTab"></Tabs>
     </div>
 
     <div class="two-col-page-rt flx-justify-end">
@@ -24,7 +24,7 @@
   </kr-pro-table>
 </template>
 <script setup lang="tsx">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 import { KeepAliveStore } from '@/stores/modules/keepAlive';
 import { ColumnProps } from '@patrol/ui';
 import { getDict, getDictForColumnFilters as dictForFilters } from '@/utils/serviceDict';
@@ -40,12 +40,11 @@ const route = useRoute();
 const keepAliveStore = KeepAliveStore();
 
 //联动状态数据字典
-const statusDictlist = [
-  ...((await getDict('task_status')) as DefaultDict),
-  { label: t('worktop.All'), value: 'total', remark: '' },
-];
+const statusDictlist = [...((await getDict('task_status')) as DefaultDict)];
+let allCount = 0;
 const getTabOptions = async () => {
   let taskNumObj = (await getStatisticsApi()).data;
+  allCount = taskNumObj['total'];
   return statusDictlist.map((item) => {
     let obj = { ...item };
     obj.label = `${item.label}(${taskNumObj[item.value]})`;
@@ -53,7 +52,7 @@ const getTabOptions = async () => {
   });
 };
 const tabOptions = ref(await getTabOptions());
-
+const taboptions2 = computed(() => [...tabOptions.value, { label: t('worktop.All') + `(${allCount})`, value: 'all' }]);
 const proTable = ref();
 const searchProp = ref('linkageSignalName');
 const initParam = reactive({
@@ -76,7 +75,7 @@ const dataCallback = (data: any) => {
 };
 
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns = computed<ColumnProps[]>(() => [
   { type: 'selection', width: 60 },
 
   { type: 'index', label: t('table.sort'), width: 60 },
@@ -153,7 +152,7 @@ const columns: ColumnProps[] = [
     minWidth: 120,
   },
   { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
-];
+]);
 
 // 获取表格数据
 const getTableList = async (params: any) => {

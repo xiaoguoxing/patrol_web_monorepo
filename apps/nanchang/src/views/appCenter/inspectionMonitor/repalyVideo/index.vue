@@ -18,6 +18,9 @@
       @change="changeTreeFilter"
       ref="treeRef"
     >
+      <template #default="{ node, data }">
+        <cameraTreeTemp :node="node" :data="data"></cameraTreeTemp>
+      </template>
     </kr-filter-tree>
     <collapseBar v-model="isCollapse" :treeWidth="treeWidth"></collapseBar>
     <div class="two-col-page-rt" style="overflow: hidden">
@@ -48,6 +51,7 @@ import { getCameraTreeApi, Tree } from '@/api/modules/camera';
 import videoControls from '@optCenter/videoRealTime.vue';
 import { treeFirst } from '@/api/modules/optCenter/aiPatrolManage/position';
 import CollapseBar from '@appCenter/components/collapseBar.vue';
+import cameraTreeTemp from '@optCenter/components/cameraTreeTemp/index.vue';
 let cardTitle = useRoute().meta?.title || '';
 //树操作
 const dataSource = ref<Tree[]>([]);
@@ -104,20 +108,6 @@ function del() {
     }
     .watching-container-video {
       height: calc(100%);
-    }
-  }
-  .custom-tree-node {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 10px;
-    user-select: none;
-    &.move {
-      cursor: grab;
-      &:active {
-        cursor: grabbing;
-      }
     }
   }
 }

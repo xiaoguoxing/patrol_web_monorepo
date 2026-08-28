@@ -23,6 +23,8 @@
       padding: 24px 24px 0;
       .buttons {
         position: relative;
+        display: flex;
+        gap: 16px;
         height: var(--el-component-size);
         .date-picker {
           position: absolute;

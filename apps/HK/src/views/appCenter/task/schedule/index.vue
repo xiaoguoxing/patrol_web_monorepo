@@ -7,7 +7,8 @@
           <div class="pre" @click="change('pre')">
             <el-icon><ArrowLeft /></el-icon>
           </div>
-          <div>{{ year + $t('common.year') + formatNum(month) + $t('common.month3') }}</div>
+          <div>{{ year + ' - ' + formatNum(month) }}</div>
+          <!--          <div>{{ year + $t('common.year') + formatNum(month) + $t('common.month3') }}</div>-->
           <div class="next" @click="change('next')">
             <el-icon><ArrowRight /></el-icon>
           </div>
@@ -136,8 +137,8 @@ function goSys() {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 80px;
     height: 28px;
+    padding-inline: 5px;
   }
   .ectant-status {
     display: flex;

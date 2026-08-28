@@ -30,7 +30,7 @@ interface Props {
   nodeType: number;
 }
 const props = withDefaults(defineProps<Props>(), { cameraId: '' });
-const typeTitle = computed(() => pageTypeTitle[props.pageType]);
+const typeTitle = computed(() => t(pageTypeTitle[props.pageType]));
 interface Emits {
   (e: 'openDialogChange', page: PageType, row?: PositionListRows): void;
   (e: 'addPageClose'): void;

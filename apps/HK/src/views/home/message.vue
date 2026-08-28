@@ -12,7 +12,6 @@
       title="通知消息"
       titleBorder
       :outBorder="false"
-      colSetAble
     >
       <!-- 表格 header 按钮 -->
       <template #tableHeader="{ selectedListIds }">
@@ -31,67 +30,57 @@
 </template>
 
 <script setup name="message" lang="ts">
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import myTabs from '@/components/Tabs/index.vue';
 import { getMessageList, getDeleteList, getUpdateList } from '@/api/modules/workstand';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { type DefaultDict, getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 const { t } = useI18n();
 const router = useRouter();
 const proTable = ref();
-const options1 = [
+const options1 = computed(() => [
   { label: t('worktop.All'), value: undefined },
   { label: t('worktop.unRead'), value: 0 },
   { label: t('worktop.read'), value: 1 },
-];
+]);
+
+const message_type = (await getDict('message_type')) as DefaultDict;
 const initParam = reactive({});
-const columns = [
+const columns = computed(() => [
   { type: 'selection', label: t('table.sort'), width: 150 },
-  { type: 'index', label: '序号', width: 120 },
+  { type: 'index', label: t('table.sort'), width: 120 },
   {
     prop: 'messageContent',
     label: t('worktop.messageContent'),
+    minWidth: 180,
   },
 
   {
     prop: 'readStatus',
     label: t('table.status'),
     sortable: false,
-    filterMultiple: false,
-    filters: [
-      { text: t('worktop.unRead'), value: 0 },
-      { text: t('worktop.read'), value: 1 },
-    ],
     enum: [
       { label: t('worktop.unRead'), value: 0 },
       { label: t('worktop.read'), value: 1 },
     ],
-    width: 120,
   },
   {
     prop: 'messageType',
     label: t('worktop.messageType'),
     sortable: false,
     filterMultiple: false,
-    filters: [
-      { text: t('worktop.messageType1'), value: t('worktop.messageType1') },
-      { text: t('worktop.messageType2'), value: t('worktop.messageType2') },
-    ],
-    enum: [
-      { label: t('worktop.messageType1'), value: t('worktop.messageType1') },
-      { label: t('worktop.messageType2'), value: t('worktop.messageType2') },
-    ],
-    width: 120,
+    filters: getDictForColumnFilters(message_type),
+    enum: message_type,
   },
   {
     prop: 'sendTime',
     label: t('worktop.sendTime'),
-    width: 160,
   },
-];
+]);
 const selectProp = ref('1');
-let tabItem = ref(options1[0]);
+let tabItem = ref(options1.value[0]);
 
 const deleteList = async (selectedListIds: any) => {
   try {

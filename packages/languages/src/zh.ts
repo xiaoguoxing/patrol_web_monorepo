@@ -63,6 +63,11 @@ export default {
     show: '显示',
     columnName: '列名',
     noColSet: '暂无可配置列',
+    sTime: '开始时间',
+    rangeSeparator: '到',
+    eTime: '结束时间',
+    placeholderBase: '请输入',
+    placeholderSelect: '请选择',
   },
   common: {
     today: '今天',
@@ -179,6 +184,7 @@ export default {
     finished: '已结束',
     during: '执行中',
     no_execute: '未执行',
+    app: '常用应用',
   },
   device: {
     camera: '摄像头',

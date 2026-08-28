@@ -10,13 +10,13 @@ import {
 // import dialogPicture from '@/views/appCenter/task/report/detail/detailDialog.vue';
 import myTab from '@/components/Tabs/index.vue';
 import videoControls from '@optCenter/videoRealTime.vue';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { useRouter } from 'vue-router';
 import { GlobalStore } from '@/stores';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 import { cameraInTask } from '@/api/modules/camera';
 const router = useRouter();
 const globalStore = GlobalStore();
@@ -38,11 +38,11 @@ interface Emits {
 defineEmits<Emits>();
 
 const urlArr = useRemoveURLObject();
-let tabsOpt = [
+let tabsOpt = computed(() => [
   { label: t('aiInspection.picture'), value: '1' },
   { label: t('aiInspection.watching'), value: '2' },
   { label: t('aiInspection.playBackVideo'), value: '3' },
-];
+]);
 let tabValue = ref('1');
 interface FormConfig {
   label: string;
@@ -58,12 +58,12 @@ interface FormConfig {
   changeStyle?: (val: string, row: any) => string;
 }
 let formDataConfig = ref<FormConfig[]>([
-  { label: t('common.orgName'), value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
-  { label: t('alarm.alarmAreaName'), value: '南沙水司/黄阁水厂/加药间', prop: 'alarmAreaName', type: 'text' },
-  { label: t('alarm.alarmObjectName'), value: 'PAC投加系统', prop: 'alarmObjectName', type: 'text' },
-  { label: t('alarm.alarmItemName'), value: 'PAC投加系统', prop: 'alarmItemName', type: 'text' },
+  { label: 'common.orgName', value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
+  { label: 'alarm.alarmAreaName', value: '南沙水司/黄阁水厂/加药间', prop: 'alarmAreaName', type: 'text' },
+  { label: 'alarm.alarmObjectName', value: 'PAC投加系统', prop: 'alarmObjectName', type: 'text' },
+  { label: 'alarm.alarmItemName', value: 'PAC投加系统', prop: 'alarmItemName', type: 'text' },
   {
-    label: t('alarm.recognitionResult'),
+    label: 'alarm.recognitionResult',
     value: '80℃',
     prop: 'recognitionResult',
     type: 'text',
@@ -72,7 +72,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: t('alarm.scadaResult'),
+    label: 'alarm.scadaResult',
     value: '80℃',
     prop: 'scadaResult',
     type: 'text',
@@ -81,7 +81,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: t('alarm.alarmRules'),
+    label: 'alarm.alarmRules',
     value: '温度≥65℃',
     prop: 'alarmRules',
     type: 'text',
@@ -104,7 +104,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: t('alarm.alarmGrade'),
+    label: 'alarm.alarmGrade',
     value: '二级',
     prop: 'alarmGrade',
     type: 'tag',
@@ -129,7 +129,7 @@ let formDataConfig = ref<FormConfig[]>([
     },
   },
   {
-    label: t('alarm.alarmStatus'),
+    label: 'alarm.alarmStatus',
     value: '告警中',
     prop: 'alarmStatus',
     type: 'tag',
@@ -141,11 +141,11 @@ let formDataConfig = ref<FormConfig[]>([
       return val === t('alarm.alarmStatus1') ? 'tag2type1' : 'tag2type2';
     },
   },
-  { label: t('alarm.alarmTime'), value: '2023-09-08 16:00', prop: 'alarmTime', type: 'text' },
-  { label: t('alarm.erasingTime'), value: '2023-09-08 16:00', prop: 'erasingTime', type: 'text' },
-  { label: t('alarm.erasingExplain'), value: '2023-09-08 16:00', prop: 'erasingExplain', type: 'text' },
+  { label: 'alarm.alarmTime', value: '2023-09-08 16:00', prop: 'alarmTime', type: 'text' },
+  { label: 'alarm.erasingTime', value: '2023-09-08 16:00', prop: 'erasingTime', type: 'text' },
+  { label: 'alarm.erasingExplain', value: '2023-09-08 16:00', prop: 'erasingExplain', type: 'text' },
   {
-    label: t('alarm.alarmSource'),
+    label: 'alarm.alarmSource',
     value: '2023-09-08 16:00',
     prop: 'alarmSource',
     type: 'text',
@@ -153,9 +153,9 @@ let formDataConfig = ref<FormConfig[]>([
       return findOpt(val, 'alarm_source').label;
     },
   },
-  { label: t('alarm.cameraName'), value: '加药间PAC投加系统热成像球机#1', prop: 'cameraName', type: 'text' },
+  { label: 'alarm.cameraName', value: '加药间PAC投加系统热成像球机#1', prop: 'cameraName', type: 'text' },
   {
-    label: t('alarm.isReport'),
+    label: 'alarm.isReport',
     value: '加药间PAC投加系统热成像球机#1',
     prop: 'isReport',
     type: 'text',
@@ -163,7 +163,7 @@ let formDataConfig = ref<FormConfig[]>([
       return eval(val) ? t('alarm.isReport1') : t('alarm.isReport2');
     },
   },
-  { label: t('alarm.reportId'), value: '加药间PAC投加系统热成像球机#1', prop: 'reportId', type: 'text' },
+  { label: 'alarm.reportId', value: '加药间PAC投加系统热成像球机#1', prop: 'reportId', type: 'text' },
 
   /*  { label: '告警名称', value: '设备温度异常', prop: 'alarmName', type: 'text' },
   {
@@ -382,7 +382,7 @@ async function openUploadDialog() {
       <div class="alarm-right-content">
         <el-scrollbar>
           <div class="alarm-right-description-items" :key="item.prop" v-for="item in formDataConfig">
-            <div class="alarm-right-description-items-label">{{ item.label }}：</div>
+            <div class="alarm-right-description-items-label" :class="locale">{{ $t(item.label) }}：</div>
             <template v-if="item.type === 'text'">
               <div class="alarm-right-description-items-value">
                 {{ item.value }}
@@ -479,6 +479,7 @@ async function openUploadDialog() {
       justify-content: space-between;
       margin-bottom: 20px;
       .alarm-right-title-text {
+        flex: 1;
         font-size: 18px;
         color: var(--el-text-color-primary);
       }
@@ -493,6 +494,10 @@ async function openUploadDialog() {
         align-items: baseline;
         margin-bottom: 20px;
         .alarm-right-description-items-label {
+          &.en {
+            width: 110px;
+          }
+
           width: 86px;
           font-size: 14px;
           color: var(--el-text-color-secondary);

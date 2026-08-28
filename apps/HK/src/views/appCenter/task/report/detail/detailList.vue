@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { Clock } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
@@ -25,7 +25,7 @@ const emit = defineEmits<Emit>();
 //表格
 const proTable = ref();
 const urlArr = useRemoveURLObject();
-const resColumns = [
+const resColumns = computed(() => [
   ...[
     props.showBtn
       ? {
@@ -47,17 +47,17 @@ const resColumns = [
   {
     prop: 'objectName',
     label: t('aiInspection.objectName'),
-    width: 200,
+    width: 220,
   },
   {
     prop: 'itemName',
     label: t('task.itemName'),
-    width: 200,
+    width: 220,
   },
   {
     prop: 'recognitionResult',
     label: t('aiInspection.recognitionResult'),
-    width: 150,
+    width: 180,
     render(scope: any) {
       // scadaResult
       return (
@@ -96,8 +96,8 @@ const resColumns = [
     },
   },
   ...props.column,
-  { prop: 'operation', align: 'right', label: t('table.operation'), width: 80 },
-];
+  { prop: 'operation', align: 'right', label: t('table.operation'), width: 150, fixed: 'right' },
+]);
 const initParam = {};
 watch(
   () => props.objectList,

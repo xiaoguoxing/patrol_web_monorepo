@@ -11,7 +11,7 @@ import { reactive, ref } from 'vue';
 import { ElMessage, FormRules } from 'element-plus';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 interface Prop {
   id?: string;
   pageType: PageType;
@@ -109,7 +109,7 @@ defineExpose({ openDialog });
   >
     <el-form
       ref="ruleFormRef"
-      label-width="120px"
+      :label-width="locale === 'en' ? '180px' : '120px'"
       label-suffix=" :"
       :rules="formRule"
       :disabled="pageType === 'detail'"

@@ -362,12 +362,12 @@ const flatColumns = ref<ColumnProps[]>();
 flatColumns.value = flatColumnsFunc(tableColumns.value as any);
 
 // 过滤需要搜索的配置项 && 处理搜索排序
-const searchColumns = flatColumns.value
-  .filter((item) => item.search?.el)
-  .sort((a, b) => (b.search?.order ?? 0) - (a.search?.order ?? 0));
+const searchColumns = ref<ColumnProps[]>(
+  flatColumns.value.filter((item) => item.search?.el).sort((a, b) => (b.search?.order ?? 0) - (a.search?.order ?? 0))
+);
 
 // 设置搜索表单的默认值
-searchColumns.forEach((column) => {
+searchColumns.value.forEach((column) => {
   const key = column.search?.key ?? handleProp(column.prop!);
   const defaultValue = column.search?.defaultValue;
   if (defaultValue !== undefined && defaultValue !== null) {
@@ -386,6 +386,19 @@ flatColumns.value
       searchInitParam.value[String(key)] = filteredValue[0];
     }
   });
+
+// 监听 columns 变化（如多语言切换导致父组件重新生成列配置），同步更新表格列、搜索项
+watch(
+  () => props.columns,
+  (val) => {
+    if (val === tableColumns.value) return;
+    tableColumns.value = val as ColumnProps[];
+    flatColumns.value = flatColumnsFunc(val as any);
+    searchColumns.value = flatColumns.value
+      .filter((item) => item.search?.el)
+      .sort((a, b) => (b.search?.order ?? 0) - (a.search?.order ?? 0));
+  }
+);
 
 // 列设置 ==> 过滤掉不需要设置显隐的列
 const colRef = ref();

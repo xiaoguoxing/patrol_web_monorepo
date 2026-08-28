@@ -34,7 +34,6 @@
       titleBorder
       showReset
       :outBorder="false"
-      :colSetAble="true"
       :operationBtn="true"
       @resetFn="resetFn"
     >
@@ -115,7 +114,7 @@ import { useDebounceFn } from '@vueuse/core';
 import { useDownload } from '@patrol/shared/hooks/useDownload';
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 let alarm_level: Dict = [];
 let alarm_type: Dict = [];
 let alarm_status: Dict = [];
@@ -172,7 +171,7 @@ function goDetail() {
 const proTable = ref();
 const range = getTodayRange();
 const initParam = reactive({ objectId: defaultValue.value, selectProp: 'alarmObjectName' });
-const columns: tableProps<AlarmListRows>[] = [
+const columns = computed<tableProps<AlarmListRows>[]>(() => [
   {
     type: 'index',
     label: t('table.sort'),
@@ -366,8 +365,14 @@ const columns: tableProps<AlarmListRows>[] = [
       { label: t('alarm.sendQywx2'), value: false },
     ],
   },
-  { prop: 'operation', align: 'right', label: t('table.operation'), width: 120, fixed: 'right' },
-];
+  {
+    prop: 'operation',
+    align: 'right',
+    label: t('table.operation'),
+    width: locale.value === 'zh' ? 120 : 200,
+    fixed: 'right',
+  },
+]);
 const dataCallback = (data: any) => {
   return {
     datalist: data.list,

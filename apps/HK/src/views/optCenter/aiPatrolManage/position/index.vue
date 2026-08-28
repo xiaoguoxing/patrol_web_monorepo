@@ -20,7 +20,6 @@
         title="预置位配置"
         titleBorder
         :outBorder="false"
-        colSetAble
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="{ selectedListIds }">
@@ -130,7 +129,8 @@ const changeTreeFilter = (val: string, node: Tree) => {
 const proTable = ref();
 const urlArr = useRemoveURLObject();
 const initParam = reactive<Partial<PositionListParams>>({ cameraId: defaultValue.value });
-const columns: tableProps<PositionListRows>[] = [
+// 列配置需为响应式，使多语言切换后 t() 重新求值
+const columns = computed<tableProps<PositionListRows>[]>(() => [
   {
     type: 'selection',
     label: t('table.sort'),
@@ -143,22 +143,19 @@ const columns: tableProps<PositionListRows>[] = [
   {
     prop: 'presetPositionName',
     label: t('linkageSet.presetPositionName'),
-    isShowInputLabel: false,
     search: {
       el: 'input',
       props: { placeholder: t('position.presetPositionPlaceholder2') },
     },
-    minWidth: 200,
   },
   {
     prop: 'id',
     label: t('position.presetPositionId'),
-    minWidth: 250,
+    showOverflowTooltip: true,
   },
   {
     prop: 'attachmentId',
     label: t('position.attachmentId'),
-    showOverflowTooltip: false,
     render(scope) {
       return (
         <div>
@@ -181,15 +178,13 @@ const columns: tableProps<PositionListRows>[] = [
         </div>
       );
     },
-    minWidth: 100,
   },
   {
     prop: 'relatedSkillsName',
     label: t('linkageSet.relatedSkills'),
-    minWidth: 200,
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 250, fixed: 'right' },
-];
+]);
 const getTableList = async (params: PositionListParams) => {
   let { pageNum, ...searchData } = params;
   searchData.page = pageNum!;
@@ -264,6 +259,8 @@ async function goDimension(row: PositionListRows) {
 </script>
 <style scoped lang="scss">
 .messageContent {
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
   &:hover {
     color: #0d60b4;

@@ -1,5 +1,5 @@
 <template>
-  <kr-card header="常用应用" :border="false">
+  <kr-card :header="$t('worktop.app')" :border="false">
     <div v-for="(item, index) in appsList" :key="index" class="apps" @click="goToMenu(item)">
       <!-- <img :src="item.icon" alt="" /> -->
       <div class="app-icon">

@@ -29,7 +29,6 @@
       titleBorder
       showReset
       :outBorder="false"
-      :colSetAble="true"
       :operationBtn="true"
       @resetFn="resetFn"
     >
@@ -113,7 +112,7 @@ const proTable = ref();
 const range = getTodayRange();
 const OrgNameHeaderSearchRef = ref();
 const initParam = reactive({ objectId: defaultValue.value, selectProp: 'objectName' });
-const columns: tableProps<AlarmListRows>[] = [
+const columns = computed<tableProps<AlarmListRows>[]>(() => [
   {
     type: 'index',
     label: t('table.sort'),
@@ -195,7 +194,7 @@ const columns: tableProps<AlarmListRows>[] = [
     ],
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 120, fixed: 'right' },
-];
+]);
 const dataCallback = (data: any) => {
   return {
     datalist: data.list,

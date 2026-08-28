@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import apps from './components/apps.vue';
 import message from './components/message.vue';
 import task from './components/task.vue';
@@ -91,33 +91,41 @@ const ChangeCurrDs = (val) => {
   globalStore.setCurrDs(val);
   groupValue.value = val;
 };
-const equipmentList = ref([
+// 设备统计：动态数据与静态配置分离，列表用 computed 保证 name 多语言响应式
+const equipmentState = ref({
+  camera: { online: 0, total: 0 },
+  sensor: { online: 0, total: 0 },
+  track: { online: 0, total: 0 },
+});
+const equipmentList = computed(() => [
   {
     name: t('device.camera'),
-    online: 0,
-    total: 0,
+    online: equipmentState.value.camera.online,
+    total: equipmentState.value.camera.total,
     icon: video1,
     menuName: 'cameraMng',
   },
   {
     name: t('device.sensor'),
-    online: 0,
-    total: 0,
+    online: equipmentState.value.sensor.online,
+    total: equipmentState.value.sensor.total,
     icon: video2,
     menuName: 'sensorMng',
   },
   {
     name: t('device.trackBot'),
-    online: 0,
-    total: 0,
+    online: equipmentState.value.track.online,
+    total: equipmentState.value.track.total,
     icon: video3,
     menuName: 'trackMng',
   },
 ]);
-const alarmList = ref([
+
+const alarmState = ref({ alarmCount: 0, itemCount: 0 });
+const alarmList = computed(() => [
   {
     name: t('worktop.subTitle1'),
-    value: 0,
+    value: alarmState.value.alarmCount,
     icon: icon1,
     color: '#EA3939',
     menuName: 'appCenterAlarm',
@@ -125,16 +133,18 @@ const alarmList = ref([
   },
   {
     name: t('worktop.subTitle2'),
-    value: 0,
+    value: alarmState.value.itemCount,
     icon: icon2,
     color: '#0D60B4',
     menuName: 'inspection',
   },
 ]);
-const linkList = ref([
+
+const linkageState = ref({ linkageAlarmCount: 0, linkageItemCount: 0 });
+const linkList = computed(() => [
   {
     name: t('worktop.subTitle3'),
-    value: 0,
+    value: linkageState.value.linkageAlarmCount,
     icon: icon3,
     color: '#FA802F',
     menuName: 'appCenterAlarm',
@@ -142,26 +152,30 @@ const linkList = ref([
   },
   {
     name: t('worktop.subTitle4'),
-    value: 0,
+    value: linkageState.value.linkageItemCount,
     icon: icon4,
     color: '#0D60B4',
     menuName: 'linkageSet',
   },
 ]);
-const linkList2 = ref([
+
+const todayCountState = ref(0);
+const linkList2 = computed(() => [
   {
     name: t('worktop.subTitle5'),
-    value: 0,
+    value: todayCountState.value,
     icon: icon3,
     color: '#FA802F',
     menuName: 'abnormal',
     fromRoute: '1',
   },
 ]);
-const linkList3 = ref([
+
+const todayXXTSCountState = ref(0);
+const linkList3 = computed(() => [
   {
     name: t('worktop.subTitle6'),
-    value: 0,
+    value: todayXXTSCountState.value,
     icon: icon3,
     color: '#FA802F',
     menuName: 'appCenterAlarm',
@@ -178,35 +192,35 @@ const initAll = () => {
 const getStatisticsData = async () => {
   try {
     let res = await getStatistics();
-    equipmentList.value[0] = Object.assign(equipmentList.value[0], res.data.camera);
-    equipmentList.value[1] = Object.assign(equipmentList.value[1], res.data.sensor);
-    equipmentList.value[2] = Object.assign(equipmentList.value[2], res.data.track);
+    equipmentState.value.camera = { ...equipmentState.value.camera, ...res.data.camera };
+    equipmentState.value.sensor = { ...equipmentState.value.sensor, ...res.data.sensor };
+    equipmentState.value.track = { ...equipmentState.value.track, ...res.data.track };
   } catch (e) {}
 };
 const getAlarmData = async () => {
   try {
     let res = await getAlarmStatistics();
-    alarmList.value[0].value = res.data.alarmCount;
-    alarmList.value[1].value = res.data.itemCount;
+    alarmState.value.alarmCount = res.data.alarmCount;
+    alarmState.value.itemCount = res.data.itemCount;
   } catch (e) {}
 };
 const getlinkageData = async () => {
   try {
     let res = await getlinkageStatistics();
-    linkList.value[0].value = res.data.linkageAlarmCount;
-    linkList.value[1].value = res.data.linkageItemCount;
+    linkageState.value.linkageAlarmCount = res.data.linkageAlarmCount;
+    linkageState.value.linkageItemCount = res.data.linkageItemCount;
   } catch (e) {}
 };
 const getTodayCountNum = async () => {
   try {
     let res = await getTodayCount();
-    linkList2.value[0].value = res.data ?? 0;
+    todayCountState.value = res.data ?? 0;
   } catch (e) {}
 };
 const getTodayXXTSCountNum = async () => {
   try {
     let res = await getTodayXXTSCount();
-    linkList3.value[0].value = res.data ?? 0;
+    todayXXTSCountState.value = res.data ?? 0;
   } catch (e) {}
 };
 onMounted(() => {

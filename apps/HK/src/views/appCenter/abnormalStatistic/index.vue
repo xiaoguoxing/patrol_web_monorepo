@@ -3,7 +3,9 @@
     <div class="top">
       <div class="t-top">
         <div class="buttons">
-          <my-tabs v-model="tabValue" :options="timeOptions" @change="timeChange"></my-tabs>
+          <div>
+            <my-tabs v-model="tabValue" :options="timeOptions" @change="timeChange"></my-tabs>
+          </div>
           <div class="date-picker" v-if="tabValue == 3">
             <el-date-picker
               v-model="timesArr"
@@ -52,12 +54,12 @@
               clearable
               @clear="searchCardData"
               v-model="tableText"
-              style="width: 340px"
+              style="width: 360px"
               @keydown.enter="searchCardData"
               class="input-with-select"
             >
               <template #prepend>
-                <el-select class="input-prepend-select" v-model="selectProp" style="width: 100px">
+                <el-select class="input-prepend-select" v-model="selectProp" style="width: 150px">
                   <el-option :label="$t('aiInspection.areaName')" value="areaName" />
                   <el-option :label="$t('aiInspection.objectName')" value="objectName" />
                 </el-select>
@@ -117,7 +119,7 @@
   </div>
 </template>
 <script setup lang="tsx">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import icon1 from '@/assets/images/statistic/icon1.png';
 import myTabs from '@/components/Tabs/index.vue';
 import chart from '@/views/home/components/chart.vue';
@@ -135,12 +137,12 @@ import { Search } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const levelDictList = (await getDict('alarm_level')) as DefaultDict;
-const timeOptions: Tabs[] = [
+const timeOptions = computed<Tabs[]>(() => [
   { label: t('common.today'), value: 0 },
   { label: t('common.week'), value: 1 },
   { label: t('common.month'), value: 2 },
   { label: t('common.custom'), value: 3 },
-];
+]);
 const options = [
   { data: 'today', value: 0 },
   { data: 'week', value: 1 },
@@ -153,10 +155,10 @@ const downSvg = ref('icon-a-7xiadie');
 // week - 近一周
 // month - 近一月
 // custom - 自定义
-const timeOptions1: Tabs[] = [
+const timeOptions1 = computed<Tabs[]>(() => [
   { label: t('common.week'), value: 1 },
   { label: t('common.month'), value: 2 },
-];
+]);
 const wainingInfo = ref([
   { name: t('statistic.wainingInfo1'), nums: 0, circle: 0, up: true },
   { name: t('statistic.wainingInfo2'), nums: 0, circle: 0, up: true },
@@ -199,12 +201,12 @@ let searchParams1 = ref({
 const proTable = ref();
 
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns = computed<ColumnProps[]>(() => [
   // { type: 'selection', label: '序号', width: 50 },
   {
     prop: 'index',
     label: t('statistic.sort'),
-    width: 60,
+    width: 80,
     render: (scope) => {
       let value = scope.row.rank > 9 ? scope.row.rank : '0' + scope.row.rank.toString();
       let str =
@@ -240,7 +242,7 @@ const columns: ColumnProps[] = [
       );
     },
   },
-];
+]);
 const selectProp = ref('areaName');
 const tableText = ref('');
 let energyChartOption1 = ref({});

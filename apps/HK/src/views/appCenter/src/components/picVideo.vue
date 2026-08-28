@@ -26,7 +26,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 import Tabs from '@/components/Tabs/index.vue';
 import PicRes from './picRes.vue';
 import VideoControls from '@optCenter/videoRealTime.vue';
@@ -37,13 +37,13 @@ interface Props {
 }
 // 接受父组件参数，配置默认值
 const props = withDefaults(defineProps<Props>(), {});
-const tabsOption = [
+const tabsOption = computed(() => [
   { label: t('aiInspection.picture'), value: 'picture' },
   { label: t('aiInspection.watching'), value: 'watching' },
   { label: t('aiInspection.playBackVideo'), value: 'video' },
-];
+]);
 
-const activeTab = ref(tabsOption[0]!.value);
+const activeTab = ref(tabsOption.value[0]!.value);
 
 watch(
   () => props.activeItem,

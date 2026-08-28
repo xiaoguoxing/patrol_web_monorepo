@@ -16,7 +16,11 @@
       :highlightCurrent="false"
       ref="treeRef"
       @change="changeTreeFilter"
-    ></kr-filter-tree>
+    >
+      <template #default="{ node, data }">
+        <cameraTreeTemp :node="node" :data="data"></cameraTreeTemp>
+      </template>
+    </kr-filter-tree>
     <collapseBar v-model="isCollapse" :treeWidth="treeWidth"></collapseBar>
     <div class="two-col-page-rt">
       <div class="watching-title">
@@ -51,6 +55,7 @@ import { treeFirst, treeItem } from '@/api/modules/optCenter/aiPatrolManage/posi
 import collapseBar from '@appCenter/components/collapseBar.vue';
 import { ElMessage } from 'element-plus';
 import { videoNodeType } from '@optCenter/hooks/use-video';
+import cameraTreeTemp from '@optCenter/components/cameraTreeTemp/index.vue';
 let route = useRoute();
 let router = useRouter();
 let { nodeType, nodeTypeLabel } = videoNodeType();
@@ -163,20 +168,6 @@ function videoSuccess() {
       font-size: 50px;
       color: red;
       pointer-events: none;
-    }
-  }
-  .custom-tree-node {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 10px;
-    user-select: none;
-    &.move {
-      cursor: grab;
-      &:active {
-        cursor: grabbing;
-      }
     }
   }
   .watching-tip {

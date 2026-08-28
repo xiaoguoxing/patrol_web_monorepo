@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import detailList from './detail/detailList.vue';
 import detailExpandList from './detail/detailExpandList.vue';
 import detailDialog from './detail/detailDialog.vue';
@@ -8,7 +8,7 @@ import { getReportDetailApi, ReportListRows, PageType, getReportCheckApi } from 
 import { ElMessage } from 'element-plus';
 import { Clock } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 interface props {
   id: string;
   pageType: PageType;
@@ -42,28 +42,28 @@ let formData = ref<ReportListRows>({
 type FormProps = { label: string; prop: keyof ReportListRows; format?: (val: string, obj: ReportListRows) => any }[];
 
 let formProps: FormProps = [
-  { label: `${t('aiInspection.inspectionTaskName')}：`, prop: 'inspectionTaskName' },
+  { label: `${'aiInspection.inspectionTaskName'}`, prop: 'inspectionTaskName' },
   {
-    label: `${t('aiInspection.taskTypeName')}：`,
+    label: `${'aiInspection.taskTypeName'}`,
     prop: 'taskTypeName',
   },
-  { label: `${t('common.orgName')}：`, prop: 'orgName' },
+  { label: `${'common.orgName'}`, prop: 'orgName' },
   {
-    label: `${t('aiInspection.taskStatus')}：`,
+    label: `${'aiInspection.taskStatus'}`,
     prop: 'taskStatus',
   },
   {
-    label: `${t('task.taskUseTime')}：`,
+    label: `${'task.taskUseTime'}`,
     prop: 'taskUseTime',
     format: (val) => ((val as unknown as number) / 60).toFixed(2) + t('common.minute'),
   },
-  { label: `${t('aiInspection.taskStartTime')}：`, prop: 'taskStartTime' },
-  { label: `${t('aiInspection.taskEndTime')}：`, prop: 'taskEndTime' },
+  { label: `${'aiInspection.taskStartTime'}`, prop: 'taskStartTime' },
+  { label: `${'aiInspection.taskEndTime'}`, prop: 'taskEndTime' },
   /*  { label: '巡检方式：', prop: 'inspectionWay' },
   { label: '任务执行类型：', prop: 'executeType' },*/
 ];
 
-const resColumnBase: ColumnProps[] = [
+const resColumnBase = computed<ColumnProps[]>(() => [
   {
     prop: 'gatherPic',
     label: t('task.gatherPic'),
@@ -88,10 +88,12 @@ const resColumnBase: ColumnProps[] = [
         </div>
       );
     },
+    minWidth: 220,
   },
   {
     prop: 'gatherTime',
     label: t('task.gatherTime'),
+    minWidth: 250,
   },
   {
     prop: 'inspectionConclusion',
@@ -114,16 +116,18 @@ const resColumnBase: ColumnProps[] = [
         </div>
       );
     },
+    minWidth: 250,
   },
-];
+]);
 
-const resColumns1: ColumnProps[] = [
+const resColumns1 = computed<ColumnProps[]>(() => [
   {
     prop: 'alarmRule',
     label: t('alarm.alarmRules'),
+    minWidth: 150,
   },
-  ...resColumnBase,
-];
+  ...resColumnBase.value,
+]);
 
 async function getDetail() {
   if (props.id) {
@@ -184,7 +188,7 @@ defineExpose({
     <div class="detail-title kr-font-medium" style="">{{ $t('task.taskInfo') }}</div>
     <div class="detail-description">
       <div class="detail-description-items" :key="item.prop" v-for="item in formProps">
-        <div class="detail-description-label">{{ item.label }}</div>
+        <div class="detail-description-label" :class="locale">{{ $t(item.label) }}：</div>
         <div class="detail-description-value">
           {{ item.format?.(formData[item.prop] + '', formData) ?? formData[item.prop] }}
         </div>
@@ -281,6 +285,10 @@ defineExpose({
       display: flex;
       font-size: 14px;
       .detail-description-label {
+        &.en {
+          width: 180px;
+        }
+
         width: 100px;
         color: var(--el-text-color-secondary);
         text-align: right;

@@ -2,11 +2,11 @@
 import { PageType, getAlarmDetailApi, AlarmListRows } from '@/api/modules/appCenter/task/abnormal';
 import myTab from '@/components/Tabs/index.vue';
 import videoControls from '@optCenter/videoRealTime.vue';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { cameraInTask } from '@/api/modules/camera';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 interface Props {
   id: string;
   pageType: PageType;
@@ -19,11 +19,11 @@ interface Emits {
 defineEmits<Emits>();
 
 const urlArr = useRemoveURLObject();
-let tabsOpt = [
+let tabsOpt = computed(() => [
   { label: t('aiInspection.picture'), value: '1' },
   { label: t('aiInspection.watching'), value: '2' },
   { label: t('aiInspection.playBackVideo'), value: '3' },
-];
+]);
 let tabValue = ref('1');
 interface FormConfig {
   label: string;
@@ -39,13 +39,13 @@ interface FormConfig {
   changeStyle?: (val: string, row: any) => string;
 }
 let formDataConfig = ref<FormConfig[]>([
-  { label: t('common.orgName'), value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
-  { label: t('aiInspection.areaName'), value: '南沙水司/黄阁水厂/加药间', prop: 'areaName', type: 'text' },
-  { label: t('aiInspection.objectName'), value: 'PAC投加系统', prop: 'objectName', type: 'text' },
-  { label: t('task.itemName'), value: 'PAC投加系统', prop: 'itemName', type: 'text' },
-  { label: t('alarm.executeTime'), value: '2023-09-08 16:00', prop: 'executeTime', type: 'text' },
+  { label: 'common.orgName', value: '南沙水司/黄阁水厂/加药间', prop: 'orgName', type: 'text' },
+  { label: 'aiInspection.areaName', value: '南沙水司/黄阁水厂/加药间', prop: 'areaName', type: 'text' },
+  { label: 'aiInspection.objectName', value: 'PAC投加系统', prop: 'objectName', type: 'text' },
+  { label: 'task.itemName', value: 'PAC投加系统', prop: 'itemName', type: 'text' },
+  { label: 'alarm.executeTime', value: '2023-09-08 16:00', prop: 'executeTime', type: 'text' },
   {
-    label: t('alarm.recognitionResult2'),
+    label: 'alarm.recognitionResult2',
     value: '80℃',
     prop: 'recognitionResult',
     type: 'text',
@@ -170,7 +170,7 @@ async function goRealVideo() {
       <div class="alarm-right-content">
         <el-scrollbar>
           <div class="alarm-right-description-items" :key="item.prop" v-for="item in formDataConfig">
-            <div class="alarm-right-description-items-label">{{ item.label }}：</div>
+            <div class="alarm-right-description-items-label" :class="locale">{{ $t(item.label) }}：</div>
             <template v-if="item.type === 'text'">
               <div class="alarm-right-description-items-value">
                 {{ item.value }}
@@ -250,6 +250,10 @@ async function goRealVideo() {
         align-items: baseline;
         margin-bottom: 20px;
         .alarm-right-description-items-label {
+          &.en {
+            width: 110px;
+          }
+
           width: 86px;
           font-size: 14px;
           color: var(--el-text-color-secondary);

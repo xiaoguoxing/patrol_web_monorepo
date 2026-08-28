@@ -22,6 +22,9 @@
       <!--      <template #treeHeader>
         <myTabs :options="options1" style="margin-bottom: 10px" buttonType="line" @change="tabChange"></myTabs>
       </template>-->
+      <template #tree="{ node, data }">
+        <cameraTreeTemp :node="node" :data="data"></cameraTreeTemp>
+      </template>
     </kr-tree-list-select>
   </div>
 </template>
@@ -41,6 +44,7 @@ import { getCameraTreeApi, Tree } from '@/api/modules/camera';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { videoNodeType } from '@optCenter/hooks/use-video';
 
+import cameraTreeTemp from '@optCenter/components/cameraTreeTemp/index.vue';
 interface DialogProps {
   title: string;
   pageType: string;
