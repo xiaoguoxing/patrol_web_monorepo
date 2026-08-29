@@ -155,7 +155,7 @@ const urlArr = useRemoveURLObject();
 
 const initParam = reactive<Partial<Search>>({ collectionStatus: ' ' });
 const searchDataLocal = ref({});
-const columns: tableProps<any>[] = [
+const columns = computed<tableProps<any>[]>(() => [
   {
     prop: 'algorithmName',
     label: t('model.algorithmName2'),
@@ -184,7 +184,7 @@ const columns: tableProps<any>[] = [
       },
     },
   },
-];
+]);
 const dataCallback = (data: any) => {
   pageSize.value = Math.ceil(data.list.length / 5);
   return {

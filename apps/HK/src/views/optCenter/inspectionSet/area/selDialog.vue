@@ -55,7 +55,7 @@ const getTableList = async (params: any) => {
   });
 };
 // 表格配置项
-const column: ColumnProps[] = [
+const column = computed<ColumnProps[]>(() => [
   {
     type: 'selection',
     width: 60,
@@ -71,7 +71,7 @@ const column: ColumnProps[] = [
     prop: 'name',
     label: t('overHaulArea.name'),
   },
-];
+]);
 
 interface DialogProps {
   title: string;

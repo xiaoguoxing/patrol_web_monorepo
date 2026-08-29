@@ -263,7 +263,7 @@ const dataCallback = (data: any) => {
 };
 
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns = computed<ColumnProps[]>(() => [
   { type: 'selection', width: 60 },
 
   { type: 'index', label: t('table.sort'), width: 60 },
@@ -342,7 +342,7 @@ const columns: ColumnProps[] = [
     minWidth: 150,
   },
   { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
-];
+]);
 // 点击联动信号
 const onClickSignal = (signal: any) => {
   proTable.value.pageable.pageNum = 1;

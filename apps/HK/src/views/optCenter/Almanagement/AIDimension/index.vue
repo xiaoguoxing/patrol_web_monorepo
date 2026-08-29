@@ -91,7 +91,7 @@ const stateOption = ref<StateOption>({ todo: t('model.markStatus1'), finish: t('
 const stateClassOption = ref<StateOption>({ todo: 'tab1', finish: 'tab2' });
 const proTable = ref();
 const initParam = reactive<Partial<Search>>({});
-const columns: tableProps<Row>[] = [
+const columns = computed<tableProps<Row>[]>(() => [
   { type: 'index', label: t('table.sort'), width: 70 },
   {
     prop: 'presetPositionName',
@@ -125,7 +125,7 @@ const columns: tableProps<Row>[] = [
     label: t('linkageSet.createTime'),
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
-];
+]);
 const dataCallback = (data: any) => {
   return {
     datalist: data.list,

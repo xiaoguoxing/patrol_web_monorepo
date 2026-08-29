@@ -114,7 +114,7 @@ const dataCallback = (data: any) => {
   };
 };
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns = computed<ColumnProps[]>(() => [
   {
     type: 'selection',
     width: 60,
@@ -175,7 +175,7 @@ const columns: ColumnProps[] = [
     enum: alarm_level,
   },
   { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
-];
+]);
 // 点击树节点
 let syncData = ref();
 const clickTreeNode = (val: string, data: any) => {

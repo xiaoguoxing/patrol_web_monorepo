@@ -156,7 +156,7 @@ const tableSource = [
   },
 ];
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns = computed<ColumnProps[]>(() => [
   {
     type: 'selection',
     width: 60,
@@ -201,7 +201,7 @@ const columns: ColumnProps[] = [
   //   label: '密码',
   // },
   { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
-];
+]);
 
 // 获取表格数据
 const getTableList = (params: any) => {

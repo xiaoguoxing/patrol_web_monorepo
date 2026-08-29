@@ -124,7 +124,7 @@ const changeTreeFilter = (val: string, node: Tree) => {
 // 表格配置项
 const proTable = ref();
 const initParam = reactive<Partial<searchForm>>({ cameraId: defaultValue.value });
-const columns: tableProps<rows>[] = [
+const columns = computed<tableProps<rows>[]>(() => [
   { type: 'selection', label: t('table.sort'), width: 70 },
   { type: 'index', label: t('table.sort'), width: 70 },
   {
@@ -164,7 +164,7 @@ const columns: tableProps<rows>[] = [
     minWidth: 200,
   },
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 150, fixed: 'right' },
-];
+]);
 let checkListCode = ref('');
 const dataCallback = (data: any) => {
   return {

@@ -9,7 +9,7 @@
   >
     <el-form
       ref="ruleFormRef"
-      label-width="120px"
+      label-width="auto"
       label-suffix=" :"
       :rules="rules"
       :disabled="props.isView"

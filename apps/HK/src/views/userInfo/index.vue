@@ -24,7 +24,7 @@
               </div>
             </div>
             <!-- </div> -->
-            <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="userFormData" label-width="100">
+            <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="userFormData" label-width="auto">
               <el-row class="">
                 <el-col :span="24">
                   <el-form-item :label="$t('inputPlaceholder.username')" prop="name" label-width="100">
@@ -63,7 +63,7 @@
         <div class="info">
           <div class="info-title">{{ $t('header.changePassword') }}</div>
           <div class="info-part">
-            <el-form ref="pswFormRef" :rules="rules1" label-suffix=" :" :model="passwdFormData" label-width="100">
+            <el-form ref="pswFormRef" :rules="rules1" label-suffix=" :" :model="passwdFormData" label-width="auto">
               <el-row class="">
                 <el-col :span="24">
                   <el-form-item :label="$t('input.oldPassword')" prop="oldPassword" label-width="100">

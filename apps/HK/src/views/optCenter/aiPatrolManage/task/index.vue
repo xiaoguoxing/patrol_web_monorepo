@@ -295,11 +295,11 @@ function openDialogChange(page: PageType, row?: rows) {
   if (page !== 'add') id.value = row ? row.id : '';
 }
 // tabs
-const options1 = [
+const options1 = computed(() => [
   { label: t('worktop.All'), value: 'bc' },
   { label: t('buttonName.on'), value: '1' },
   { label: t('buttonName.off'), value: '0' },
-];
+]);
 </script>
 <style scoped lang="scss">
 .task {

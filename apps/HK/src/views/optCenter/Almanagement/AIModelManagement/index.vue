@@ -67,7 +67,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const proTable = ref();
 const initParam = reactive<Partial<Search>>({});
-const columns: tableProps<Row>[] = [
+const columns = computed<tableProps<Row>[]>(() => [
   { type: 'selection', label: t('table.sort'), width: 70 },
   { type: 'index', label: t('table.sort'), width: 70 },
   {
@@ -119,7 +119,7 @@ const columns: tableProps<Row>[] = [
     isShowInputLabel: true,
   },*/
   { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' },
-];
+]);
 const dataCallback = (data: any) => {
   return {
     datalist: data.list,

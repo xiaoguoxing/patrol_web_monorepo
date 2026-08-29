@@ -108,7 +108,7 @@ const getTList = async (params: any) => {
     data: resData.value || [],
   };
 };
-const column: ColumnProps[] = [
+const column = computed<ColumnProps[]>(() => [
   {
     prop: 'presetPositionName',
     label: t('linkageSet.presetPositionName'),
@@ -143,7 +143,7 @@ const column: ColumnProps[] = [
       );
     },
   },
-];
+]);
 // 提交数据（新增/编辑）
 const abc = computed(() => [...props.list!]);
 const onConfirm = (ids: string[], arr: any) => {
@@ -155,10 +155,10 @@ const onClose = () => {
   show.value = false;
 };
 
-const options1 = [
+const options1 = computed(() => [
   { label: '摄像头', value: '1' },
   { label: '轨道机', value: '2' },
-];
+]);
 const tabChange = function (val: string) {
   console.log(val);
 };

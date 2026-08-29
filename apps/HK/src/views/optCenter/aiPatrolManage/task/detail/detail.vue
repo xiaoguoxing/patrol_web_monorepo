@@ -3,7 +3,7 @@ import { reactive, ref, onMounted } from 'vue';
 import { PageType, addRows, detailTaskApi, Cron } from '@/api/modules/optCenter/aiPatrolManage/task';
 import addObjectList from '../add/addObjectList.vue';
 import { getDict } from '@/utils/serviceDict';
-import { useI18n } from 'vue-i18n';
+import { useI18n,locale } from 'vue-i18n';
 const { t } = useI18n();
 defineExpose({
   openDialogChange() {
@@ -49,32 +49,32 @@ let formData = ref<addRows>({
 type FormProps = { label: string; prop: keyof addRows; format?: (val: string, obj: addRows) => any }[];
 type FormProps2 = { timing: FormProps; cycle: FormProps };
 let formProps: FormProps = [
-  { label: t('aiInspection.inspectionTaskName') + '：', prop: 'taskPlanName' },
-  { label: t('common.orgName') + '：', prop: 'orgName' },
-  { label: t('aiInspection.taskTypeName') + '：', prop: 'taskTypeName' },
+  { label: ('aiInspection.inspectionTaskName'), prop: 'taskPlanName' },
+  { label: ('common.orgName'), prop: 'orgName' },
+  { label: ('aiInspection.taskTypeName') , prop: 'taskTypeName' },
   {
-    label: t('task.inspectionModel') + '：',
+    label: ('task.inspectionModel'),
     prop: 'executeMode',
     format(val) {
       let obj = model.find((i) => i.value === val);
       return obj?.label;
     },
   },
-  { label: t('inspection.inspectionWay') + '：', prop: 'inspectionWayName' },
-  { label: t('aiInspection.executeTypeName') + '：', prop: 'executeTypeName' },
+  { label: ('inspection.inspectionWay') , prop: 'inspectionWayName' },
+  { label: ('aiInspection.executeTypeName') , prop: 'executeTypeName' },
 ];
 let executeTypeConfig: FormProps2 = {
-  timing: [{ label: t('aiInspection.taskStartTime') + '：', prop: 'taskStartTime' }],
+  timing: [{ label: ('aiInspection.taskStartTime') , prop: 'taskStartTime' }],
   cycle: [
     {
-      label: t('inspection.executeFrequency') + '：',
+      label: ('inspection.executeFrequency'),
       prop: 'executeFrequency',
       format(val, obj) {
         return `每 ${val} ${executeCycleNames.find((i) => i.value === obj.executeCycle)?.label}`;
       },
     },
-    { label: t('aiInspection.taskStartTime') + '：', prop: 'taskStartTime' },
-    { label: t('aiInspection.taskEndTime') + '：', prop: 'taskEndTime' },
+    { label: ('aiInspection.taskStartTime'), prop: 'taskStartTime' },
+    { label: ('aiInspection.taskEndTime'), prop: 'taskEndTime' },
   ],
 };
 
@@ -102,7 +102,7 @@ function cancel() {
     <div class="detail-title kr-font-medium" style="margin-bottom: 16px">{{ $t('task.taskInfo') }}</div>
     <div class="detail-description">
       <div class="detail-description-items" :key="item.prop" v-for="item in formProps">
-        <div class="detail-description-label">{{ item.label }}</div>
+        <div class="detail-description-label" :class="locale">{{ t(item.label)}}：</div>
         <div class="detail-description-value">
           {{ item.format?.(formData[item.prop] as string, formData) || formData[item.prop] }}
         </div>
@@ -135,6 +135,9 @@ function cancel() {
       display: flex;
       font-size: 14px;
       .detail-description-label {
+      &.en {
+        width: 180px;
+      }
         width: 120px;
         color: #999999;
         text-align: right;

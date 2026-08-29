@@ -76,7 +76,7 @@ const tableSource = [
   { id: '6', taskType: '测试', priorityLevel: 6 },
 ];
 // 表格配置项
-const columns: ColumnProps[] = [
+const columns  = computed<ColumnProps[]>(()=>[
   { type: 'selection', width: 60 },
 
   { type: 'index', label: t('table.sort'), width: 60 },
@@ -109,7 +109,7 @@ const columns: ColumnProps[] = [
     },
   },
   { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
-];
+]);
 
 // 获取表格数据
 const getTableList = (params: any) => {

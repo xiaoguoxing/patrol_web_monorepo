@@ -12,7 +12,7 @@
   </kr-public-dialog>
 </template>
 <script setup lang="tsx" name="sortDialog">
-import { ref, reactive, onMounted, nextTick, watch } from 'vue';
+import { ref, reactive, onMounted, nextTick, watch,computed } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import Sortable from 'sortablejs';
 import { Rank } from '@element-plus/icons-vue';
@@ -72,7 +72,7 @@ const rowDrop = (row: any, column: any, cell: HTMLTableCellElement, event: Event
     });
   });
 };
-const columns = [
+const columns = computed(()=>[
   // {
   //   label: '',
   //   prop: 'id',
@@ -109,7 +109,7 @@ const columns = [
     minWidth: 200,
   },
   { prop: 'itemName', label: t('task.itemName') },
-];
+]);
 const handleSubmit = async () => {
   try {
     const param: linkObj.ReqSortParams = {

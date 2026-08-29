@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts" name="LinkageDialog">
-import { ref, reactive, nextTick, onMounted } from 'vue';
+import { ref, reactive, nextTick, onMounted,computed } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { getObjTreeApi } from '@/api/modules/optCenter/inspectionSet/area';
@@ -59,12 +59,12 @@ const getTableList = (params: any) => {
 //   };
 // };
 // 表格配置项
-const column: ColumnProps[] = [
+const column = computed<ColumnProps[]>(() => [
   {
     prop: 'itemName',
     label: t('task.itemName'),
   },
-];
+]);
 
 interface DialogProps {
   title: string;

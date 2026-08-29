@@ -10,7 +10,7 @@
     <el-form
       v-if="show"
       ref="ruleFormRef"
-      label-width="130px"
+      label-width="auto"
       label-suffix=" :"
       :rules="rules"
       :disabled="paramprops.isView"

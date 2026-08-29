@@ -74,12 +74,12 @@ const getTList = async (params: any) => {
   let res = await orgTreeList(searchData);
   return res;
 };
-const column: ColumnProps[] = [
+const column = computed<ColumnProps[]>(() => [
   {
     prop: 'name',
     label: t('common.name'),
   },
-];
+]);
 const onClose = () => {
   show.value = false;
 };
