@@ -1,56 +1,34 @@
 import type * as THREE from 'three';
 
-export type DeviceType = 'pump' | 'cabinet' | 'meter' | 'light' | 'doser' | 'blower';
-export type InspectionStatus = 'ok' | 'abnormal';
+export interface ModelLoadProgress {
+  percent: number;
+  label: string;
+}
 
-export interface PlantDevice {
-  type: DeviceType;
-  key: string;
+/** 巡检目标：真实模型中的某个节点 */
+export interface PatrolTargetInfo {
+  /** 模型节点 id（对应 GLB 中的对象名），由业务侧配置 */
+  id: string;
+  /** 展示名称 */
   name: string;
-  model: string;
-  area: string;
-  x: number;
-  z: number;
-  floor: number;
-  alarm?: boolean;
+  /** 目标巡检点（世界坐标，取节点包围盒上方） */
+  position: THREE.Vector3;
 }
 
-export interface InspectionItem {
-  name: string;
-  status: '正常' | '异常';
-  detail: string;
-}
-
-export interface InspectionResult {
-  duration: string;
-  confidence: number;
-  status: InspectionStatus;
-  items: InspectionItem[];
-}
-
-export interface PatrolSnapshot {
-  device: PlantDevice;
-  result: InspectionResult;
+export interface ModelPatrolSnapshot {
+  /** 当前巡检目标；未配置巡检对象（total 为 0）时为 undefined */
+  target: PatrolTargetInfo | undefined;
   completed: number;
   total: number;
   dwelling: boolean;
-  paused: boolean;
-  cursor: THREE.Vector3;
-}
-
-export interface DeviceSelection {
-  device: PlantDevice;
-  clientX: number;
-  clientY: number;
 }
 
 export interface WaterPlantSceneCallbacks {
-  onPatrolChange: (snapshot: PatrolSnapshot) => void;
-  onDeviceSelect: (selection?: DeviceSelection) => void;
-}
-
-export interface DeviceBuildResult {
-  groups: Map<string, THREE.Group>;
-  rings: Map<string, THREE.Mesh>;
-  pickables: THREE.Object3D[];
+  onPatrolChange: (snapshot: ModelPatrolSnapshot) => void;
+  /** 真实 GLB 模型加载进度 */
+  onModelLoadProgress?: (progress: ModelLoadProgress) => void;
+  /** 全部模型加载完成（外立面 + 内部结构） */
+  onModelLoaded?: () => void;
+  /** 模型加载失败 */
+  onModelError?: (message: string) => void;
 }
