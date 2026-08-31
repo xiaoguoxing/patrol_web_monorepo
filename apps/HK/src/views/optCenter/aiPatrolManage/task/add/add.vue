@@ -413,7 +413,9 @@ function cancel() {
   }
   :deep(.el-step) {
     .el-step__title {
+      margin-inline-end: 5px;
       font-size: 14px;
+      white-space: nowrap;
       &.is-process {
         color: var(--el-text-color-regular);
       }
@@ -507,7 +509,7 @@ function cancel() {
     margin: 0 -24px -24px;
     border-top: 1px solid #e6e6e6;
     .el-button {
-      width: 108px;
+      min-width: 108px;
       height: 40px;
       margin-top: 11px;
     }

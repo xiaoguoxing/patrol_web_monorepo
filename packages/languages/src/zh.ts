@@ -436,6 +436,7 @@ export default {
     step1: '设置任务信息',
     step2: '选择巡检项',
     m: '每',
+    m2: '每{val}{label}',
   },
   linkageSet: {
     treePlaceholder: '请输入联动信号',

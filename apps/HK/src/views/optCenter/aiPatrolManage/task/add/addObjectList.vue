@@ -21,7 +21,7 @@ interface Emit {
 const emit = defineEmits<Emit>();
 //表格
 const proTable = ref();
-const resColumns = [
+const resColumns = computed(() => [
   ...[props.showBtn ? { type: 'selection', label: t('table.sort'), width: 70 } : {}],
   { type: 'index', label: t('table.sort'), width: 70 },
   {
@@ -37,9 +37,9 @@ const resColumns = [
     label: t('task.itemName'),
   },
   ...[
-    props.showBtn ? { prop: 'operation', align: 'right', label: t('table.operation'), width: 180, fixed: 'right' } : {},
+    props.showBtn ? { prop: 'operation', align: 'right', label: t('table.operation'), width: 250, fixed: 'right' } : {},
   ],
-];
+]);
 const initParam = {};
 watch(
   () => props.objectList,

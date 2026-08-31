@@ -8,7 +8,6 @@
         :dataCallback="dataCallback"
         :searchCol="{ xs: 1, sm: 1, md: 3, lg: 3, xl: 3 }"
         selectId="id"
-        colSetAble
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="scope">

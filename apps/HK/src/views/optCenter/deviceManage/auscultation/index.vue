@@ -19,7 +19,6 @@
         :dataCallback="dataCallback"
         :searchCol="{ xs: 1, sm: 1, md: 3, lg: 3, xl: 3 }"
         selectId="id"
-        colSetAble
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="scope">
@@ -199,7 +198,7 @@ const columns = computed<tableProps<Row>[]>(() => [
     label: t('camera.channelNum'),
   },
   { prop: 'operation', label: t('table.operation'), width: 200, fixed: 'right' },
-]);    
+]);
 // 点击树节点
 let syncData = ref();
 const clickTreeNode = (val: string, data: any) => {

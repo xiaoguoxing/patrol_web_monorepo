@@ -13,7 +13,6 @@
         title="预置位配置"
         titleBorder
         :outBorder="false"
-        colSetAble
       >
         <!-- 表格 header 按钮 -->
         <template #tableHeader="{ selectedListIds }">

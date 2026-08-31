@@ -20,7 +20,6 @@
         title="预置位配置"
         titleBorder
         :outBorder="false"
-        colSetAble
       >
         <!-- 表格操作 -->
         <template #operation="{ row }">

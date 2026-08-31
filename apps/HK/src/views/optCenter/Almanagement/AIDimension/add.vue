@@ -18,7 +18,7 @@ import useArcChange from './components/useArcChange';
 import { useBackFileUrl, useRemoveURLObject } from '@optCenter/hooks/use-file-utils';
 import { Warning } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 interface Prop {
   id: string;
   pageType: PageType;
@@ -294,32 +294,36 @@ async function imgSave() {
     </div>
     <div class="dimension-right">
       <div class="dimension-right-description-items">
-        <div class="dimension-right-description-items-label">{{ $t('linkageSet.presetPositionName') }}：</div>
+        <div class="dimension-right-description-items-label" :class="locale">
+          {{ $t('linkageSet.presetPositionName') }}：
+        </div>
         <div class="dimension-right-description-items-value">{{ state?.presetPositionName }}</div>
       </div>
       <div class="dimension-right-description-items">
-        <div class="dimension-right-description-items-label">{{ $t('position.presetPositionId') }}：</div>
+        <div class="dimension-right-description-items-label" :class="locale">
+          {{ $t('position.presetPositionId') }}：
+        </div>
         <div class="dimension-right-description-items-value">{{ state?.presetPositionId }}</div>
       </div>
       <div class="dimension-right-description-items">
-        <div class="dimension-right-description-items-label">{{ $t('model.algorithmName3') }}：</div>
+        <div class="dimension-right-description-items-label" :class="locale">{{ $t('model.algorithmName3') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.algorithmName }}</div>
       </div>
       <div
         class="dimension-right-description-items"
         v-if="pageType === 'detail' && (state.markType === '1' || state.markType === '2')"
       >
-        <div class="dimension-right-description-items-label">{{ $t('model.pointNum') }}：</div>
+        <div class="dimension-right-description-items-label" :class="locale">{{ $t('model.pointNum') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.pointNum }}</div>
       </div>
       <div class="dimension-right-description-items" v-if="pageType === 'detail' && state.markType === '3'">
-        <div class="dimension-right-description-items-label">{{ $t('model.threshold') }}：</div>
+        <div class="dimension-right-description-items-label" :class="locale">{{ $t('model.threshold') }}：</div>
         <div class="dimension-right-description-items-value">{{ state?.threshold }}</div>
       </div>
       <template v-if="pageType === 'edit'">
         <template v-if="state.markType === '2' || state.markType === '1'">
           <div class="dimension-right-description-items" v-if="state.markType === '1'">
-            <div class="dimension-right-description-items-label">
+            <div class="dimension-right-description-items-label" :class="locale">
               {{ $t('model.arcCenter') }}：
               <el-tooltip effect="light" placement="bottom-end">
                 <el-icon>
@@ -351,7 +355,7 @@ async function imgSave() {
             </div>
           </div>
           <div class="dimension-right-description-items">
-            <div class="dimension-right-description-items-label">
+            <div class="dimension-right-description-items-label" :class="locale">
               {{ $t('model.keduLabel') }}：
               <el-tooltip effect="light" placement="bottom-end">
                 <el-icon>
@@ -374,7 +378,7 @@ async function imgSave() {
             </div>
           </div>
           <div class="dimension-right-description-items">
-            <div class="dimension-right-description-items-label">{{ $t('model.pointNum') }}：</div>
+            <div class="dimension-right-description-items-label" :class="locale">{{ $t('model.pointNum') }}：</div>
             <div class="dimension-right-description-items-value">
               <el-select v-model="state!.pointNum" style="width: 132px" clearable>
                 <el-option
@@ -389,7 +393,7 @@ async function imgSave() {
         </template>
         <template v-if="state.markType === '3'">
           <div class="dimension-right-description-items">
-            <div class="dimension-right-description-items-label">
+            <div class="dimension-right-description-items-label" :class="locale">
               {{ $t('model.print') }}：
               <el-tooltip effect="light" placement="bottom-end">
                 <el-icon>
@@ -417,7 +421,7 @@ async function imgSave() {
             </div>
           </div>
           <div class="dimension-right-description-items">
-            <div class="dimension-right-description-items-label">{{ $t('model.threshold') }}：</div>
+            <div class="dimension-right-description-items-label" :class="locale">{{ $t('model.threshold') }}：</div>
             <div class="dimension-right-description-items-value">
               <el-input-number
                 v-model="state!.threshold"
@@ -431,7 +435,7 @@ async function imgSave() {
           </div>
         </template>
         <div class="dimension-right-description-items">
-          <div class="dimension-right-description-items-label"></div>
+          <div class="dimension-right-description-items-label" :class="locale"></div>
           <div class="dimension-right-description-items-value">
             <el-button @click="close">{{ $t('ui.cancel') }}</el-button>
             <el-button @click="imgSave" type="primary">{{ $t('buttonName.save') }}</el-button>
@@ -571,6 +575,11 @@ async function imgSave() {
       align-items: center;
       margin-bottom: 15px;
       .dimension-right-description-items-label {
+        &.en {
+          width: 140px;
+          text-align: left;
+        }
+
         width: 85px;
         font-size: 14px;
         color: var(--el-text-color-secondary);
@@ -597,6 +606,9 @@ async function imgSave() {
             height: 16px;
             background-image: url('@/assets/images/AiDimension/arc-center-default.png');
             background-size: 100%;
+          }
+          .arc-delete-text {
+            white-space: nowrap;
           }
           &:hover {
             color: var(--el-text-color-regular);
