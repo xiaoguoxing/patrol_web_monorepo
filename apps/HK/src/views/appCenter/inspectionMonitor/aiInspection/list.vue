@@ -9,7 +9,10 @@
           <el-collapse-item v-for="task in dataSource" :name="task.id" :key="task.id">
             <template #title>
               <div class="flex-1-column mr20 task-header">
-                <div class="task-title mb15">{{ task.inspectionTaskName }}</div>
+                <div class="task-title mb15">
+                  <div class="tit">{{ task.inspectionTaskName }}</div>
+                  <el-button type="primary" link class="btn" @click.stop="goBIM(task.id)">BIM巡检</el-button>
+                </div>
                 <el-progress :percentage="getPercentNum(task.finishNum, task.itemNum)">
                   <span class="item-num finished-num">{{ task.finishNum }}</span
                   ><span class="item-num">/{{ task.itemNum }}</span>
@@ -32,7 +35,7 @@
       </el-scrollbar>
     </div>
     <div class="two-col-page-rt flex-1-column">
-      <ThreeRectangle :active-item="activeItem" />
+      <PicRes :active-item="activeItem"> </PicRes>
     </div>
 
     <kr-public-dialog
@@ -65,12 +68,17 @@ import {
 import type { AITask } from '@/api/modules/appCenter/inspectionMonitor/aiInspection';
 
 import ListObj from '@appCenter/components/listObj.vue';
-import ThreeRectangle from '@appCenter/components/threeRectangle.vue';
 import PicVideo from '@appCenter/components/picVideo.vue';
 import { getPercentNum } from '@/utils/util';
 import { useWebSocket } from '@appCenter/hooks/useWebSocket';
 import { useDateFormat } from '@vueuse/core';
+import PicRes from '@appCenter/components/picRes.vue';
+import { useRoute, useRouter } from 'vue-router';
+import { KeepAliveStore } from '@/stores/modules/keepAlive';
 
+const router = useRouter();
+const route = useRoute();
+const keepAliveStore = KeepAliveStore();
 const searchParams = reactive({
   taskStatus: 'during',
 });
@@ -137,6 +145,11 @@ const onChange = (taskId: string) => {
     getActiveItem();
   }
 };
+
+const goBIM = (taskId: string) => {
+  keepAliveStore.addKeepLiveName('aiInspection');
+  router.push(`${route.path}/aiInspectionDetailBIM?id=${taskId}`);
+};
 </script>
 <style scoped lang="scss">
 .list-title {
@@ -187,11 +200,15 @@ const onChange = (taskId: string) => {
 
   // 标题
   .task-title {
-    overflow: hidden;
-    font-size: var(--el-font-size-medium);
-    text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: flex;
+    justify-content: space-between;
+    .tit {
+      overflow: hidden;
+      font-size: var(--el-font-size-medium);
+      text-align: left;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }
 :deep(.picVidoDialog) {
