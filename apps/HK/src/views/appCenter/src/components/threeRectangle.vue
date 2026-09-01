@@ -2,14 +2,28 @@
   <section ref="containerRef" class="three-water-plant" aria-label="水厂三维巡检场景">
     <div class="three-water-plant__viewport"></div>
     <div class="three-water-plant__tools">
-      <button type="button" :class="{ active: facadeHidden }" @click="toggleFacade">
-        {{ facadeHidden ? '🏭 显示外立面' : '🎭 隐藏外立面' }}
+      <button type="button" :class="{ active: cameraMode === 'orbit' }" @click="setCameraMode('orbit')">
+        🛰 全景浏览
       </button>
-      <button type="button" :class="{ active: followView }" @click="toggleFollow">
-        {{ followView ? '🎥 视角跟随' : '🖐 自由视角' }}
+      <button type="button" :class="{ active: cameraMode === 'walk' }" @click="setCameraMode('walk')">
+        🚶 厂房漫游
       </button>
+      <button type="button" :class="{ active: cameraMode === 'patrol' }" @click="setCameraMode('patrol')">
+        🤖 自动巡检
+      </button>
+      <span class="three-water-plant__toolbar-sep"></span>
+      <button type="button" :class="{ active: facadeMode === 'show' }" @click="setFacadeMode('show')">外立面</button>
+      <button type="button" :class="{ active: facadeMode === 'transparent' }" @click="setFacadeMode('transparent')">
+        透视
+      </button>
+      <button type="button" :class="{ active: facadeMode === 'hidden' }" @click="setFacadeMode('hidden')">隐藏</button>
+      <span class="three-water-plant__toolbar-sep"></span>
+      <button type="button" @click="flyToPreset('overall')">整体</button>
+      <button type="button" @click="flyToPreset('front')">正面</button>
+      <button type="button" @click="flyToPreset('side')">侧面</button>
+      <button type="button" @click="flyToPreset('inside')">内部</button>
     </div>
-    <div class="three-water-plant__hint">左键旋转 · 右键平移 · 滚轮缩放 · WASD 移动</div>
+    <div class="three-water-plant__hint">{{ hintText }}</div>
 
     <div v-if="patrolState" class="three-water-plant__status">
       <span>AI 巡检</span>
@@ -45,8 +59,8 @@ import { WaterPlantScene } from './three-water-plant/WaterPlantScene';
 const props = defineProps<{ activeItem?: Record<string, unknown> }>();
 const containerRef = ref<HTMLElement>();
 const patrolState = ref<ModelPatrolSnapshot>();
-const facadeHidden = ref(false);
-const followView = ref(true);
+const cameraMode = ref<'orbit' | 'walk' | 'patrol'>('orbit');
+const facadeMode = ref<'show' | 'transparent' | 'hidden'>('transparent');
 const modelLoadingPercent = ref(0);
 const modelLoadingLabel = ref('');
 const modelError = ref('');
@@ -58,11 +72,23 @@ const progress = computed(() =>
   patrolState.value && patrolState.value.total > 0 ? (patrolState.value.completed / patrolState.value.total) * 100 : 0
 );
 
-const toggleFacade = () => {
-  facadeHidden.value = waterPlantScene?.toggleFacade() ?? facadeHidden.value;
+/** 随相机模式变化的操作提示 */
+const hintText = computed(() => {
+  if (cameraMode.value === 'walk') return 'WASD 移动 · 按住左键拖动转视角';
+  if (cameraMode.value === 'patrol') return '自动跟随巡检 · 滚轮调整观察距离';
+  return '左键旋转 · 右键平移 · 滚轮缩放';
+});
+
+const setCameraMode = (mode: 'orbit' | 'walk' | 'patrol') => {
+  cameraMode.value = waterPlantScene?.setCameraMode(mode) ?? mode;
 };
-const toggleFollow = () => {
-  followView.value = waterPlantScene?.toggleFollowView() ?? followView.value;
+const setFacadeMode = (mode: 'show' | 'transparent' | 'hidden') => {
+  facadeMode.value = waterPlantScene?.setFacadeMode(mode) ?? mode;
+};
+/** 预设视角：镜头丝滑飞到 整体/正面/侧面/内部（预设属于全景浏览，先切到 orbit） */
+const flyToPreset = (name: 'overall' | 'front' | 'side' | 'inside') => {
+  cameraMode.value = waterPlantScene?.setCameraMode('orbit') ?? 'orbit';
+  waterPlantScene?.flyToPreset(name);
 };
 const retryModel = () => {
   modelError.value = '';
@@ -92,6 +118,8 @@ onMounted(() => {
     },
     onModelLoaded: () => {
       modelReady.value = true;
+      // 模型加载完成后可能自动进入巡检跟随，同步 UI 上的模式高亮
+      cameraMode.value = waterPlantScene?.getCameraMode() ?? 'orbit';
     },
     onModelError: (message) => {
       modelError.value = message;
@@ -144,11 +172,18 @@ onBeforeUnmount(() => {
   left: 12px;
   z-index: 3;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  max-width: calc(100% - 24px);
 }
 .three-water-plant__tools button {
   padding: 5px 9px;
   font-size: 11px;
+}
+.three-water-plant__toolbar-sep {
+  width: 1px;
+  margin: 0 2px;
+  background: rgb(0 212 255 / 25%);
 }
 .three-water-plant__hint {
   position: absolute;
