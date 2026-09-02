@@ -30,6 +30,7 @@
     "fabric": "catalog:",
     "face-api.js": "catalog:",
     "flv.js": "catalog:",
+    "gsap": "catalog:",
     "js-md5": "catalog:",
     "jsencrypt": "catalog:",
     "lodash": "catalog:",

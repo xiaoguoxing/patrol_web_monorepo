@@ -115,11 +115,11 @@ app.use(znxjUi, {
 
 ## HK Three.js 水厂巡检场景
 
-HK 的 AI 巡检执行详情页 `BIMdetail`（`inspectionMonitor/aiInspection/BIMdetail.vue`）挂载 `ThreeRectangle`（`three-water-plant/threeRectangle.vue`）展示水厂三维巡检场景。场景已从早期的程序化几何体/写死模拟设备演进为真实 GLB 模型巡检：并发加载外立面与内部结构两份模型，按业务提供的 28 个巡检点位（GLB 节点，巡检点位即"任务"）自动循环巡检，并集成 orbit/patrol 两种相机模式（patrol 自动巡检为主，orbit 仅作为鼠标手动查看与"恢复保存机位"的承接模式）、外立面三态、悬浮结果卡片、左侧任务面板、全屏与"巡检对象配置视角"联动。早期全景浏览/厂房漫游切换按钮及整体/正面/侧面/内部预设视角飞行、操作提示均已按需求移除。模型文件位于 `apps/HK/public/GLB/`：`TWFWPS_WLM.glb`（外立面）、`TWFWPS_SNSB.glb`（内部设备，由 Babylon 场景调试导出）。
+HK 的 AI 巡检执行详情页 `BIMdetail`（`inspectionMonitor/aiInspection/BIMdetail.vue`）挂载 `ThreeRectangle`（`three-water-plant/threeRectangle.vue`）展示水厂三维巡检场景。场景已从早期的程序化几何体/写死模拟设备演进为真实 GLB 模型巡检：并发加载外立面与内部结构两份模型，按业务提供的 28 个巡检点位（GLB 节点，巡检点位即"任务"）自动循环巡检（点位间镜头由 GSAP 时间轴平滑运镜，加载完成后首个点位镜头直接定格就位），并集成 orbit/patrol 两种相机模式（patrol 自动巡检为主，orbit 仅用于鼠标手动自由查看）、外立面三态、悬浮结果卡片、左侧任务面板、全屏与"巡检对象配置视角"联动。早期全景浏览/厂房漫游切换按钮及整体/正面/侧面/内部预设视角飞行、操作提示均已按需求移除；任务列表不支持点击跳转（点击跳转会导致巡检 currentIndex 非顺序跳变、completed 计数错乱，破坏任务状态与进度条，故取消）。模型文件位于 `apps/HK/public/GLB/`：`TWFWPS_WLM.glb`（外立面）、`TWFWPS_SNSB.glb`（内部设备，由 Babylon 场景调试导出）。
 
 ### 目录与职责
 
-- `three-water-plant/`：`threeRectangle.vue`（组件壳：工具栏、任务面板、结果卡片、全屏、加载遮罩）、`WaterPlantScene.ts`（渲染、相机、交互、模型加载与资源释放）、`patrolController.ts`（点位解析、巡航路径、停留高亮与进度）、`patrolResult.ts`（模拟 AI 识别结果数据源）、`types.ts`（场景回调与目标类型）。
+- `three-water-plant/`：`threeRectangle.vue`（组件壳：工具栏、任务面板、结果卡片、全屏、加载遮罩）、`WaterPlantScene.ts`（渲染、相机、交互、GSAP 镜头运镜、模型加载与资源释放）、`patrolController.ts`（点位解析、transit/dwell 巡检节奏、停留高亮与进度）、`patrolResult.ts`（模拟 AI 识别结果数据源）、`types.ts`（场景回调与目标类型）。
 - 同级 `shared/`（巡视页与"配置视角"页共用，保证保存的视角坐标两侧互通）：`constants.ts`（`TARGET_SIZE=1200` 归一化边长、GLB 文件名、`WATER_PLANT_MODELS`、`SCENE_CONFIG` 相机/雾/地面参数、`PATROL_IDS` 巡检点位列表，每项含展示名 `name` 与可选预设视角数据）、`environment.ts`（灯光与场景环境）、`utils.ts`（可见性/命中判定、递归释放几何材质纹理、Canvas 纹理）。
 - `viewpoint/`：`ViewpointPicker.ts` + `viewpointDialog.vue`，巡检对象"配置视角"弹窗场景。
 
@@ -128,7 +128,7 @@ HK 的 AI 巡检执行详情页 `BIMdetail`（`inspectionMonitor/aiInspection/BI
 - `WaterPlantScene` 构造即创建 renderer，用 `GLTFLoader` 并发加载外立面 + 内部结构两个 GLB；URL 用 `new URL('GLB/…', window.location.href)` 基于当前地址解析，兼容 hash 路由与部署子路径。
 - 外立面 mesh 统一半透明处理（opacity 0.45、DoubleSide、depthWrite 保持 true 避免内部变暗）；两个模型全部加载完成后再在 `modelRoot` 整体上统一缩放至 `TARGET_SIZE`、水平居中、底面贴 `y=0`（整体变换不改变内外模型相对位置，保证严格对齐）。
 - 公共环境（`shared/environment.ts`，与配置视角页完全一致）：太阳光（2048 阴影贴图）作主光 + 环境光/半球光 + 正面/顶部内部补光；Canvas 程序化蓝天白云全景背景 + 雾效 + 水泥地面（接收模型阴影）+ PMREM 工业环境反射（不用外部 HDR 图）。
-- 加载进度按"百分比 + 当前文件名标签"上报到加载遮罩；失败显示错误并可"重新加载"（`reloadModels` 先重置 `modelRoot` 的缩放/平移再重载，避免叠加）；全部加载完成后在 `modelRoot` 上统一归一化对齐，初始化巡检控制器并 `fitAll` 初始机位（从斜上方覆盖全厂）；存在巡检对象时自动切入自动巡检，否则停留在 orbit 自由观察。
+- 加载进度按"百分比 + 当前文件名标签"上报到加载遮罩；失败显示错误并可"重新加载"（`reloadModels` 先重置 `modelRoot` 的缩放/平移再重载，避免叠加）；全部加载完成后在 `modelRoot` 上统一归一化对齐，初始化巡检控制器并 `fitAll` 计算整体包围基线（作为 orbit 与自动跟随的参考，不要求镜头停留在覆盖全厂的鸟瞰位）；存在巡检对象时自动切入自动巡检，且首个点位若配置了预设机位则镜头直接定格该机位进入停留（`snapToFirstPatrolTarget`，避免加载完成后从高空晃入目标设备），否则停留在 orbit 自由观察。
 
 ### 渲染配置
 
@@ -138,8 +138,8 @@ renderer：`antialias + alpha`、`pixelRatio ≤ 2`、`SRGBColorSpace`、`Reinha
 
 相机系统已收敛为两种模式，相关按钮与 TS 逻辑均已删除：orbit 全景浏览中的键盘移动辅助（WASD/方向键/Q-E，`updateOrbitMove`）、"整体/正面/侧面/内部"预设视角飞行（`flyToPreset`）以及 walk 厂房漫游整套（第一人称移动/转向、键盘监听、人眼高度贴地行走）都不再存在，仅保留下列能力：
 
-- orbit 自由观察：球坐标（theta/phi/radius）。鼠标左键旋转、右键平移、滚轮缩放（带范围与俯仰限制）。它是"设备已配置机位时恢复视角"的承接模式：点击任务列表项若该设备保存过机位，先切到 orbit 再 `flyToViewpoint(position, target)`（easeOutCubic 约 1.2s 平滑飞行）恢复保存视角，之后可继续用鼠标手动微调。
-- patrol 自动巡检：加载完成且存在巡检点位时默认进入（页面进入后即自动循环巡检）；镜头平滑跟随目标，滚轮调整观察距离（默认 75，范围 40~900）。工具栏保留"自动巡检"按钮，随时可回到跟随模式。
+- orbit 自由观察：球坐标（theta/phi/radius）。鼠标左键旋转、右键平移、滚轮缩放（带范围与俯仰限制）。仅用于用户手动查看，不承载任何自动跳转/恢复机位（原先"任务列表点击恢复保存机位"的 `flyToViewpoint` 已随点击跳转一起移除）。
+- patrol 自动巡检：加载完成且存在巡检点位时默认进入（页面进入后即自动循环巡检）；首个点位若配置了预设机位则加载后镜头直接定格就位，后续点位间由 GSAP 时间轴平滑运镜，停留阶段无预设视角的点位走自动跟随；滚轮调整观察距离（默认 75，范围 40~900）。工具栏保留"自动巡检"按钮，随时可回到跟随模式。
 - 两种模式互相切换都保持相机位置/朝向连续，不跳变（切换即结束当前飞行并平滑接管）。
 
 `CameraMode` 类型现为 `'orbit' | 'patrol'`。
@@ -147,15 +147,17 @@ renderer：`antialias + alpha`、`pixelRatio ≤ 2`、`SRGBColorSpace`、`Reinha
 ### 自动巡检（patrolController.ts）
 
 - 巡检点位 `PATROL_IDS`（`shared/constants.ts`）共 28 个：每项含 `name`（任务/结果卡片展示名，如 "1#输水管道"）与 `modelId`（对应 GLB 内的节点名，`getObjectByName` 定位），并内置 `position/target/fov/distance` 预设视角数据（与"配置视角"页保存的数据结构一致，fov 均为 46）；未找到节点时 `console.warn` 并跳过。
-- 点位解析取节点包围盒中心为巡检注视点、包围球半径为"设备整体入画"距离依据；多个点位构成闭合 `CatmullRomCurve3`（centripetal）巡航路径，`getPoint(progress)` 取巡航位置、`getTangent(progress)` 取切线（直线段纯平移的关键）。
-- 巡航段内接近目标自动减速（二次缓动模拟真实感），距最近点位小于阈值即触发停留；停留 3.4s：目标设备所有 mesh 替换为青色 `MeshBasicMaterial` 闪烁（透明度正弦脉冲），结束后恢复原材质并释放临时材质；单点位时停留结束重复巡检自身；`completed/total` 与 `dwelling` 状态经 `onChange` 快照驱动界面。
-- 相机跟随在 `WaterPlantScene.updateCamera` 内完成：fov 统一 `smoothPatrolFov` 逐帧 lerp（0.08），消除切换点位/停留时视角"先重置再到位"的闪烁；停留分支 `updatePatrolFollow`（注视点锁定设备中心、相机略高形成轻微俯视、距离保证设备整体入画、每 4 帧沿视线射线检测遮挡并拉近，不做抬升）；设备间巡航分支 `updatePatrolCruise`（相机置于路径侧上方、朝向沿切线方向、注视路径前方点，直线段纯平移、转弯处平缓转向，避免识别结束前往下一设备时镜头大角度转动）；点位带预设视角时停留直接向预设机位 lerp 过渡。
-- 外部驱动：`advanceToNextTarget()`（组件 watch `activeItem.itemId` 变化时触发）、`jumpToTarget(index)`（跳到指定点位并强制进入自动巡检模式，任务列表点击"未配置机位"的点位时使用）。
+- 点位解析取节点包围盒中心为巡检注视点、包围球半径为"设备整体入画"距离依据。`PatrolController` 只负责巡检"节奏"，不再内置路径巡航，阶段机为 `transit`（运镜中）/ `dwell`（停留中）两态：多点位构造后 `phase = 'transit'`、`pendingIndex = 0`，等待场景把镜头运镜到首个点位后由 `completeTransit()` 切入停留；单点位在构造时直接 `beginDwell(0)` 停留并循环巡检自身。
+- 停留 3.4s（`dwellTime`）：目标设备所有 mesh 替换为青色 `MeshBasicMaterial` 闪烁（透明度正弦脉冲），结束后恢复原材质并释放临时材质、进入下一段 `transit`；`completed/total` 与 `dwelling` 状态经 `onChange` 快照驱动界面。
+- 点位间镜头运镜由 `WaterPlantScene.updateCamera` 按阶段分派到 GSAP（`gsap@3.14.2`，pnpm catalog 管理）：`transit` 调 `ensurePatrolFlight()`——确保存在一次朝向 pending 点位的 GSAP 运镜，该点位未配置预设视角则直接 `completeTransit()`；`dwell` 调 `updateDwellCamera()`——点位有预设机位且镜头已在位时逐帧锁定 position/lookAt/fov，不在位（如从 orbit 切回）先 `flyCameraTo` 补一次运镜；未配置预设视角的点位走 `updatePatrolFollow` 自动跟随（注视点锁定设备中心、相机略高轻微俯视、距离保证设备整体入画、每 4 帧沿视线射线检测遮挡并拉近，不做抬升）。
+- `flyCameraTo` 用 `gsap.timeline` 三轨编排：位置/注视点均为 `power2.inOut` 三次缓入缓出（位置全程、注视点 0.8× 时长，先转看目标再推进，出发缓起、临近目标减速滑入、到点速度趋零，避免"快速冲到设备前戛然而止"）、fov `sine.inOut`（0.7× 时长），时长按两点距离 `clamp(distance / 180, 1.8, 5)` 缩放；注视起点取视线前方远点避免起飞瞬间镜头转动生硬，`onComplete` 统一收尾精确到位，消除旧方案逐帧 lerp"永远差一点、镜头晃动"的问题。
+- 首次进入：模型加载完成后若首个巡检点位配置了预设机位，`snapToFirstPatrolTarget()` 把相机直接定格到该机位（同步 `camPos`/`camLook` 平滑状态、写入机位 fov）并 `completeTransit()` 直接进入首段停留，跳过"整体鸟瞰 → 首个点位"的长距离运镜——页面进入即显示设备特写，不再从高空晃入。
+- 外部驱动：`advanceToNextTarget()`（组件 watch `activeItem.itemId` 变化时触发）。控制器只按顺序自动推进/循环，不再提供"跳转到任意点位"的 `jumpToTarget`（随任务列表点击跳转一并移除），保证 `currentIndex`/`completed` 的顺序语义不被破坏。
 
 ### 前端面板与结果卡片（threeRectangle.vue）
 
 - 工具栏：自动巡检（切回跟随模式，`cameraMode === 'patrol'` 时高亮）＋外立面 显示/透视（默认半透明 0.45）/隐藏 三态＋全屏按钮（`@vueuse/core` 的 `useFullscreen(containerRef)` 以场景容器为全屏目标，`:fullscreen` 时撑满视口并去除圆角边框；容器已有 `ResizeObserver`，全屏切换自动触发渲染尺寸与相机 aspect 更新）。全景浏览/厂房漫游模式切换按钮、整体/正面/侧面/内部预设视角按钮与右侧操作提示已按需求移除，对应 TS（`flyToPreset`、第一人称漫游、键盘移动辅助）也已一并删除。
-- 左侧"巡检任务"面板：按 `name` 展示巡检点位并带状态（待巡检/巡检中/已巡检）与进度条（已巡检数 + 百分比）；点击点位若该设备配置过机位（外部传入的 `viewpoints`）则先切 orbit 再 `flyToViewpoint` 恢复保存机位，否则 `jumpToTarget` 进入自动巡检定位；面板可收起/展开。
+- 左侧"巡检任务"面板：按 `name` 展示巡检点位并带状态（待巡检/巡检中/已巡检）与进度条（已巡检数 + 百分比），状态由巡检顺序推导（`index < currentIndex` 为已巡检），面板可收起/展开。任务项为纯展示、不支持点击跳转（点击后无法跟随自动巡检推进，会导致状态与进度失真，故移除该交互）。
 - 智能巡检结果卡片：到达点位停留即弹出，卡片每帧跟随设备屏幕投影（`emitTargetScreenPos`：投影锚点取设备顶部偏下"半径的 35%"高度，让卡片覆盖部分模型而不飘远；屏幕坐标做边界保护，左右留半卡宽、左侧避开任务面板、上下不出容器）。卡片含巡检结论（正常绿/异常橙/失败红）、识别结果（loading 转圈 → 模拟快照图 + 文案 + 置信度）、巡检时间，展示 15s 后自动淡出；切换任务时 abort 上一次请求防竞态。
 - `patrolResult.ts`：当前为本地模拟数据源（1.5~3s 延迟、按 taskId hash 返回确定性模板、SVG data URL 快照占位图）；约定后续接后端时只替换 `requestPatrolResult` 实现（如 WebSocket 按 taskId 订阅识别结果），组件调用方不感知。
 - 卸载清理：abort 结果请求、清除定时器、断开 `ResizeObserver`、`scene.dispose()`（停动画循环、移除事件、递归释放几何/材质/纹理、dispose 背景/环境纹理与 `renderLists`、`renderer.dispose()` + `forceContextLoss()`、移除 canvas）。
@@ -163,12 +165,12 @@ renderer：`antialias + alpha`、`pixelRatio ≤ 2`、`SRGBColorSpace`、`Reinha
 ### 配置视角联动
 
 - 巡检设置-巡检对象表单（`optCenter/inspectionSet/area/formDialog.vue`）提供"配置视角/重新配置"按钮，打开 `viewpointDialog`：在 `ViewpointPicker` 场景中点击模型内部设备（`BoxHelper` 青色高亮边框，不改材质避免替换 bug）自动计算右前上方 45° 机位并平滑飞行聚焦，可再手动微调后保存 `{ modelId, position, target, fov, distance }` 回写巡检对象。
-- `ViewpointPicker` 与巡视场景共用同一套 GLB（外立面 + 内部结构）与 `TARGET_SIZE` 归一化参数、`shared/environment` 环境，保证保存视角坐标在巡视侧直接复用；巡视侧"任务列表点击点位"或"点位停留"即按该数据恢复机位。配置弹窗侧栏提供外立面 显示/透视/隐藏 三态切换（默认半透明透视，与巡视场景一致），隐藏后内部设备完全可见便于选中；外立面构件不可拾取——点击外墙会跳过该命中、穿透选中其背后的内部设备，悬停外墙不显示手型。
-- 组件 props 保留 `viewpoints`（点位 → 机位映射）与 `activeItem.itemId`（外部驱动切换下一台）两个可选接入点，便于后续监控流/任务数据接入；当前 `BIMdetail` 详情页未传入这些数据，页面进入后由 `PatrolController` 自动循环巡检全部内置点位。
+- `ViewpointPicker` 与巡视场景共用同一套 GLB（外立面 + 内部结构）与 `TARGET_SIZE` 归一化参数、`shared/environment` 环境，保证保存视角坐标在巡视侧直接复用；巡视侧停留在点位时按点位内置视角数据（`PATROL_IDS` 的 `position/target/fov`）恢复机位，任务列表点击跳转入口已下线。配置弹窗侧栏提供外立面 显示/透视/隐藏 三态切换（默认半透明透视，与巡视场景一致），隐藏后内部设备完全可见便于选中；外立面构件不可拾取——点击外墙会跳过该命中、穿透选中其背后的内部设备，悬停外墙不显示手型。
+- 组件 props 保留 `activeItem.itemId`（外部驱动切换到下一台，触发 `advanceToNextTarget`）可选接入点；原 `viewpoints`（点位 → 机位映射，用于点击任务恢复机位）已随点击跳转功能移除。当前 `BIMdetail` 详情页未传入 `activeItem`，页面进入后由 `PatrolController` 自动循环巡检全部内置点位。
 
 ### 与旧版本描述差异
 
-- 相机交互已收敛为 orbit/patrol 两种模式：orbit 仅剩鼠标操作（左键旋转/右键平移/滚轮缩放），已无键盘移动辅助与"整体/正面/侧面/内部"预设视角；walk 厂房漫游整套（第一人称 WASD 行走、键盘监听、贴地高度回落）及 `flyToPreset` 均已从 `WaterPlantScene.ts` 删除，工具栏不再提供模式切换与预设视角入口。
+- 相机交互已收敛为 orbit/patrol 两种模式：orbit 仅剩鼠标操作（左键旋转/右键平移/滚轮缩放），已无键盘移动辅助与"整体/正面/侧面/内部"预设视角；walk 厂房漫游整套（第一人称 WASD 行走、键盘监听、贴地高度回落）及 `flyToPreset` 均已从 `WaterPlantScene.ts` 删除，工具栏不再提供模式切换与预设视角入口。任务列表点击跳转（`jumpToTarget`）及用于恢复机位的 `flyToViewpoint` 飞行动画也已移除——点击跳转会令 `currentIndex` 非顺序跳变、`completed` 重复计数，导致任务状态与进度条失真，故任务面板改为纯展示。
 - 已不存在 `plantFactory.ts / deviceFactory.ts / mockData.ts`，也无暂停/继续按钮、路径显隐开关、设备点击信息浮层；色调映射已从 ACESFilmic 调整为 Reinhard（exposure 2.0）；阴影为每帧动态渲染的 `PCFShadowMap`，并非"初始化后按需更新"。
 - 场景独立使用 `ResizeObserver` 适配容器尺寸，与已废弃的 ProTable 尺寸补偿方案无关；组件卸载会完整释放 WebGL（网页图形渲染）资源。
 
@@ -176,6 +178,7 @@ renderer：`antialias + alpha`、`pixelRatio ≤ 2`、`SRGBColorSpace`、`Reinha
 
 - `@patrol/shared` 和 `@patrol/ui` 初次从原三个应用抽取后，hglh、nanchang、yuedong 的 `build:test` 曾实际执行并通过。
 - HK 已通过 `apps/*` 自动纳入 pnpm workspace，包名统一为 `@patrol/hk`，依赖使用 catalog（依赖版本目录）和 `workspace:*`；HK 由现有应用复制后接入，共享配置保持一致。使用仅对当前进程生效的 `HTTP_PROXY`/`HTTPS_PROXY=http://127.0.0.1:7890` 执行 `pnpm install --frozen-lockfile` 已成功，根锁文件包含 `apps/HK` importer（项目依赖入口）且无需更新。
+- `gsap@3.14.2` 已加入 pnpm catalog 并由 HK 显式声明（`"gsap": "catalog:"`）。npm 官方 registry 直连下载 `gsap-3.14.2.tgz` 报 `ECONNRESET`，已在用户级 `~/.npmrc` 配置 `proxy`/`https-proxy=http://127.0.0.1:7890`（仅本机生效，未提交），走代理后 `pnpm install` 成功。巡检点位间镜头已改为 GSAP timeline 运镜 + 首点位直接定格，用户已在浏览器验收：设备与设备之间动画衔接流畅、无镜头晃动；"初始直接从高空飞入首个设备"问题已通过 `snapToFirstPatrolTarget` 修复，待再次人工确认。
 - `three@0.185.0` 和 `@types/three@0.185.0` 已由 catalog 管理并由 HK 显式声明，HK 实际解析版本已核对为 `0.185.0`，`pnpm install --frozen-lockfile --ignore-scripts` 验证锁文件一致。水厂场景相关目标文件已通过语义诊断。
 - 本次多语言改造涉及的四个 `App.vue`、三份共享语言资源和共享 UI 组件均已通过语义诊断，未发现错误。
 - `pnpm --filter @patrol/hk build:test` 已在 Three.js r185 和 `el.patrol` 多语言改造后实际执行成功，退出码为 0，共转换 3063 个模块。因此可确认 HK 测试环境构建通过，但不能据此声明 HK 最新正式生产构建通过。

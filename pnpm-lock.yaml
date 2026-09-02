@@ -99,6 +99,9 @@ catalogs:
     flv.js:
       specifier: 1.6.2
       version: 1.6.2
+    gsap:
+      specifier: 3.14.2
+      version: 3.14.2
     husky:
       specifier: 8.0.3
       version: 8.0.3
@@ -374,6 +377,9 @@ importers:
       flv.js:
         specifier: 'catalog:'
         version: 1.6.2
+      gsap:
+        specifier: 'catalog:'
+        version: 3.14.2
       js-md5:
         specifier: 'catalog:'
         version: 0.7.3
@@ -3458,6 +3464,9 @@ packages:
 
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
+
+  gsap@3.14.2:
+    resolution: {integrity: sha512-P8/mMxVLU7o4+55+1TCnQrPmgjPKnwkzkXOK1asnR9Jg2lna4tEY5qBJjMmAaOBDDZWtlRjBXjLa0w53G/uBLA==}
 
   h264-profile-level-id@2.3.3:
     resolution: {integrity: sha512-rPd5gpyWuIfEbBiHC/f9I4wdeCpAhg0aWdYgjMRdVTqhJT22C6VrWTi4hpAAgJad1Vv8BJDEvrzAQTW7CxzmJw==}
@@ -8872,6 +8881,8 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   graphemer@1.4.0: {}
+
+  gsap@3.14.2: {}
 
   h264-profile-level-id@2.3.3(supports-color@10.2.2):
     dependencies:

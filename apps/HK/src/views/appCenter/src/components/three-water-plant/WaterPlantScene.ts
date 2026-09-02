@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PatrolController } from './patrolController';
 import type { WaterPlantSceneCallbacks } from './types';
@@ -29,6 +30,13 @@ interface ModelLoadingState {
   total: number;
 }
 
+/** 巡检点位机位：预设视角（配置视角页保存）解析后的相机姿态 */
+interface PatrolCamPose {
+  position: THREE.Vector3;
+  target: THREE.Vector3;
+  fov: number;
+}
+
 /**
  * 水厂三维模型巡检场景
  * - 展示真实 GLB 模型：外立面 + 内部结构同时加载、一起展示（外立面半透明）
@@ -54,12 +62,16 @@ export class WaterPlantScene {
   /** 遮挡检测：目标 -> 相机的射线与解析出的无遮挡相机位置 */
   private readonly raycaster = new THREE.Raycaster();
   private readonly resolvedCamPos = new THREE.Vector3();
-  /** 巡检预设视角的注视点（复用临时向量） */
-  private readonly presetLook = new THREE.Vector3();
-  /** 巡航平移跟随：路径侧向向量 / 路径前方注视点 / 世界向上（复用临时向量） */
-  private readonly cruiseRight = new THREE.Vector3();
-  private readonly cruiseAhead = new THREE.Vector3();
-  private readonly upVec = new THREE.Vector3(0, 1, 0);
+  /** 巡检点位机位缓存（index -> 机位；未配置预设视角的点位为 undefined） */
+  private poseCache: (PatrolCamPose | undefined)[] | undefined;
+  /** GSAP 运镜补间代理：镜头位置 / 注视点 / fov 分开补间，可配不同缓动与时长 */
+  private readonly flightPos = { x: 0, y: 0, z: 0 };
+  private readonly flightLook = { x: 0, y: 0, z: 0 };
+  private readonly flightFov = { v: SCENE_CONFIG.cameraFov };
+  /** 当前进行中的 GSAP 运镜时间轴 */
+  private flightTimeline: gsap.core.Timeline | undefined;
+  /** 运镜起点朝向（计算注视起点时复用） */
+  private readonly camDir = new THREE.Vector3();
   /** 跟随模式下的观察距离（滚轮可调，默认贴近设备） */
   private followDist = 75;
   private occlusionAccum = 0;
@@ -71,18 +83,6 @@ export class WaterPlantScene {
   private readonly viewportRect = { width: 1, height: 1 };
   /** 屏幕投影复用的临时向量 */
   private readonly projPoint = new THREE.Vector3();
-  /** 视角飞行动画状态（easeOutCubic 插值 theta/phi/radius/viewTarget） */
-  private flyActive = false;
-  private flyTime = 0;
-  private flyDuration = 0;
-  private readonly flyFromTarget = new THREE.Vector3();
-  private readonly flyToTarget = new THREE.Vector3();
-  private flyFromTheta = 0;
-  private flyToTheta = 0;
-  private flyFromPhi = 0;
-  private flyToPhi = 0;
-  private flyFromRadius = 0;
-  private flyToRadius = 0;
   /** 真实 GLB 模型容器（外立面 + 内部结构） */
   private readonly modelRoot = new THREE.Group();
   private readonly modelLoading = new Map<ModelKey, ModelLoadingState>();
@@ -140,12 +140,6 @@ export class WaterPlantScene {
     this.patrol?.advanceToNextTarget();
   }
 
-  /** 跳转到指定巡检任务（点击任务列表项时定位对应设备），自动进入自动巡检模式 */
-  public jumpToTarget(index: number) {
-    if (this.cameraMode !== 'patrol') this.setCameraMode('patrol');
-    this.patrol?.jumpToTarget(index);
-  }
-
   /** 全部巡检任务列表（任务标题 = 巡检点位，按巡检顺序） */
   public getPatrolTargets() {
     return this.patrol?.getTargets() ?? [];
@@ -189,51 +183,20 @@ export class WaterPlantScene {
     return this.facadeMode;
   }
 
-  /** 切换相机模式（orbit 自由观察 / patrol 自动巡检），切换前结束飞行避免状态残留 */
+  /** 切换相机模式（orbit 自由观察 / patrol 自动巡检） */
   public setCameraMode(mode: CameraMode) {
     if (mode === this.cameraMode) return this.cameraMode;
-    this.flyActive = false;
+    if (mode !== 'patrol') {
+      // 离开巡检模式：终止进行中的运镜（巡检阶段逻辑保留，切回时会从当前镜头继续）
+      this.flightTimeline?.kill();
+      this.flightTimeline = undefined;
+    }
     this.cameraMode = mode;
     return this.cameraMode;
   }
 
   public getCameraMode() {
     return this.cameraMode;
-  }
-
-  /**
-   * 飞行到指定视角（巡检对象"配置视角"功能：巡视时恢复保存的角度）。
-   * @param position 相机位置 [x, y, z]（与配置页同一 GLB 归一化坐标系）
-   * @param target   注视点 [x, y, z]
-   * 自动反推球坐标（theta/phi/radius）并用 easeOutCubic 平滑过渡。
-   */
-  public flyToViewpoint(position: number[], target: number[]) {
-    if (!this.modelReady) return;
-    // 恢复视角属于自由观察能力，先切到 orbit 模式再飞行
-    this.setCameraMode('orbit');
-    const pos = new THREE.Vector3(position[0], position[1], position[2]);
-    const tgt = new THREE.Vector3(target[0], target[1], target[2]);
-    const dx = pos.x - tgt.x;
-    const dy = pos.y - tgt.y;
-    const dz = pos.z - tgt.z;
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (dist < 1e-4) return;
-    this.flyFromTarget.copy(this.viewTarget);
-    this.flyToTarget.copy(tgt);
-    this.flyFromTheta = this.theta;
-    // 球坐标约定：position = target + radius*sin(phi)*sin(theta), y + radius*cos(phi), z + radius*sin(phi)*cos(theta)
-    this.flyToTheta = THREE.MathUtils.radToDeg(Math.atan2(dx, dz));
-    this.flyFromPhi = this.phi;
-    this.flyToPhi = THREE.MathUtils.clamp(
-      THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(dy / dist, -1, 1))),
-      10,
-      84
-    );
-    this.flyFromRadius = this.radius;
-    this.flyToRadius = THREE.MathUtils.clamp(dist, 200, 4000);
-    this.flyActive = true;
-    this.flyTime = 0;
-    this.flyDuration = 1.2;
   }
 
   /** 获取当前相机视角（配置页保存视角用）：position + target */
@@ -259,6 +222,8 @@ export class WaterPlantScene {
   public dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    this.flightTimeline?.kill();
+    this.flightTimeline = undefined;
     this.renderer.setAnimationLoop(null);
     const canvas = this.renderer.domElement;
     canvas.removeEventListener('mousedown', this.handlePointerDown);
@@ -380,23 +345,32 @@ export class WaterPlantScene {
     this.alignModels();
     this.initPatrol();
     this.fitAll();
+    this.snapToFirstPatrolTarget();
     this.callbacks.onModelLoaded?.();
   }
 
-  /** 驱动相机视角飞行动画（恢复保存的视角等）：easeOutCubic 插值 theta/phi/radius/viewTarget */
-  private updateFly(delta: number) {
-    if (!this.flyActive) return;
-    this.flyTime += delta;
-    const t = Math.min(1, this.flyTime / this.flyDuration);
-    const ease = 1 - Math.pow(1 - t, 3);
-    this.viewTarget.lerpVectors(this.flyFromTarget, this.flyToTarget, ease);
-    this.theta = this.flyFromTheta + (this.flyToTheta - this.flyFromTheta) * ease;
-    this.phi = this.flyFromPhi + (this.flyToPhi - this.flyFromPhi) * ease;
-    this.radius = this.flyFromRadius + (this.flyToRadius - this.flyFromRadius) * ease;
-    // 飞行期间同步平滑状态，避免结束后跳变
-    this.camPos.copy(this.camera.position);
-    this.camLook.copy(this.viewTarget);
-    if (t >= 1) this.flyActive = false;
+  /**
+   * 自动巡检启动时若首个巡检点位已配置预设机位，相机直接定格在该机位并进入停留，
+   * 跳过"整体鸟瞰 -> 首个点位"的长距离 GSAP 运镜，
+   * 避免页面加载完成后镜头从高空晃入目标设备的观感。
+   * 首个点位无预设视角时不做处理，沿用停留阶段的自动跟随平滑就位。
+   */
+  private snapToFirstPatrolTarget() {
+    const patrol = this.patrol;
+    if (!patrol || this.cameraMode !== 'patrol') return;
+    const index = patrol.getCurrentIndex() >= 0 ? patrol.getCurrentIndex() : patrol.getPendingIndex();
+    const pose = this.getTargetPose(index);
+    if (!pose) return;
+    this.camera.position.copy(pose.position);
+    this.camera.lookAt(pose.target);
+    this.camera.fov = pose.fov;
+    this.camera.updateProjectionMatrix();
+    // 同步跟随平滑状态，避免停留阶段首帧从旧位置插值产生镜头滑动
+    this.camPos.copy(pose.position);
+    this.camLook.copy(pose.target);
+    // 多巡检对象：transit -> dwell 直接开始首点位停留；
+    // 单个巡检对象：构造时已进入 dwell，此调用为无副作用的空操作
+    patrol.completeTransit();
   }
 
   /** 基于模型 id 列表创建巡检控制器（模型加载完成后调用） */
@@ -526,30 +500,14 @@ export class WaterPlantScene {
   }
 
   private updateCamera() {
-    // 自动巡检（patrol）：镜头平滑跟随巡检目标，注视点锁定设备本体
-    const dwelling = this.patrol?.isDwelling() ?? false;
-    const aim = dwelling ? this.patrol?.getFocusedTargetPosition() : this.patrol?.getPathPosition();
-    if (this.cameraMode === 'patrol' && aim) {
-      // fov 统一做平滑过渡，避免切换目标或 dwelling 状态时视角一跳一跳
-      this.smoothPatrolFov();
-      // 该点位配置了预设视角（配置视角页保存）：停留时相机直接采用预设机位（位置/注视点/fov）
-      const viewpoint = this.patrol?.getFocusedViewpoint();
-      if (dwelling && viewpoint?.position && viewpoint.target) {
-        this.resolvedCamPos.fromArray(viewpoint.position);
-        this.presetLook.fromArray(viewpoint.target);
-        this.camPos.lerp(this.resolvedCamPos, 0.12);
-        this.camLook.lerp(this.presetLook, 0.15);
-        this.camera.position.copy(this.camPos);
-        this.camera.lookAt(this.camLook);
+    // 自动巡检（patrol）：点位间镜头由 GSAP 运镜，停留时锁定预设机位 / 自动跟随
+    if (this.cameraMode === 'patrol' && (this.patrol?.getTargetCount() ?? 0) > 0) {
+      if (this.patrol?.getPhase() === 'transit') {
+        // transit：镜头完全由 GSAP 时间轴写入（位置/注视点/fov），这里避免覆盖
+        this.ensurePatrolFlight();
         return;
       }
-      // 停留且未配置预设视角：自动跟随算法（注视点锁定设备中心，相机保持一定观察距离）
-      if (dwelling) {
-        this.updatePatrolFollow(aim);
-        return;
-      }
-      // 设备间巡航：相机沿路径切线平移跟随，避免镜头大角度转动
-      this.updatePatrolCruise(aim);
+      this.updateDwellCamera();
       return;
     }
     // 自由观察（orbit）：球坐标手动旋转/平移
@@ -564,16 +522,6 @@ export class WaterPlantScene {
     // 同步跟随平滑状态，避免切换模式时跳变
     this.camPos.copy(this.camera.position);
     this.camLook.copy(this.viewTarget);
-  }
-
-  /** 巡检视角：fov 每帧平滑过渡到目标值，避免切换点位或 dwelling 状态时视角突变 */
-  private smoothPatrolFov() {
-    const viewpoint = this.patrol?.getFocusedViewpoint();
-    const desiredFov = viewpoint?.fov && viewpoint.fov > 0 ? viewpoint.fov : SCENE_CONFIG.cameraFov;
-    if (Math.abs(this.camera.fov - desiredFov) > 0.01) {
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, desiredFov, 0.08);
-      this.camera.updateProjectionMatrix();
-    }
   }
 
   /** 停留阶段自动跟随：注视点锁定设备中心，相机保持一定观察距离形成轻微俯视 */
@@ -605,42 +553,133 @@ export class WaterPlantScene {
     this.camera.lookAt(this.camLook);
   }
 
-  /**
-   * 设备间巡航：相机置于路径侧上方，朝向沿路径切线方向（看前进方向）。
-   * 直线段相机纯平移不转动，转弯处随路径平缓转向，避免设备之间镜头大角度转动。
-   */
-  private updatePatrolCruise(pathPos: THREE.Vector3) {
-    const tangent = this.patrol?.getPathTangent();
-    if (!tangent) {
-      // 兜底：取不到切线时直接看路径点
-      this.camLook.lerp(pathPos, 0.15);
-      this.camera.position.copy(this.camPos);
-      this.camera.lookAt(this.camLook);
+  /** 巡检停留阶段相机：预设机位锁定（未就位时 GSAP 补一次运镜）；未配置预设视角时自动跟随 */
+  private updateDwellCamera() {
+    const patrol = this.patrol;
+    if (!patrol) return;
+    const index = patrol.getCurrentIndex();
+    if (index < 0) return;
+    const pose = this.getTargetPose(index);
+    if (pose) {
+      // 镜头已在位则直接锁定；尚未就位（如从 orbit 切回）则用 GSAP 补一次运镜
+      if (!this.flightTimeline?.isActive() && this.camera.position.distanceTo(pose.position) > 2) {
+        this.flyCameraTo(pose, undefined);
+        return;
+      }
+      this.camera.position.copy(pose.position);
+      this.camera.lookAt(pose.target);
+      if (Math.abs(this.camera.fov - pose.fov) > 0.01) {
+        this.camera.fov = pose.fov;
+        this.camera.updateProjectionMatrix();
+      }
+      this.camPos.copy(this.camera.position);
+      this.camLook.copy(pose.target);
       return;
     }
-    // 侧向单位向量（路径切线 × 上），相机始终位于路径侧方，直线段即纯平移
-    this.cruiseRight.crossVectors(tangent, this.upVec).normalize();
-    if (this.cruiseRight.lengthSq() < 1e-6) this.cruiseRight.set(1, 0, 0);
-    const side = 34;
-    const camHeight = 22;
-    const desired = this.followPos.set(
-      pathPos.x + this.cruiseRight.x * side,
-      pathPos.y + camHeight,
-      pathPos.z + this.cruiseRight.z * side
-    );
-    // 注视点：路径前方一段距离（沿切线方向），朝向始终与前进方向一致
-    this.cruiseAhead.copy(pathPos).addScaledVector(tangent, 70);
-    this.cruiseAhead.y += 8;
-    // 遮挡检测（每 4 帧一次）：被遮挡时仅沿视线拉近（保持高度），不做抬升
-    this.occlusionAccum += 1;
-    if (this.occlusionAccum % 4 === 1) {
-      this.resolvedCamPos.copy(this.resolveClearCamera(this.cruiseAhead, desired));
+    const aim = patrol.getFocusedTargetPosition();
+    if (aim) this.updatePatrolFollow(aim);
+  }
+
+  /** 运镜阶段：确保存在一次朝向 pending 点位的 GSAP 运镜；该点位无预设视角时直接进入停留 */
+  private ensurePatrolFlight() {
+    const patrol = this.patrol;
+    if (!patrol || patrol.getPhase() !== 'transit') return;
+    if (this.flightTimeline && this.flightTimeline.isActive()) return;
+    const pending = patrol.getPendingIndex();
+    const pose = this.getTargetPose(pending);
+    if (!pose) {
+      // 点位未配置预设视角：无明确机位，由停留阶段的自动跟随算法平滑就位
+      patrol.completeTransit();
+      return;
     }
-    // 位置/注视点平滑插值，形成平稳的平移跟随
-    this.camPos.lerp(this.resolvedCamPos, 0.1);
-    this.camLook.lerp(this.cruiseAhead, 0.12);
-    this.camera.position.copy(this.camPos);
-    this.camera.lookAt(this.camLook);
+    this.flyCameraTo(pose, () => patrol.completeTransit());
+  }
+
+  /**
+   * GSAP 运镜：从当前镜头平滑飞到目标机位。
+   * 位置 / 注视点 / fov 分别补间并采用不同缓动：注视点先转向目标（先看清下一个设备），
+   * 镜头随后平移推进，fov 同步过渡，形成"关注点切换 -> 运镜到达"的镜头语言。
+   */
+  private flyCameraTo(pose: PatrolCamPose, onComplete: (() => void) | undefined) {
+    // 起点 = 当前相机位姿；注视起点取视线前方远点，避免起飞瞬间镜头转动生硬
+    const from = this.camera.position;
+    this.camera.getWorldDirection(this.camDir);
+    this.flightPos.x = from.x;
+    this.flightPos.y = from.y;
+    this.flightPos.z = from.z;
+    this.flightLook.x = from.x + this.camDir.x * 400;
+    this.flightLook.y = from.y + this.camDir.y * 400;
+    this.flightLook.z = from.z + this.camDir.z * 400;
+    this.flightFov.v = this.camera.fov;
+
+    const distance = from.distanceTo(pose.position);
+    // 运镜时长随距离缩放：保持较长的缓行区间，到达前减速滑入，避免镜头"冲"到目标
+    const duration = THREE.MathUtils.clamp(distance / 180, 1.8, 5);
+    const apply = () => {
+      this.camera.position.set(this.flightPos.x, this.flightPos.y, this.flightPos.z);
+      this.camera.lookAt(this.flightLook.x, this.flightLook.y, this.flightLook.z);
+      if (Math.abs(this.camera.fov - this.flightFov.v) > 0.01) {
+        this.camera.fov = this.flightFov.v;
+        this.camera.updateProjectionMatrix();
+      }
+    };
+
+    this.flightTimeline?.kill();
+    this.flightTimeline = undefined;
+    const tl = gsap.timeline({
+      onComplete: () => {
+        this.flightTimeline = undefined;
+        apply();
+        onComplete?.();
+      },
+    });
+    // 三轨交错：注视点先转过去（0.8 倍时长，先看清目标），镜头随后跟进，fov 平滑过渡。
+    // 位置与注视点均用 power2.inOut 三次缓入缓出：出发缓慢、中段推进、临近目标明显减速滑入，
+    // 到点瞬间速度趋零，避免"快速冲到设备前戛然而止"的生硬感
+    tl.to(
+      this.flightPos,
+      {
+        x: pose.position.x,
+        y: pose.position.y,
+        z: pose.position.z,
+        duration,
+        ease: 'power2.inOut',
+        onUpdate: apply,
+      },
+      0
+    );
+    tl.to(
+      this.flightLook,
+      {
+        x: pose.target.x,
+        y: pose.target.y,
+        z: pose.target.z,
+        duration: duration * 0.8,
+        ease: 'power2.inOut',
+        onUpdate: apply,
+      },
+      0
+    );
+    tl.to(this.flightFov, { v: pose.fov, duration: duration * 0.7, ease: 'sine.inOut', onUpdate: apply }, 0);
+    this.flightTimeline = tl;
+    apply();
+  }
+
+  /** 点位预设机位（未配置预设视角的点位返回 undefined）；解析结果惰性缓存 */
+  private getTargetPose(index: number): PatrolCamPose | undefined {
+    if (this.poseCache) return this.poseCache[index];
+    const targets = this.patrol?.getTargets();
+    if (!targets || targets.length === 0) return undefined;
+    this.poseCache = targets.map((target) => {
+      const viewpoint = target.viewpoint;
+      if (!viewpoint?.position || !viewpoint.target) return undefined;
+      return {
+        position: new THREE.Vector3().fromArray(viewpoint.position),
+        target: new THREE.Vector3().fromArray(viewpoint.target),
+        fov: viewpoint.fov && viewpoint.fov > 0 ? viewpoint.fov : SCENE_CONFIG.cameraFov,
+      };
+    });
+    return this.poseCache[index];
   }
 
   /**
@@ -688,7 +727,6 @@ export class WaterPlantScene {
     const delta = Math.min(0.1, now - this.lastTime);
     this.lastTime = now;
     this.patrol?.tick(delta, now);
-    this.updateFly(delta);
     this.updateCamera();
     this.emitTargetScreenPos();
     this.renderer.render(this.scene, this.camera);

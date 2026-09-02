@@ -15,7 +15,7 @@
       <button type="button" @click="toggleFullscreen">{{ isFullscreen ? '退出全屏' : '全屏' }}</button>
     </div>
 
-    <!-- 左侧任务列表面板（巡检点位 = 任务，可显隐；点击任务跳转定位设备） -->
+    <!-- 左侧任务列表面板（巡检点位 = 任务，可显隐；仅展示巡检进度与状态，不支持点击跳转） -->
     <aside class="patrol-tasks" :class="{ 'patrol-tasks--collapsed': !taskPanelVisible }">
       <header class="patrol-tasks__header">
         <span class="patrol-tasks__title">巡检任务</span>
@@ -38,8 +38,7 @@
             :key="task.id"
             class="patrol-tasks__item"
             :class="`is-${task.state}`"
-            :title="`点击定位：${task.name}`"
-            @click="onTaskClick(index)"
+            :title="task.name"
           >
             <span class="patrol-tasks__index">{{ index + 1 }}</span>
             <span class="patrol-tasks__name">{{ task.name }}</span>
@@ -142,16 +141,8 @@ interface PatrolResultCardState {
   time?: string;
 }
 
-/** 巡检对象配置的视角：key = 模型节点 id（如 Line009），value = 相机位置 + 注视点 */
-interface ViewpointConfig {
-  position: number[];
-  target: number[];
-}
-
 const props = defineProps<{
   activeItem?: Record<string, unknown>;
-  /** 巡检对象视角映射（巡检对象配置视角功能：跳转时恢复保存的角度） */
-  viewpoints?: Record<string, ViewpointConfig>;
 }>();
 const containerRef = ref<HTMLElement>();
 /** 全屏：以场景容器为目标，进入/退出全屏（ResizeObserver 会自动触发渲染尺寸更新） */
@@ -224,19 +215,6 @@ const refreshPatrolTasks = () => {
 /** 切换左侧任务列表面板显隐 */
 const toggleTaskPanel = () => {
   taskPanelVisible.value = !taskPanelVisible.value;
-};
-
-/** 点击任务列表项：若该设备配置了视角则飞到保存的角度，否则跳转定位（自动巡检模式） */
-const onTaskClick = (index: number) => {
-  const target = patrolTasks.value[index];
-  const viewpoint = target ? props.viewpoints?.[target.id] : undefined;
-  if (viewpoint && Array.isArray(viewpoint.position) && Array.isArray(viewpoint.target)) {
-    // 恢复保存的视角（自由观察，可手动旋转微调）
-    cameraMode.value = waterPlantScene?.setCameraMode('orbit') ?? 'orbit';
-    waterPlantScene?.flyToViewpoint(viewpoint.position, viewpoint.target);
-  } else {
-    waterPlantScene?.jumpToTarget(index);
-  }
 };
 
 /**
@@ -540,7 +518,7 @@ onBeforeUnmount(() => {
   color: #9fd8ff;
 }
 
-// 左侧任务列表面板（巡检点位 = 任务，可显隐；点击任务跳转定位设备）
+// 左侧任务列表面板（巡检点位 = 任务，可显隐；仅展示巡检状态，不支持点击跳转）
 .patrol-tasks {
   position: absolute;
   top: 54px;
@@ -621,13 +599,8 @@ onBeforeUnmount(() => {
   gap: 8px;
   align-items: center;
   padding: 6px 8px;
-  cursor: pointer;
   border: 1px solid transparent;
   border-radius: 4px;
-  transition: background 0.2s;
-  &:hover {
-    background: rgb(0 212 255 / 8%);
-  }
 }
 .patrol-tasks__item + .patrol-tasks__item {
   margin-top: 2px;

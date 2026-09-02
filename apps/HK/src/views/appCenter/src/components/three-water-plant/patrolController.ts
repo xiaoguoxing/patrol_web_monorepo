@@ -11,14 +11,20 @@ interface PatrolControllerOptions {
   onChange: (snapshot: ModelPatrolSnapshot) => void;
 }
 
+/** 巡检阶段：transit 运镜中 / dwell 点位停留观察中 */
+export type PatrolPhase = 'transit' | 'dwell';
+
 /**
- * 基于真实模型节点的巡检控制器
+ * 基于真实模型节点的巡检控制器（GSAP 运镜版）
  *
  * 巡检对象 = 业务侧提供的模型 id 列表（array），如 ['pump-01', 'valve-03', ...]。
  * 每个 id 对应 GLB 模型内的一个节点（对象名），巡检时依次定位到该节点：
  *  - 取节点包围盒中心上方的点作为目标巡检点
- *  - 在目标点之间巡航（接近目标时减速），对外暴露当前巡航位置供相机跟随
- *  - 到达目标后停留（dwell）：模型本体材质闪烁高亮
+ *  - 控制器只负责"节奏"：到达点位后停留（dwell）并材质闪烁高亮
+ *  - 点位之间的镜头运镜由外部（WaterPlantScene + GSAP）完成：
+ *      phase === 'transit' 时等待场景把镜头运镜到 pendingIndex 点位，
+ *      到达后调用 completeTransit() 切入停留；
+ *      phase === 'dwell'   时在当前点位停留计时，结束后重新进入 transit
  *  - 通过 onChange 上报当前巡检状态（用于界面展示）
  *
  * 注意：ids 为空时表示"尚未配置巡检对象"，控制器会上报 total=0，不启动巡检。
@@ -27,15 +33,16 @@ export class PatrolController {
   private readonly onChange: (snapshot: ModelPatrolSnapshot) => void;
   private readonly targets: PatrolTargetInfo[] = [];
   private readonly objectsByTarget = new Map<string, THREE.Object3D>();
-  private readonly path: THREE.CatmullRomCurve3;
   /** 原材质快照：用于恢复模型闪烁前的材质 */
   private readonly flickerOriginal = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
   private flickerMaterials: THREE.MeshBasicMaterial[] = [];
-  private progress = 0;
+  private phase: PatrolPhase = 'transit';
+  /** 当前停留中的点位索引（-1 表示尚未完成首次运镜到达） */
   private currentIndex = -1;
-  private completed = 0;
+  /** 正在运镜前往的点位索引（transit 阶段有效） */
+  private pendingIndex = -1;
   private dwellRemaining = 0;
-  private readonly speed = 0.028;
+  private completed = 0;
   private readonly dwellTime = 3.4;
 
   constructor(options: PatrolControllerOptions) {
@@ -57,74 +64,74 @@ export class PatrolController {
       this.objectsByTarget.set(id, object);
     });
 
-    // CatmullRomCurve3 至少需要两个点，构造一个安全曲线避免空/单点时报错
-    let points: THREE.Vector3[];
-    if (this.targets.length > 1) {
-      points = this.targets.map((target) => target.position);
-    } else if (this.targets.length === 1) {
-      points = [this.targets[0].position, this.targets[0].position.clone().add(new THREE.Vector3(0, 0, 1))];
-    } else {
-      points = [new THREE.Vector3(), new THREE.Vector3(0, 0, 1)];
-    }
-    this.path = new THREE.CatmullRomCurve3(points, true, 'centripetal');
-
     if (this.targets.length === 0) {
       this.emitSnapshot();
       return;
     }
-    this.advanceToNextTarget();
+    if (this.targets.length === 1) {
+      // 单个巡检对象：无需运镜，直接开始停留并循环巡检
+      this.beginDwell(0);
+    } else {
+      // 多个巡检对象：等待场景把镜头运镜到首个点位后由 completeTransit() 切入停留
+      this.phase = 'transit';
+      this.pendingIndex = 0;
+      this.emitSnapshot();
+    }
   }
 
   public tick(delta: number, elapsed: number) {
     if (this.targets.length === 0) return;
+    // transit：镜头运动由 GSAP 驱动，控制器等待 completeTransit()
+    if (this.phase === 'transit') return;
     if (this.dwellRemaining > 0) {
       this.dwellRemaining -= delta;
+      this.animateDwell(elapsed);
       if (this.dwellRemaining <= 0) {
         this.dwellRemaining = 0;
         if (this.targets.length === 1) {
           // 单个巡检对象：停留结束后重复巡检该对象
-          this.focusTarget(0);
+          this.beginDwell(0);
         } else {
+          // 停留结束：进入运镜阶段，等待场景把镜头带到下一个点位
+          this.phase = 'transit';
+          this.pendingIndex = (this.currentIndex + 1) % this.targets.length;
+          this.restoreFlicker();
           this.emitSnapshot();
         }
       }
-    } else if (this.targets.length > 1) {
-      // 段内接近目标时减速，让巡航更真实
-      const inSegment = (this.progress * this.targets.length) % 1;
-      const ease = 0.28 + 0.72 * (1 - inSegment) * (1 - inSegment);
-      this.progress = (this.progress + delta * this.speed * ease) % 1;
-      this.detectArrival();
-    }
-    if (this.dwellRemaining > 0 && this.currentIndex >= 0) {
-      this.animateDwell(elapsed);
-    } else {
-      // 离开停留状态：恢复目标模型的原始材质
-      this.restoreFlicker();
     }
   }
 
-  /** 切换到下一个巡检对象 */
+  /** 运镜完成（场景 GSAP 镜头到位后调用）：在当前目标点位开启停留与闪烁 */
+  public completeTransit() {
+    if (this.phase !== 'transit' || this.pendingIndex < 0) return;
+    this.beginDwell(this.pendingIndex);
+  }
+
+  /** 手动切换到下一个巡检对象（运镜途中重复调用无效） */
   public advanceToNextTarget() {
     if (this.targets.length === 0) return;
-    const index = (this.currentIndex + 1) % this.targets.length;
-    this.focusTarget(index);
+    if (this.targets.length === 1) {
+      // 单个对象：外部"开始下一轮"时直接重启停留
+      if (this.phase === 'dwell') this.beginDwell(0);
+      return;
+    }
+    if (this.phase === 'transit') return;
+    this.phase = 'transit';
+    this.pendingIndex = (this.currentIndex + 1) % this.targets.length;
+    this.dwellRemaining = 0;
+    this.restoreFlicker();
+    this.emitSnapshot();
   }
 
-  /** 跳转到指定巡检任务（点击任务列表项定位对应设备用） */
-  public jumpToTarget(index: number) {
-    if (this.targets.length === 0) return;
-    const safe = ((index % this.targets.length) + this.targets.length) % this.targets.length;
-    this.focusTarget(safe);
+  /** 当前巡检阶段 */
+  public getPhase() {
+    return this.phase;
   }
 
-  /** 当前巡航位置（路径上的点），供相机第一人称式跟随 */
-  public getPathPosition() {
-    return this.path.getPoint(this.progress);
-  }
-
-  /** 当前巡航位置的路径切线方向（相机平移跟随用，保持朝向与前进方向一致） */
-  public getPathTangent() {
-    return this.path.getTangent(this.progress);
+  /** 正在运镜前往的点位索引（transit 阶段有效，否则为 -1） */
+  public getPendingIndex() {
+    return this.pendingIndex;
   }
 
   /** 当前停留中的巡检目标位置（含高度），未停留时返回 undefined */
@@ -147,7 +154,7 @@ export class PatrolController {
     return this.targets.map((target) => ({ ...target, position: target.position.clone() }));
   }
 
-  /** 当前巡检任务索引（尚未开始时为 -1） */
+  /** 当前巡检任务索引（尚未到达任何点位时为 -1） */
   public getCurrentIndex() {
     return this.currentIndex;
   }
@@ -164,23 +171,18 @@ export class PatrolController {
   }
 
   public isDwelling() {
-    return this.dwellRemaining > 0;
+    return this.phase === 'dwell' && this.dwellRemaining > 0;
   }
 
-  private detectArrival() {
-    const nearestIndex = Math.round(this.progress * this.targets.length) % this.targets.length;
-    const targetProgress = nearestIndex / this.targets.length;
-    const distance = Math.min(Math.abs(this.progress - targetProgress), 1 - Math.abs(this.progress - targetProgress));
-    if (distance < 0.003 && nearestIndex !== this.currentIndex) this.focusTarget(nearestIndex);
-  }
-
-  private focusTarget(index: number) {
+  /** 切换到指定点位并开始停留 */
+  private beginDwell(index: number) {
     // 先恢复上一个目标的原始材质，再为当前目标开启闪烁
     this.restoreFlicker();
     this.currentIndex = index;
-    this.progress = this.targets.length > 1 ? index / this.targets.length : 0;
+    this.pendingIndex = -1;
     this.dwellRemaining = this.dwellTime;
     this.completed = (this.completed % Math.max(this.targets.length, 1)) + 1;
+    this.phase = 'dwell';
     const target = this.targets[index];
     const object = this.objectsByTarget.get(target.id);
     if (object) this.enableFlicker(object);
@@ -237,7 +239,7 @@ export class PatrolController {
       target,
       completed: this.completed,
       total: this.targets.length,
-      dwelling: this.dwellRemaining > 0,
+      dwelling: this.phase === 'dwell',
     });
   }
 }
