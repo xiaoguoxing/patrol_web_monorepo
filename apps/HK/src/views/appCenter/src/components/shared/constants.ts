@@ -307,3 +307,93 @@ export const SCENE_CONFIG = {
   /** 地面纹理重复次数 */
   groundRepeat: 16,
 } as const;
+
+/** 巡检控制器配置 */
+export const PATROL_CONFIG = {
+  /** 点位停留时长（秒） */
+  DWELL_DURATION: 3.4,
+  /** 高亮闪烁频率（Hz） */
+  FLICKER_FREQUENCY: 7,
+  /** 高亮不透明度范围 [min, max] */
+  FLICKER_OPACITY_RANGE: [0.4, 0.9] as const,
+  /** 高亮材质颜色 */
+  FLICKER_COLOR: 0x00d4ff,
+} as const;
+
+/** 相机控制配置 */
+export const CAMERA_CONTROL_CONFIG = {
+  /** 自动跟随默认观察距离 */
+  DEFAULT_FOLLOW_DISTANCE: 75,
+  /** 自动跟随距离调整范围 [min, max] */
+  FOLLOW_DISTANCE_RANGE: [40, 900] as const,
+  /** 相机高度系数（相对设备包围球半径） */
+  CAMERA_HEIGHT_FACTOR: 0.5,
+  /** 相机高度范围 [min, max]（世界单位） */
+  CAMERA_HEIGHT_RANGE: [20, 55] as const,
+  /** FOV 张角系数（用于计算"设备整体入画"最小距离） */
+  FOV_COVERAGE_FACTOR: 0.85,
+  /** 遮挡检测频率（每 N 帧执行一次） */
+  OCCLUSION_CHECK_INTERVAL: 8,
+  /** orbit 模式半径范围 [min, max] */
+  ORBIT_RADIUS_RANGE: [200, 4000] as const,
+  /** orbit 模式俯仰角范围 [min, max]（度） */
+  ORBIT_PHI_RANGE: [10, 84] as const,
+  /** orbit 模式视角限制范围 [x_min, x_max, z_min, z_max, y_min, y_max] */
+  ORBIT_TARGET_CLAMP: [-2000, 2000, -2000, 2000, 0, 1000] as const,
+  /** 鼠标拖拽灵敏度 */
+  DRAG_SENSITIVITY: {
+    rotation: 0.3,
+    tilt: 0.25,
+    pan: 0.0012,
+  },
+  /** 滚轮缩放系数 */
+  WHEEL_ZOOM_FACTOR: 1.09,
+  /** 相机平滑插值系数 [position, lookAt] */
+  CAMERA_LERP_FACTORS: [0.12, 0.15] as const,
+  /** GSAP 运镜时长系数（距离 / 速度） */
+  FLIGHT_DURATION_FACTOR: 180,
+  /** GSAP 运镜时长范围 [min, max]（秒） */
+  FLIGHT_DURATION_RANGE: [1.8, 5] as const,
+  /** GSAP 注视点时长系数（相对位置时长） */
+  FLIGHT_LOOK_DURATION_FACTOR: 0.8,
+  /** GSAP FOV 时长系数（相对位置时长） */
+  FLIGHT_FOV_DURATION_FACTOR: 0.7,
+  /** 注视起点距离（视线前方远点，避免起飞转动生硬） */
+  FLIGHT_LOOK_START_DISTANCE: 400,
+  /** 运镜到位判定距离阈值（世界单位） */
+  FLIGHT_ARRIVAL_THRESHOLD: 2,
+} as const;
+
+/** UI 配置（结果卡片、任务面板） */
+export const UI_CONFIG = {
+  /** 智能巡检结果卡片显示时长（毫秒） */
+  RESULT_CARD_DURATION: 15000,
+  /** 结果卡片宽度（CSS 像素） */
+  RESULT_CARD_WIDTH: 420,
+  /** 任务面板宽度（含左边距，CSS 像素） */
+  TASK_PANEL_WIDTH_WITH_MARGIN: 276,
+  /** 卡片边界保护：上下留白（CSS 像素） */
+  CARD_BOUNDARY_PADDING_Y: [150, 60] as const,
+  /** 卡片锚点高度系数（相对设备包围球半径，让卡片覆盖部分模型） */
+  CARD_ANCHOR_HEIGHT_FACTOR: 0.35,
+} as const;
+
+/** 配置视角选择器配置 */
+export const VIEWPOINT_PICKER_CONFIG = {
+  /** 相机最小距离（允许贴近设备细节观察） */
+  MIN_DISTANCE: 20,
+  /** 相机最大距离 */
+  MAX_DISTANCE: 4000,
+  /** 最大俯仰角（弧度） */
+  MAX_POLAR_ANGLE: Math.PI * 0.9,
+  /** OrbitControls 阻尼系数 */
+  DAMPING_FACTOR: 0.08,
+  /** 自动聚焦飞行时长（秒） */
+  FOCUS_FLIGHT_DURATION: 0.8,
+  /** 自动聚焦机位距离系数（相对设备最大边长） */
+  AUTO_VIEWPOINT_DISTANCE_FACTOR: 2.2,
+  /** 自动聚焦机位方向（右前上方 45°） */
+  AUTO_VIEWPOINT_OFFSET: [1, 0.8, 1] as const,
+  /** 拖拽判定阈值（像素） */
+  DRAG_THRESHOLD: 5,
+} as const;

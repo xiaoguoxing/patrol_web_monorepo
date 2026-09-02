@@ -56,7 +56,10 @@
         v-if="resultCard.visible && cardPos"
         class="patrol-result-card"
         :class="{ 'patrol-result-card--idle': resultCard.taskId === '' }"
-        :style="{ left: `${cardPos.x}px`, top: `${cardPos.y}px` }"
+        :style="{
+          '--card-x': `${cardPos.x}px`,
+          '--card-y': `${cardPos.y}px`,
+        }"
       >
         <header class="patrol-result-card__header">
           <span>智能巡检结果</span>
@@ -117,6 +120,7 @@ import { useFullscreen } from '@vueuse/core';
 import type { ModelPatrolSnapshot, TargetScreenPos } from './types';
 import { requestPatrolResult } from './patrolResult';
 import { WaterPlantScene } from './WaterPlantScene';
+import { UI_CONFIG } from '../shared/constants';
 
 /** 任务列表项：巡检点位 = 任务 */
 interface PatrolTaskItem {
@@ -260,7 +264,7 @@ const showResultCard = (taskId: string, taskName: string) => {
   // 结果卡片展示一段时间后自动淡出（镜头继续巡航时不会一直遮挡画面）
   resultHideTimer = window.setTimeout(() => {
     resultCard.value.visible = false;
-  }, 15000);
+  }, UI_CONFIG.RESULT_CARD_DURATION);
 };
 
 const setCameraMode = (mode: 'orbit' | 'patrol') => {
@@ -302,11 +306,12 @@ onMounted(() => {
       const height = containerRef.value?.clientHeight ?? 0;
       // 卡片较宽（420px，translateX(-50%) 居中），左右留半宽边界；
       // 左侧还需避开任务面板（约 260px），卡片中心点整体右移
-      const cardHalf = 210;
-      const panelLeft = 276;
+      const cardHalf = UI_CONFIG.RESULT_CARD_WIDTH / 2;
+      const panelLeft = UI_CONFIG.TASK_PANEL_WIDTH_WITH_MARGIN;
+      const [paddingTop, paddingBottom] = UI_CONFIG.CARD_BOUNDARY_PADDING_Y;
       cardPos.value = {
         x: Math.min(Math.max(screen.x, panelLeft + cardHalf), Math.max(width - cardHalf, panelLeft + cardHalf)),
-        y: Math.min(Math.max(screen.y, 150), Math.max(height - 60, 150)),
+        y: Math.min(Math.max(screen.y, paddingTop), Math.max(height - paddingBottom, paddingTop)),
       };
     },
     onModelLoadProgress: ({ percent, label }) => {
@@ -328,13 +333,30 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // 中止结果请求
   resultAbort?.abort();
   resultAbort = undefined;
+
+  // 清理定时器
   window.clearTimeout(resultHideTimer);
-  resizeObserver?.disconnect();
-  resizeObserver = undefined;
-  waterPlantScene?.dispose();
-  waterPlantScene = undefined;
+  resultHideTimer = undefined;
+
+  // 使用 try-finally 保证资源清理，防止异常导致泄漏
+  try {
+    waterPlantScene?.dispose();
+  } catch (error) {
+    console.error('[threeRectangle] 场景释放失败:', error);
+  } finally {
+    waterPlantScene = undefined;
+  }
+
+  try {
+    resizeObserver?.disconnect();
+  } catch (error) {
+    console.error('[threeRectangle] ResizeObserver 断开失败:', error);
+  } finally {
+    resizeObserver = undefined;
+  }
 });
 </script>
 
@@ -398,6 +420,8 @@ onBeforeUnmount(() => {
 // 智能巡检结果卡片：面板样式 + 锚定在设备上方
 .patrol-result-card {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 5;
   width: 420px;
   font-size: 11px;
@@ -407,7 +431,13 @@ onBeforeUnmount(() => {
   border: 1px solid rgb(0 212 255 / 55%);
   border-radius: 6px;
   box-shadow: 0 6px 24px rgb(0 0 0 / 45%), 0 0 18px rgb(0 212 255 / 18%);
-  transform: translate(-50%, -100%);
+
+  // 使用 transform 替代 left/top，提升性能，减少重排重绘
+  // --card-x 和 --card-y 由 Vue 响应式更新
+  transform: translate(calc(var(--card-x) - 50%), calc(var(--card-y) - 100%));
+
+  // 使用 GPU 加速
+  will-change: transform;
   backdrop-filter: blur(4px);
   &::after {
     position: absolute;
@@ -671,7 +701,9 @@ onBeforeUnmount(() => {
 .card-fade-enter-from,
 .card-fade-leave-to {
   opacity: 0;
-  transform: translate(-50%, -94%);
+
+  // 淡入时从稍下方出现（-94% 而非 -100%），营造轻微上浮感
+  transform: translate(calc(var(--card-x) - 50%), calc(var(--card-y) - 94%));
 }
 
 // 真实模型加载遮罩

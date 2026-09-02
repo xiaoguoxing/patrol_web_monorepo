@@ -5,6 +5,7 @@ import {
   TARGET_SIZE,
   SCENE_CONFIG,
   WATER_PLANT_MODELS as MODELS,
+  VIEWPOINT_PICKER_CONFIG,
   type WaterPlantModelSource as ModelSource,
 } from '../shared/constants';
 import { addSceneLights, addSceneEnvironment } from '../shared/environment';
@@ -102,11 +103,11 @@ export class ViewpointPicker {
     container.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
+    this.controls.dampingFactor = VIEWPOINT_PICKER_CONFIG.DAMPING_FACTOR;
     // 拉近下限取较小值：配置视角允许贴近设备细节观察（近裁剪面 1，可安全近距离查看）
-    this.controls.minDistance = 20;
-    this.controls.maxDistance = 4000;
-    this.controls.maxPolarAngle = Math.PI * 0.9;
+    this.controls.minDistance = VIEWPOINT_PICKER_CONFIG.MIN_DISTANCE;
+    this.controls.maxDistance = VIEWPOINT_PICKER_CONFIG.MAX_DISTANCE;
+    this.controls.maxPolarAngle = VIEWPOINT_PICKER_CONFIG.MAX_POLAR_ANGLE;
     addSceneLights(this.scene);
     addSceneEnvironment(this.scene, this.renderer);
     this.scene.add(this.modelRoot);
@@ -226,25 +227,67 @@ export class ViewpointPicker {
   public dispose() {
     if (this.disposed) return;
     this.disposed = true;
+
+    // 停止渲染循环
     this.renderer.setAnimationLoop(null);
+
     const canvas = this.renderer.domElement;
-    canvas.removeEventListener('pointerdown', this.handlePointerDown);
-    canvas.removeEventListener('pointerup', this.handlePointerUp);
-    canvas.removeEventListener('click', this.handleClick);
-    canvas.removeEventListener('mousemove', this.handleMouseMove);
-    this.clearHighlight();
-    disposeObject(this.scene);
-    if (this.scene.background instanceof THREE.Texture) this.scene.background.dispose();
-    this.scene.background = null;
-    if (this.scene.environment instanceof THREE.Texture) this.scene.environment.dispose();
-    this.scene.environment = null;
-    this.scene.fog = null;
-    this.renderer.renderLists.dispose();
-    this.renderer.dispose();
-    this.renderer.forceContextLoss();
-    canvas.remove();
-    this.scene.clear();
-    this.controls.dispose();
+
+    // 移除事件监听器（使用 try-catch 防止移除失败阻塞后续清理）
+    try {
+      canvas.removeEventListener('pointerdown', this.handlePointerDown);
+      canvas.removeEventListener('pointerup', this.handlePointerUp);
+      canvas.removeEventListener('click', this.handleClick);
+      canvas.removeEventListener('mousemove', this.handleMouseMove);
+    } catch (error) {
+      console.warn('[ViewpointPicker] 事件监听器移除失败:', error);
+    }
+
+    // 清理高亮
+    try {
+      this.clearHighlight();
+    } catch (error) {
+      console.warn('[ViewpointPicker] 高亮清理失败:', error);
+    }
+
+    // 释放 Three.js 资源
+    try {
+      disposeObject(this.scene);
+
+      if (this.scene.background instanceof THREE.Texture) {
+        this.scene.background.dispose();
+      }
+      this.scene.background = null;
+
+      if (this.scene.environment instanceof THREE.Texture) {
+        this.scene.environment.dispose();
+      }
+      this.scene.environment = null;
+
+      this.scene.fog = null;
+
+      this.renderer.renderLists.dispose();
+      this.renderer.dispose();
+      this.renderer.forceContextLoss();
+
+      this.scene.clear();
+    } catch (error) {
+      console.error('[ViewpointPicker] Three.js 资源释放失败:', error);
+    }
+
+    // 移除 canvas（使用 try-catch 防止 DOM 操作失败）
+    try {
+      canvas.remove();
+    } catch (error) {
+      console.warn('[ViewpointPicker] Canvas 移除失败:', error);
+    }
+
+    // 释放 OrbitControls
+    try {
+      this.controls.dispose();
+    } catch (error) {
+      console.warn('[ViewpointPicker] OrbitControls 释放失败:', error);
+    }
   }
 
   // ---------------- 模型加载（外立面 + 内部结构，与巡检场景一致） ----------------
@@ -273,6 +316,7 @@ export class ViewpointPicker {
           error && typeof error === 'object' && 'message' in error
             ? String((error as { message?: unknown }).message)
             : String(error);
+        console.error(`[ViewpointPicker] 模型 ${model.label} 加载失败:`, detail);
         this.onError?.(detail || '未知错误');
       }
     );
@@ -339,7 +383,7 @@ export class ViewpointPicker {
   private readonly handlePointerUp = (event: PointerEvent) => {
     const dx = event.clientX - this.downPos.x;
     const dy = event.clientY - this.downPos.y;
-    if (Math.hypot(dx, dy) > 5) this.dragging = true;
+    if (Math.hypot(dx, dy) > VIEWPOINT_PICKER_CONFIG.DRAG_THRESHOLD) this.dragging = true;
   };
 
   private readonly handleClick = (event: MouseEvent) => {
@@ -453,8 +497,10 @@ export class ViewpointPicker {
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z, 1e-4);
-    const distance = maxDim * 2.2;
-    const offset = new THREE.Vector3(1, 0.8, 1).normalize().multiplyScalar(distance);
+    const distance = maxDim * VIEWPOINT_PICKER_CONFIG.AUTO_VIEWPOINT_DISTANCE_FACTOR;
+    const offset = new THREE.Vector3(...VIEWPOINT_PICKER_CONFIG.AUTO_VIEWPOINT_OFFSET)
+      .normalize()
+      .multiplyScalar(distance);
     return {
       modelId: target.name,
       position: center.clone().add(offset).toArray().map(round2),
@@ -471,7 +517,7 @@ export class ViewpointPicker {
     this.flyToTarget.set(viewpoint.target[0], viewpoint.target[1], viewpoint.target[2]);
     this.flyActive = true;
     this.flyTime = 0;
-    this.flyDuration = 0.8;
+    this.flyDuration = VIEWPOINT_PICKER_CONFIG.FOCUS_FLIGHT_DURATION;
   }
 
   private updateFly(delta: number) {

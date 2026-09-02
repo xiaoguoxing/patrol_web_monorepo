@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PATROL_CONFIG } from '../shared/constants';
 import type { PatrolViewpoint } from '../shared/constants';
 import type { ModelPatrolSnapshot, PatrolTargetInfo } from './types';
 
@@ -43,7 +44,7 @@ export class PatrolController {
   private pendingIndex = -1;
   private dwellRemaining = 0;
   private completed = 0;
-  private readonly dwellTime = 3.4;
+  private readonly dwellTime = PATROL_CONFIG.DWELL_DURATION;
 
   constructor(options: PatrolControllerOptions) {
     this.onChange = options.onChange;
@@ -176,6 +177,12 @@ export class PatrolController {
 
   /** 切换到指定点位并开始停留 */
   private beginDwell(index: number) {
+    // 边界检查：防止数组越界
+    if (index < 0 || index >= this.targets.length) {
+      console.error(`[巡检] 无效的点位索引: ${index}, 有效范围: [0, ${this.targets.length - 1}]`);
+      return;
+    }
+
     // 先恢复上一个目标的原始材质，再为当前目标开启闪烁
     this.restoreFlicker();
     this.currentIndex = index;
@@ -200,9 +207,9 @@ export class PatrolController {
       const originals = Array.isArray(original) ? original : [original];
       const flicker = originals.map((mat) => {
         const fm = new THREE.MeshBasicMaterial({
-          color: 0x00d4ff,
+          color: PATROL_CONFIG.FLICKER_COLOR,
           transparent: true,
-          opacity: 0.85,
+          opacity: PATROL_CONFIG.FLICKER_OPACITY_RANGE[1],
           depthWrite: false,
           side: mat.side,
           toneMapped: false,
@@ -227,14 +234,17 @@ export class PatrolController {
 
   /** 停留期间：模型本体闪烁 */
   private animateDwell(elapsed: number) {
-    const pulse = (Math.sin(elapsed * 7) + 1) / 2;
+    const pulse = (Math.sin(elapsed * PATROL_CONFIG.FLICKER_FREQUENCY) + 1) / 2;
+    const [minOpacity, maxOpacity] = PATROL_CONFIG.FLICKER_OPACITY_RANGE;
     this.flickerMaterials.forEach((material) => {
-      material.opacity = 0.4 + pulse * 0.5;
+      material.opacity = minOpacity + pulse * (maxOpacity - minOpacity);
     });
   }
 
   private emitSnapshot() {
-    const target = this.currentIndex >= 0 ? this.targets[this.currentIndex] : undefined;
+    // 安全访问：防止 currentIndex 越界
+    const target =
+      this.currentIndex >= 0 && this.currentIndex < this.targets.length ? this.targets[this.currentIndex] : undefined;
     this.onChange({
       target,
       completed: this.completed,

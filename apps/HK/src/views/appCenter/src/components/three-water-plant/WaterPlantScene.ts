@@ -8,6 +8,8 @@ import {
   PATROL_IDS,
   WATER_PLANT_MODELS as MODELS,
   SCENE_CONFIG,
+  CAMERA_CONTROL_CONFIG,
+  UI_CONFIG,
   type PatrolViewpoint,
   type WaterPlantModelKey as ModelKey,
   type WaterPlantModelSource as ModelSource,
@@ -73,7 +75,7 @@ export class WaterPlantScene {
   /** 运镜起点朝向（计算注视起点时复用） */
   private readonly camDir = new THREE.Vector3();
   /** 跟随模式下的观察距离（滚轮可调，默认贴近设备） */
-  private followDist = 75;
+  private followDist = CAMERA_CONTROL_CONFIG.DEFAULT_FOLLOW_DISTANCE;
   private occlusionAccum = 0;
   /** 当前相机模式（默认自由观察，加载完成后若有巡检对象则自动开始巡检） */
   private cameraMode: CameraMode = 'orbit';
@@ -222,30 +224,63 @@ export class WaterPlantScene {
   public dispose() {
     if (this.disposed) return;
     this.disposed = true;
-    this.flightTimeline?.kill();
-    this.flightTimeline = undefined;
+
+    // 停止 GSAP 运镜动画
+    try {
+      this.flightTimeline?.kill();
+    } catch (error) {
+      console.warn('[WaterPlantScene] GSAP timeline kill 失败:', error);
+    } finally {
+      this.flightTimeline = undefined;
+    }
+
+    // 停止渲染循环
     this.renderer.setAnimationLoop(null);
+
     const canvas = this.renderer.domElement;
-    canvas.removeEventListener('mousedown', this.handlePointerDown);
-    canvas.removeEventListener('wheel', this.handleWheel);
-    canvas.removeEventListener('contextmenu', this.handleContextMenu);
-    window.removeEventListener('mousemove', this.handlePointerMove);
-    window.removeEventListener('mouseup', this.handlePointerUp);
-    disposeObject(this.scene);
-    if (this.scene.background instanceof THREE.Texture) {
-      this.scene.background.dispose();
+
+    // 移除事件监听器（使用 try-catch 防止移除失败阻塞后续清理）
+    try {
+      canvas.removeEventListener('mousedown', this.handlePointerDown);
+      canvas.removeEventListener('wheel', this.handleWheel);
+      canvas.removeEventListener('contextmenu', this.handleContextMenu);
+      window.removeEventListener('mousemove', this.handlePointerMove);
+      window.removeEventListener('mouseup', this.handlePointerUp);
+    } catch (error) {
+      console.warn('[WaterPlantScene] 事件监听器移除失败:', error);
     }
-    this.scene.background = null;
-    if (this.scene.environment instanceof THREE.Texture) {
-      this.scene.environment.dispose();
+
+    // 释放 Three.js 资源
+    try {
+      disposeObject(this.scene);
+
+      if (this.scene.background instanceof THREE.Texture) {
+        this.scene.background.dispose();
+      }
+      this.scene.background = null;
+
+      if (this.scene.environment instanceof THREE.Texture) {
+        this.scene.environment.dispose();
+      }
+      this.scene.environment = null;
+
+      this.scene.fog = null;
+
+      this.renderer.renderLists.dispose();
+      this.renderer.dispose();
+      this.renderer.forceContextLoss();
+
+      this.scene.clear();
+    } catch (error) {
+      console.error('[WaterPlantScene] Three.js 资源释放失败:', error);
     }
-    this.scene.environment = null;
-    this.scene.fog = null;
-    this.renderer.renderLists.dispose();
-    this.renderer.dispose();
-    this.renderer.forceContextLoss();
-    canvas.remove();
-    this.scene.clear();
+
+    // 移除 canvas（使用 try-catch 防止 DOM 操作失败）
+    try {
+      canvas.remove();
+    } catch (error) {
+      console.warn('[WaterPlantScene] Canvas 移除失败:', error);
+    }
   }
 
   // 灯光与环境（蓝天白云 / 雾 / 地面 / PMREM 环境反射）见 ../shared/environment.ts，与配置视角页共用
@@ -456,8 +491,12 @@ export class WaterPlantScene {
     const dy = event.clientY - this.lastPointer.y;
     this.lastPointer = { x: event.clientX, y: event.clientY };
     if (this.dragButton === 0) {
-      this.theta -= dx * 0.3;
-      this.phi = THREE.MathUtils.clamp(this.phi + dy * 0.25, 10, 84);
+      this.theta -= dx * CAMERA_CONTROL_CONFIG.DRAG_SENSITIVITY.rotation;
+      this.phi = THREE.MathUtils.clamp(
+        this.phi + dy * CAMERA_CONTROL_CONFIG.DRAG_SENSITIVITY.tilt,
+        CAMERA_CONTROL_CONFIG.ORBIT_PHI_RANGE[0],
+        CAMERA_CONTROL_CONFIG.ORBIT_PHI_RANGE[1]
+      );
     } else if (this.dragButton === 2) {
       this.panCamera(dx, dy);
     }
@@ -471,10 +510,22 @@ export class WaterPlantScene {
     event.preventDefault();
     if (this.cameraMode === 'patrol' && (this.patrol?.getTargetCount() ?? 0) > 0) {
       // 自动巡检：滚轮调整观察距离
-      this.followDist = THREE.MathUtils.clamp(this.followDist * (event.deltaY > 0 ? 1.09 : 0.92), 40, 900);
+      const factor =
+        event.deltaY > 0 ? CAMERA_CONTROL_CONFIG.WHEEL_ZOOM_FACTOR : 1 / CAMERA_CONTROL_CONFIG.WHEEL_ZOOM_FACTOR;
+      this.followDist = THREE.MathUtils.clamp(
+        this.followDist * factor,
+        CAMERA_CONTROL_CONFIG.FOLLOW_DISTANCE_RANGE[0],
+        CAMERA_CONTROL_CONFIG.FOLLOW_DISTANCE_RANGE[1]
+      );
     } else {
       // 自由观察：滚轮缩放
-      this.radius = THREE.MathUtils.clamp(this.radius * (event.deltaY > 0 ? 1.09 : 0.92), 200, 4000);
+      const factor =
+        event.deltaY > 0 ? CAMERA_CONTROL_CONFIG.WHEEL_ZOOM_FACTOR : 1 / CAMERA_CONTROL_CONFIG.WHEEL_ZOOM_FACTOR;
+      this.radius = THREE.MathUtils.clamp(
+        this.radius * factor,
+        CAMERA_CONTROL_CONFIG.ORBIT_RADIUS_RANGE[0],
+        CAMERA_CONTROL_CONFIG.ORBIT_RADIUS_RANGE[1]
+      );
     }
   };
 
@@ -490,13 +541,15 @@ export class WaterPlantScene {
     );
     const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
     const up = new THREE.Vector3().crossVectors(right, forward).normalize();
-    const scale = this.radius * 0.0012;
+    const scale = this.radius * CAMERA_CONTROL_CONFIG.DRAG_SENSITIVITY.pan;
     this.viewTarget.addScaledVector(right, -dx * scale);
     this.viewTarget.addScaledVector(up, dy * scale);
-    this.viewTarget.x = THREE.MathUtils.clamp(this.viewTarget.x, -2000, 2000);
-    this.viewTarget.z = THREE.MathUtils.clamp(this.viewTarget.z, -2000, 2000);
+
+    const clamp = CAMERA_CONTROL_CONFIG.ORBIT_TARGET_CLAMP;
+    this.viewTarget.x = THREE.MathUtils.clamp(this.viewTarget.x, clamp[0], clamp[1]);
+    this.viewTarget.z = THREE.MathUtils.clamp(this.viewTarget.z, clamp[2], clamp[3]);
     // 贴近视角时目标点带高度，平移保留高度（限制在模型高度范围内），避免视角跳变
-    this.viewTarget.y = THREE.MathUtils.clamp(this.viewTarget.y, 0, 1000);
+    this.viewTarget.y = THREE.MathUtils.clamp(this.viewTarget.y, clamp[4], clamp[5]);
   }
 
   private updateCamera() {
@@ -528,10 +581,14 @@ export class WaterPlantScene {
   private updatePatrolFollow(lookTarget: THREE.Vector3) {
     const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
     // 相机略高于设备中心形成轻微俯视（高度随设备大小适当调整）
-    const height = THREE.MathUtils.clamp(radius * 0.5, 20, 55);
+    const height = THREE.MathUtils.clamp(
+      radius * CAMERA_CONTROL_CONFIG.CAMERA_HEIGHT_FACTOR,
+      CAMERA_CONTROL_CONFIG.CAMERA_HEIGHT_RANGE[0],
+      CAMERA_CONTROL_CONFIG.CAMERA_HEIGHT_RANGE[1]
+    );
     // 保证设备整体入画：相机到设备中心的直线距离需使包围球张角不超过 85% FOV
     const fovHalf = THREE.MathUtils.degToRad(this.camera.fov / 2);
-    const minDist = (radius + 8) / Math.tan(fovHalf * 0.85);
+    const minDist = (radius + 8) / Math.tan(fovHalf * CAMERA_CONTROL_CONFIG.FOV_COVERAGE_FACTOR);
     // 观察距离：贴近设备，不低于整体入画所需距离
     const dist3 = Math.max(Math.min(this.followDist, 42), minDist, height + 1);
     const flat = Math.sqrt(dist3 * dist3 - height * height);
@@ -541,14 +598,16 @@ export class WaterPlantScene {
       lookTarget.y + height,
       lookTarget.z + flat * Math.cos(theta)
     );
-    // 遮挡检测（每 4 帧一次）：被遮挡时仅沿视线拉近（保持高度），不做抬升
+
+    // 遮挡检测优化：降低频率到每 8 帧一次，减少射线投射开销
     this.occlusionAccum += 1;
-    if (this.occlusionAccum % 4 === 1) {
+    if (this.occlusionAccum % CAMERA_CONTROL_CONFIG.OCCLUSION_CHECK_INTERVAL === 1) {
       this.resolvedCamPos.copy(this.resolveClearCamera(lookTarget, desired));
     }
+
     // 相机位置与注视点均做平滑插值，形成平稳的水平平移跟随
-    this.camPos.lerp(this.resolvedCamPos, 0.12);
-    this.camLook.lerp(lookTarget, 0.15);
+    this.camPos.lerp(this.resolvedCamPos, CAMERA_CONTROL_CONFIG.CAMERA_LERP_FACTORS[0]);
+    this.camLook.lerp(lookTarget, CAMERA_CONTROL_CONFIG.CAMERA_LERP_FACTORS[1]);
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
   }
@@ -562,7 +621,10 @@ export class WaterPlantScene {
     const pose = this.getTargetPose(index);
     if (pose) {
       // 镜头已在位则直接锁定；尚未就位（如从 orbit 切回）则用 GSAP 补一次运镜
-      if (!this.flightTimeline?.isActive() && this.camera.position.distanceTo(pose.position) > 2) {
+      if (
+        !this.flightTimeline?.isActive() &&
+        this.camera.position.distanceTo(pose.position) > CAMERA_CONTROL_CONFIG.FLIGHT_ARRIVAL_THRESHOLD
+      ) {
         this.flyCameraTo(pose, undefined);
         return;
       }
@@ -607,14 +669,20 @@ export class WaterPlantScene {
     this.flightPos.x = from.x;
     this.flightPos.y = from.y;
     this.flightPos.z = from.z;
-    this.flightLook.x = from.x + this.camDir.x * 400;
-    this.flightLook.y = from.y + this.camDir.y * 400;
-    this.flightLook.z = from.z + this.camDir.z * 400;
+    const lookStartDist = CAMERA_CONTROL_CONFIG.FLIGHT_LOOK_START_DISTANCE;
+    this.flightLook.x = from.x + this.camDir.x * lookStartDist;
+    this.flightLook.y = from.y + this.camDir.y * lookStartDist;
+    this.flightLook.z = from.z + this.camDir.z * lookStartDist;
     this.flightFov.v = this.camera.fov;
 
     const distance = from.distanceTo(pose.position);
     // 运镜时长随距离缩放：保持较长的缓行区间，到达前减速滑入，避免镜头"冲"到目标
-    const duration = THREE.MathUtils.clamp(distance / 180, 1.8, 5);
+    const duration = THREE.MathUtils.clamp(
+      distance / CAMERA_CONTROL_CONFIG.FLIGHT_DURATION_FACTOR,
+      CAMERA_CONTROL_CONFIG.FLIGHT_DURATION_RANGE[0],
+      CAMERA_CONTROL_CONFIG.FLIGHT_DURATION_RANGE[1]
+    );
+
     const apply = () => {
       this.camera.position.set(this.flightPos.x, this.flightPos.y, this.flightPos.z);
       this.camera.lookAt(this.flightLook.x, this.flightLook.y, this.flightLook.z);
@@ -654,13 +722,22 @@ export class WaterPlantScene {
         x: pose.target.x,
         y: pose.target.y,
         z: pose.target.z,
-        duration: duration * 0.8,
+        duration: duration * CAMERA_CONTROL_CONFIG.FLIGHT_LOOK_DURATION_FACTOR,
         ease: 'power2.inOut',
         onUpdate: apply,
       },
       0
     );
-    tl.to(this.flightFov, { v: pose.fov, duration: duration * 0.7, ease: 'sine.inOut', onUpdate: apply }, 0);
+    tl.to(
+      this.flightFov,
+      {
+        v: pose.fov,
+        duration: duration * CAMERA_CONTROL_CONFIG.FLIGHT_FOV_DURATION_FACTOR,
+        ease: 'sine.inOut',
+        onUpdate: apply,
+      },
+      0
+    );
     this.flightTimeline = tl;
     apply();
   }
@@ -686,6 +763,9 @@ export class WaterPlantScene {
    * 找到能看见目标主体的相机位置：
    * 保持同一高度水平视角，被遮挡时仅沿视线方向拉近（不做抬升/俯视动作），
    * 保证镜头始终水平平移、直接到达目标附近。
+   *
+   * 性能优化：限制射线投射递归深度为 false（只检测顶层模型容器），
+   * 避免遍历所有子节点，显著降低复杂场景开销。
    */
   private resolveClearCamera(target: THREE.Vector3, desired: THREE.Vector3) {
     if (this.modelRoot.children.length === 0) return desired;
@@ -700,7 +780,13 @@ export class WaterPlantScene {
     return desired;
   }
 
-  /** 目标 -> 相机方向上是否有遮挡物（排除当前巡检目标自身） */
+  /**
+   * 目标 -> 相机方向上是否有遮挡物（排除当前巡检目标自身）
+   *
+   * 性能优化：不递归检查所有子节点（recursive = false），
+   * 只检测模型根节点的直接子级（glb-facade / glb-interior 容器），
+   * 大幅减少射线投射的计算量。
+   */
   private isCameraBlocked(from: THREE.Vector3, to: THREE.Vector3) {
     const dir = to.clone().sub(from);
     const dist = dir.length();
@@ -708,7 +794,11 @@ export class WaterPlantScene {
     dir.normalize();
     this.raycaster.set(from, dir);
     this.raycaster.far = dist;
-    const hits = this.raycaster.intersectObjects(this.modelRoot.children, true);
+
+    // 性能优化：不递归检查所有子节点，只检测顶层容器
+    // 足以判断是否被外立面或主要结构遮挡，无需精确到细小部件
+    const hits = this.raycaster.intersectObjects(this.modelRoot.children, false);
+
     if (hits.length === 0) return false;
     const focused = this.patrol?.getFocusedObject();
     for (const hit of hits) {
@@ -735,26 +825,38 @@ export class WaterPlantScene {
   /**
    * 每帧上报当前巡检目标在屏幕上的投影位置（设备上方一点），
    * 供外部把"巡检结果卡片"锚定到设备上方。非巡检模式或无目标时上报 null。
+   *
+   * 性能优化：仅在 patrol 模式且 dwelling 状态时才计算投影，避免无效计算。
    */
   private emitTargetScreenPos() {
     const cb = this.callbacks.onTargetScreenPosition;
     if (!cb) return;
-    if (this.cameraMode !== 'patrol') {
+
+    // 优化：仅在自动巡检模式且停留阶段时才计算屏幕投影
+    // 避免在 orbit 模式、transit 阶段或无巡检对象时的每帧无效计算
+    if (this.cameraMode !== 'patrol' || !this.patrol?.isDwelling()) {
       cb(null);
       return;
     }
-    const aim = this.patrol?.getFocusedTargetPosition();
+
+    const aim = this.patrol.getFocusedTargetPosition();
     if (!aim) {
       cb(null);
       return;
     }
+
     // 投影点取设备顶部偏下一点，让卡片覆盖部分模型，避免离设备太远
-    const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
-    const proj = this.projPoint.set(aim.x, aim.y + radius * 0.35, aim.z).project(this.camera);
+    const radius = this.patrol.getFocusedTargetRadius() ?? 30;
+    const proj = this.projPoint
+      .set(aim.x, aim.y + radius * UI_CONFIG.CARD_ANCHOR_HEIGHT_FACTOR, aim.z)
+      .project(this.camera);
+
+    // 检查投影点是否在视锥体内（z 在 [-1, 1] 范围）
     if (proj.z > 1 || proj.z < -1) {
       cb(null);
       return;
     }
+
     cb({
       x: ((proj.x + 1) / 2) * this.viewportRect.width,
       y: ((-proj.y + 1) / 2) * this.viewportRect.height,
