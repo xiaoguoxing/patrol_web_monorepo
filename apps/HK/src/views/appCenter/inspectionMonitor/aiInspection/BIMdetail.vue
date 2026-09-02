@@ -14,7 +14,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import ThreeRectangle from '@appCenter/components/threeRectangle.vue';
+import ThreeRectangle from '../../src/components/three-water-plant/threeRectangle.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

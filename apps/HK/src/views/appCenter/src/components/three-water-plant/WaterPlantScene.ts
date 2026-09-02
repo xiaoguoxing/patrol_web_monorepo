@@ -15,12 +15,11 @@ import { addSceneLights, addSceneEnvironment } from '../shared/environment';
 import { disposeObject, isVisible, isObjectOrChildOf } from '../shared/utils';
 
 /**
- * 相机模式（设计文档明确拆分的三套相机）：
- * - orbit  全景浏览：球坐标环绕（左键旋转 / 右键平移 / 滚轮缩放 / 预设视角）
- * - walk   厂房漫游：第一人称，camera.position 即玩家位置，WASD 移动 + 鼠标转动视角
+ * 相机模式：
+ * - orbit  自由观察：球坐标环绕（左键旋转 / 右键平移 / 滚轮缩放）
  * - patrol 自动巡检：跟随巡检目标，镜头平滑平移、被遮挡自动拉近
  */
-export type CameraMode = 'orbit' | 'walk' | 'patrol';
+export type CameraMode = 'orbit' | 'patrol';
 
 /** 外立面显示模式：show 显示 / transparent 透视 / hidden 隐藏 */
 export type FacadeMode = 'show' | 'transparent' | 'hidden';
@@ -64,27 +63,15 @@ export class WaterPlantScene {
   /** 跟随模式下的观察距离（滚轮可调，默认贴近设备） */
   private followDist = 75;
   private occlusionAccum = 0;
-  /** 当前相机模式（默认全景浏览，加载完成后若有巡检对象则切到自动巡检） */
+  /** 当前相机模式（默认自由观察，加载完成后若有巡检对象则自动开始巡检） */
   private cameraMode: CameraMode = 'orbit';
   /** 外立面显示模式（默认半透明透视，兼顾整体观感与内部可见性） */
   private facadeMode: FacadeMode = 'transparent';
-  /** walk 漫游：玩家位置（camera.position 即玩家位置） */
-  private readonly playerPos = new THREE.Vector3();
-  /** walk 漫游：水平朝向 / 俯仰角（弧度） */
-  private walkYaw = 0;
-  private walkPitch = 0;
-  /** walk 漫游人眼高度（世界单位，相对模型归一化尺寸） */
-  private readonly walkEyeHeight = 160;
-  /** walk 漫游：鼠标转视角灵敏度（弧度/像素） */
-  private readonly walkLookSpeed = 0.003;
   /** 视口尺寸（CSS 像素，用于世界坐标 -> 屏幕坐标投影） */
   private readonly viewportRect = { width: 1, height: 1 };
   /** 屏幕投影复用的临时向量 */
   private readonly projPoint = new THREE.Vector3();
-  /** 模型整体包围信息（加载完成后缓存，用于预设视角） */
-  private readonly modelCenter = new THREE.Vector3();
-  private readonly modelSphere = new THREE.Sphere();
-  /** 预设视角飞行动画状态（easeOutCubic 插值 theta/phi/radius/viewTarget） */
+  /** 视角飞行动画状态（easeOutCubic 插值 theta/phi/radius/viewTarget） */
   private flyActive = false;
   private flyTime = 0;
   private flyDuration = 0;
@@ -110,10 +97,6 @@ export class WaterPlantScene {
   private dragButton = 0;
   private lastPointer = { x: 0, y: 0 };
   private disposed = false;
-  /** 自由视角键盘行走：当前按下的按键集合（WASD / 方向键 / QE） */
-  private readonly keys = new Set<string>();
-  /** 自由视角行走速度（世界单位/秒） */
-  private readonly walkSpeed = 150;
 
   constructor(container: HTMLElement, callbacks: WaterPlantSceneCallbacks) {
     this.container = container;
@@ -206,38 +189,10 @@ export class WaterPlantScene {
     return this.facadeMode;
   }
 
-  /**
-   * 切换相机模式（orbit 全景浏览 / walk 厂房漫游 / patrol 自动巡检）。
-   * 切换时保持相机位置/朝向连续，避免镜头跳变。
-   */
+  /** 切换相机模式（orbit 自由观察 / patrol 自动巡检），切换前结束飞行避免状态残留 */
   public setCameraMode(mode: CameraMode) {
     if (mode === this.cameraMode) return this.cameraMode;
-    // 切换前结束预设飞行，避免飞行状态残留
     this.flyActive = false;
-    if (mode === 'walk') {
-      // 从当前相机朝向初始化第一人称朝向
-      const dir = new THREE.Vector3();
-      this.camera.getWorldDirection(dir);
-      this.walkYaw = Math.atan2(-dir.x, -dir.z);
-      this.walkPitch = THREE.MathUtils.clamp(Math.asin(THREE.MathUtils.clamp(dir.y, -1, 1)), -0.9, 0.9);
-      // 玩家位置 = 当前相机位置（高度会在漫游过程中快速回落到人眼高度）
-      this.playerPos.copy(this.camera.position);
-    } else if (mode === 'orbit' && this.cameraMode === 'walk') {
-      // 从第一人称位置/朝向反推球坐标，保证进入全景浏览后相机连续
-      const forward = new THREE.Vector3(-Math.sin(this.walkYaw), 0, -Math.cos(this.walkYaw));
-      this.viewTarget.copy(this.playerPos).addScaledVector(forward, 250);
-      const dx = this.playerPos.x - this.viewTarget.x;
-      const dy = this.playerPos.y - this.viewTarget.y;
-      const dz = this.playerPos.z - this.viewTarget.z;
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      this.radius = THREE.MathUtils.clamp(dist, 200, 4000);
-      this.phi = THREE.MathUtils.clamp(
-        THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(dy / Math.max(dist, 1e-6), -1, 1))),
-        10,
-        84
-      );
-      this.theta = THREE.MathUtils.radToDeg(Math.atan2(dx, dz));
-    }
     this.cameraMode = mode;
     return this.cameraMode;
   }
@@ -311,8 +266,6 @@ export class WaterPlantScene {
     canvas.removeEventListener('contextmenu', this.handleContextMenu);
     window.removeEventListener('mousemove', this.handlePointerMove);
     window.removeEventListener('mouseup', this.handlePointerUp);
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
     disposeObject(this.scene);
     if (this.scene.background instanceof THREE.Texture) {
       this.scene.background.dispose();
@@ -425,71 +378,12 @@ export class WaterPlantScene {
     if (this.modelReady || this.disposed) return;
     this.modelReady = true;
     this.alignModels();
-    // 缓存整体包围信息（预设视角使用）
-    const box = new THREE.Box3().setFromObject(this.modelRoot);
-    box.getCenter(this.modelCenter);
-    box.getBoundingSphere(this.modelSphere);
     this.initPatrol();
     this.fitAll();
     this.callbacks.onModelLoaded?.();
   }
 
-  /**
-   * 预设视角飞行：镜头丝滑过渡到目标视角（整体 / 正面 / 侧面 / 内部）。
-   * 属于自由观察能力，调用后会退出跟随模式。
-   */
-  public flyToPreset(name: 'overall' | 'front' | 'side' | 'inside') {
-    if (!this.modelReady) return;
-    // 预设视角属于全景浏览能力，先切到 orbit 模式再飞行
-    this.setCameraMode('orbit');
-    const center = this.modelCenter;
-    const radius = this.modelSphere.radius;
-    let toTarget = center.clone();
-    let toTheta = this.theta;
-    let toPhi = this.phi;
-    let toRadius = this.radius;
-    switch (name) {
-      case 'overall':
-        // 整体：从斜上方俯瞰全厂（同 fitAll 的初始视角）
-        toTheta = -55;
-        toPhi = 45;
-        toRadius = Math.max(radius * 1.25, 200);
-        break;
-      case 'front':
-        // 正面：正对厂房
-        toTheta = 0;
-        toPhi = 40;
-        toRadius = Math.max(radius * 1.45, 300);
-        break;
-      case 'side':
-        // 侧面：从侧向看厂房
-        toTheta = 90;
-        toPhi = 40;
-        toRadius = Math.max(radius * 1.45, 300);
-        break;
-      case 'inside': {
-        // 内部：进入厂房中部，贴近设备的高度平视内部
-        toTarget = new THREE.Vector3(center.x, Math.max(center.y * 0.35, 60), center.z);
-        toTheta = -55;
-        toPhi = 68;
-        toRadius = Math.max(radius * 0.45, 140);
-        break;
-      }
-    }
-    this.flyFromTarget.copy(this.viewTarget);
-    this.flyToTarget.copy(toTarget);
-    this.flyFromTheta = this.theta;
-    this.flyToTheta = toTheta;
-    this.flyFromPhi = this.phi;
-    this.flyToPhi = toPhi;
-    this.flyFromRadius = this.radius;
-    this.flyToRadius = toRadius;
-    this.flyActive = true;
-    this.flyTime = 0;
-    this.flyDuration = 1.4;
-  }
-
-  /** 驱动预设视角动画：easeOutCubic 插值 theta/phi/radius/viewTarget */
+  /** 驱动相机视角飞行动画（恢复保存的视角等）：easeOutCubic 插值 theta/phi/radius/viewTarget */
   private updateFly(delta: number) {
     if (!this.flyActive) return;
     this.flyTime += delta;
@@ -513,7 +407,7 @@ export class WaterPlantScene {
       ids: PATROL_IDS,
       onChange: (snapshot) => this.callbacks.onPatrolChange(snapshot),
     });
-    // 有巡检对象时默认进入自动巡检跟随；未配置巡检对象时保持全景浏览
+    // 有巡检对象时默认进入自动巡检跟随；未配置巡检对象时保持自由观察（orbit）
     this.cameraMode = this.patrol.getTargetCount() > 0 ? 'patrol' : 'orbit';
   }
 
@@ -574,81 +468,6 @@ export class WaterPlantScene {
     canvas.addEventListener('contextmenu', this.handleContextMenu);
     window.addEventListener('mousemove', this.handlePointerMove);
     window.addEventListener('mouseup', this.handlePointerUp);
-    window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('keyup', this.handleKeyUp);
-  }
-
-  private readonly handleKeyDown = (event: KeyboardEvent) => {
-    // 输入框/可编辑区域内不响应键盘行走
-    const target = event.target as HTMLElement | null;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
-    this.keys.add(event.code);
-  };
-
-  private readonly handleKeyUp = (event: KeyboardEvent) => {
-    this.keys.delete(event.code);
-  };
-
-  /** 全景浏览（orbit）键盘辅助：W/S 前后移动观察中心、A/D 左右平移、Q/E 升降、方向键旋转 */
-  private updateOrbitMove(delta: number) {
-    if (this.cameraMode !== 'orbit' || this.flyActive || this.keys.size === 0) return;
-    // 相机前视方向（水平分量）与右方向
-    const forward = new THREE.Vector3().subVectors(this.viewTarget, this.camera.position);
-    forward.y = 0;
-    if (forward.lengthSq() < 1e-6) return;
-    forward.normalize();
-    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-    const move = new THREE.Vector3();
-    if (this.keys.has('KeyW')) move.add(forward);
-    if (this.keys.has('KeyS')) move.sub(forward);
-    if (this.keys.has('KeyD')) move.add(right);
-    if (this.keys.has('KeyA')) move.sub(right);
-    if (this.keys.has('ArrowUp')) move.add(forward);
-    if (this.keys.has('ArrowDown')) move.sub(forward);
-    if (move.lengthSq() > 0) {
-      move.normalize().multiplyScalar(this.walkSpeed * delta);
-      this.viewTarget.add(move);
-      // 约束在模型水平范围与高度范围内
-      this.viewTarget.x = THREE.MathUtils.clamp(this.viewTarget.x, -2000, 2000);
-      this.viewTarget.z = THREE.MathUtils.clamp(this.viewTarget.z, -2000, 2000);
-    }
-    // 升降：E 上 / Q 下
-    if (this.keys.has('KeyE')) this.viewTarget.y += this.walkSpeed * 0.5 * delta;
-    if (this.keys.has('KeyQ')) this.viewTarget.y -= this.walkSpeed * 0.5 * delta;
-    this.viewTarget.y = THREE.MathUtils.clamp(this.viewTarget.y, 0, 1000);
-    // 方向键左右旋转视角
-    if (this.keys.has('ArrowLeft')) this.theta -= 90 * delta;
-    if (this.keys.has('ArrowRight')) this.theta += 90 * delta;
-  }
-
-  /**
-   * 厂房漫游（walk）第一人称移动：
-   * camera.position 即玩家位置，W/S 前后、A/D 左右、方向键旋转；
-   * 高度从进入时快速回落到人眼高度，之后保持贴地行走，并限制在模型水平范围内。
-   */
-  private updateWalkMove(delta: number) {
-    if (this.cameraMode !== 'walk') return;
-    const forward = new THREE.Vector3(-Math.sin(this.walkYaw), 0, -Math.cos(this.walkYaw));
-    const right = new THREE.Vector3(Math.cos(this.walkYaw), 0, -Math.sin(this.walkYaw));
-    const move = new THREE.Vector3();
-    if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) move.add(forward);
-    if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) move.sub(forward);
-    if (this.keys.has('KeyD')) move.add(right);
-    if (this.keys.has('KeyA')) move.sub(right);
-    if (move.lengthSq() > 0) {
-      move.normalize().multiplyScalar(this.walkSpeed * delta);
-      this.playerPos.add(move);
-    }
-    // 方向键左右旋转朝向
-    if (this.keys.has('ArrowLeft')) this.walkYaw -= 1.6 * delta;
-    if (this.keys.has('ArrowRight')) this.walkYaw += 1.6 * delta;
-    // 高度：从高空进入时快速回落到人眼高度，之后保持贴地
-    this.playerPos.y += (this.walkEyeHeight - this.playerPos.y) * Math.min(1, delta * 5);
-    // 水平范围限制在模型周围（避免走出场景）
-    const limit = this.modelReady ? this.modelSphere.radius + 200 : 1500;
-    this.playerPos.x = THREE.MathUtils.clamp(this.playerPos.x, -limit, limit);
-    this.playerPos.z = THREE.MathUtils.clamp(this.playerPos.z, -limit, limit);
   }
 
   private readonly handlePointerDown = (event: MouseEvent) => {
@@ -662,14 +481,6 @@ export class WaterPlantScene {
     const dx = event.clientX - this.lastPointer.x;
     const dy = event.clientY - this.lastPointer.y;
     this.lastPointer = { x: event.clientX, y: event.clientY };
-    // 厂房漫游：按住左键拖动转动视角（第一人称）
-    if (this.cameraMode === 'walk') {
-      if (this.dragButton === 0) {
-        this.walkYaw -= dx * this.walkLookSpeed;
-        this.walkPitch = THREE.MathUtils.clamp(this.walkPitch - dy * this.walkLookSpeed, -0.9, 0.9);
-      }
-      return;
-    }
     if (this.dragButton === 0) {
       this.theta -= dx * 0.3;
       this.phi = THREE.MathUtils.clamp(this.phi + dy * 0.25, 10, 84);
@@ -684,13 +495,11 @@ export class WaterPlantScene {
 
   private readonly handleWheel = (event: WheelEvent) => {
     event.preventDefault();
-    // 厂房漫游：滚轮不缩放，保持第一人称距离感
-    if (this.cameraMode === 'walk') return;
     if (this.cameraMode === 'patrol' && (this.patrol?.getTargetCount() ?? 0) > 0) {
       // 自动巡检：滚轮调整观察距离
       this.followDist = THREE.MathUtils.clamp(this.followDist * (event.deltaY > 0 ? 1.09 : 0.92), 40, 900);
     } else {
-      // 全景浏览：滚轮缩放
+      // 自由观察：滚轮缩放
       this.radius = THREE.MathUtils.clamp(this.radius * (event.deltaY > 0 ? 1.09 : 0.92), 200, 4000);
     }
   };
@@ -717,21 +526,6 @@ export class WaterPlantScene {
   }
 
   private updateCamera() {
-    // 厂房漫游（walk）：第一人称，相机位置即玩家位置，朝向由 yaw/pitch 决定
-    if (this.cameraMode === 'walk') {
-      const cp = Math.cos(this.walkPitch);
-      const dir = new THREE.Vector3(
-        -Math.sin(this.walkYaw) * cp,
-        Math.sin(this.walkPitch),
-        -Math.cos(this.walkYaw) * cp
-      );
-      this.camera.position.copy(this.playerPos);
-      this.camera.lookAt(this.playerPos.clone().add(dir));
-      // 同步平滑状态，便于切换回自动巡检时镜头连续
-      this.camPos.copy(this.camera.position);
-      this.camLook.copy(this.playerPos).addScaledVector(dir, 50);
-      return;
-    }
     // 自动巡检（patrol）：镜头平滑跟随巡检目标，注视点锁定设备本体
     const dwelling = this.patrol?.isDwelling() ?? false;
     const aim = dwelling ? this.patrol?.getFocusedTargetPosition() : this.patrol?.getPathPosition();
@@ -758,7 +552,7 @@ export class WaterPlantScene {
       this.updatePatrolCruise(aim);
       return;
     }
-    // 全景浏览（orbit）：球坐标手动旋转/平移
+    // 自由观察（orbit）：球坐标手动旋转/平移
     const theta = THREE.MathUtils.degToRad(this.theta);
     const phi = THREE.MathUtils.degToRad(this.phi);
     this.camera.position.set(
@@ -895,8 +689,6 @@ export class WaterPlantScene {
     this.lastTime = now;
     this.patrol?.tick(delta, now);
     this.updateFly(delta);
-    this.updateOrbitMove(delta);
-    this.updateWalkMove(delta);
     this.updateCamera();
     this.emitTargetScreenPos();
     this.renderer.render(this.scene, this.camera);

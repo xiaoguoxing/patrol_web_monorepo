@@ -13,9 +13,10 @@
       <aside class="vp-dialog__side">
         <div class="vp-dialog__tip">
           <p class="vp-dialog__tip-title">操作方式</p>
-          <p>1. 点击模型中的物体，相机自动聚焦</p>
-          <p>2. 左键旋转 · 右键平移 · 滚轮缩放，微调角度</p>
-          <p>3. 调整满意后点击"保存视角"</p>
+          <p>1. 外立面支持 显示/透视/隐藏（隐藏后可清晰看到内部设备）</p>
+          <p>2. 点击模型中的内部设备，相机自动聚焦</p>
+          <p>3. 左键旋转 · 右键平移 · 滚轮缩放，微调角度</p>
+          <p>4. 调整满意后点击"保存视角"</p>
         </div>
         <div class="vp-dialog__status" :class="{ 'is-empty': !selectedName }">
           <template v-if="selectedName">
@@ -23,6 +24,21 @@
             已选中：<b>{{ selectedName }}</b>
           </template>
           <template v-else>请点击模型中的物体</template>
+        </div>
+        <div class="vp-dialog__facade">
+          <span class="vp-dialog__facade-label">外立面</span>
+          <div class="vp-dialog__facade-opts">
+            <button
+              v-for="opt in facadeOptions"
+              :key="opt.value"
+              type="button"
+              class="vp-dialog__facade-btn"
+              :class="{ active: facadeMode === opt.value }"
+              @click="setFacadeMode(opt.value)"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
         </div>
         <el-button class="vp-dialog__btn" :disabled="!selectedName" @click="picker?.focusSelected()">
           重新聚焦
@@ -43,7 +59,7 @@
 import { computed, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ViewpointPicker } from './ViewpointPicker';
-import type { ViewpointData } from './ViewpointPicker';
+import type { FacadeMode, ViewpointData } from './ViewpointPicker';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -64,6 +80,17 @@ const visible = computed({
 const canvasRef = ref<HTMLElement>();
 const pickerReady = ref(false);
 const selectedName = ref<string | null>(null);
+/** 外立面显示模式（仅影响预览，不写入保存的视角；默认与巡检场景一致为透视） */
+const facadeMode = ref<FacadeMode>('transparent');
+const facadeOptions: { value: FacadeMode; label: string }[] = [
+  { value: 'show', label: '显示' },
+  { value: 'transparent', label: '透视' },
+  { value: 'hidden', label: '隐藏' },
+];
+/** 切换外立面显示：完整显示 / 半透明透视 / 隐藏（隐藏后内部设备完全可见，便于点击选中） */
+const setFacadeMode = (mode: FacadeMode) => {
+  facadeMode.value = picker?.setFacadeMode(mode) ?? mode;
+};
 let picker: ViewpointPicker | undefined;
 
 /** 弹窗打开且容器就绪后创建 3D 场景 */
@@ -71,7 +98,7 @@ const initPicker = async () => {
   await new Promise((resolve) => setTimeout(resolve, 30));
   const container = canvasRef.value;
   if (!container || picker) return;
-  picker = new ViewpointPicker(container);
+  picker = new ViewpointPicker(container, { facadeMode: facadeMode.value });
   picker.onSelect = (id) => {
     selectedName.value = id;
   };
@@ -197,6 +224,41 @@ const handleSave = () => {
   &__btn {
     width: 100%;
     margin: 0;
+  }
+  &__facade {
+    padding: 10px 12px;
+    background: var(--el-fill-color-light);
+    border-radius: 4px;
+    &-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--el-text-color-regular);
+    }
+    &-opts {
+      display: flex;
+      gap: 2px;
+      padding: 2px;
+      background: var(--el-bg-color);
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 4px;
+    }
+    &-btn {
+      flex: 1;
+      padding: 4px 0;
+      font-size: 12px;
+      line-height: 1.2;
+      color: var(--el-text-color-secondary);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      border-radius: 3px;
+      &.active {
+        font-weight: 600;
+        color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+      }
+    }
   }
 }
 </style>

@@ -53,7 +53,7 @@ export class PatrolController {
       const box = new THREE.Box3().setFromObject(object);
       const center = box.getCenter(new THREE.Vector3());
       const sphere = box.getBoundingSphere(new THREE.Sphere());
-      this.targets.push({ id, name: id, position: center, radius: sphere.radius, viewpoint: item });
+      this.targets.push({ id, name: item.name, position: center, radius: sphere.radius, viewpoint: item });
       this.objectsByTarget.set(id, object);
     });
 

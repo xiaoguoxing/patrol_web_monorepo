@@ -2,12 +2,6 @@
   <section ref="containerRef" class="three-water-plant" aria-label="水厂三维巡检场景">
     <div class="three-water-plant__viewport"></div>
     <div class="three-water-plant__tools">
-      <button type="button" :class="{ active: cameraMode === 'orbit' }" @click="setCameraMode('orbit')">
-        🛰 全景浏览
-      </button>
-      <button type="button" :class="{ active: cameraMode === 'walk' }" @click="setCameraMode('walk')">
-        🚶 厂房漫游
-      </button>
       <button type="button" :class="{ active: cameraMode === 'patrol' }" @click="setCameraMode('patrol')">
         🤖 自动巡检
       </button>
@@ -18,14 +12,8 @@
       </button>
       <button type="button" :class="{ active: facadeMode === 'hidden' }" @click="setFacadeMode('hidden')">隐藏</button>
       <span class="three-water-plant__toolbar-sep"></span>
-      <button type="button" @click="flyToPreset('overall')">整体</button>
-      <button type="button" @click="flyToPreset('front')">正面</button>
-      <button type="button" @click="flyToPreset('side')">侧面</button>
-      <button type="button" @click="flyToPreset('inside')">内部</button>
-      <span class="three-water-plant__toolbar-sep"></span>
       <button type="button" @click="toggleFullscreen">{{ isFullscreen ? '退出全屏' : '全屏' }}</button>
     </div>
-    <div class="three-water-plant__hint">{{ hintText }}</div>
 
     <!-- 左侧任务列表面板（巡检点位 = 任务，可显隐；点击任务跳转定位设备） -->
     <aside class="patrol-tasks" :class="{ 'patrol-tasks--collapsed': !taskPanelVisible }">
@@ -73,7 +61,9 @@
       >
         <header class="patrol-result-card__header">
           <span>智能巡检结果</span>
-          <span v-if="resultCard.taskId" class="patrol-result-card__target">{{ resultCard.taskId }}</span>
+          <span v-if="resultCard.taskId" class="patrol-result-card__target">{{
+            resultCard.taskName || resultCard.taskId
+          }}</span>
         </header>
         <div class="patrol-result-card__body">
           <div class="patrol-result-card__row">
@@ -88,7 +78,7 @@
                 v-else-if="resultCard.status === 'success' && resultCard.image"
                 class="patrol-result-card__thumb"
                 :src="resultCard.image"
-                :alt="resultCard.taskId"
+                :alt="resultCard.taskName || resultCard.taskId"
               />
               <span class="patrol-result-card__text" :class="{ 'is-loading': resultCard.status === 'loading' }">
                 {{ resultText }}
@@ -125,9 +115,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useFullscreen } from '@vueuse/core';
-import type { ModelPatrolSnapshot, TargetScreenPos } from './three-water-plant/types';
-import { requestPatrolResult } from './three-water-plant/patrolResult';
-import { WaterPlantScene } from './three-water-plant/WaterPlantScene';
+import type { ModelPatrolSnapshot, TargetScreenPos } from './types';
+import { requestPatrolResult } from './patrolResult';
+import { WaterPlantScene } from './WaterPlantScene';
 
 /** 任务列表项：巡检点位 = 任务 */
 interface PatrolTaskItem {
@@ -139,7 +129,10 @@ interface PatrolTaskItem {
 /** 巡检结果卡片状态（悬浮卡片与底部结果面板共用） */
 interface PatrolResultCardState {
   visible: boolean;
+  /** 任务 id（模型节点 id，请求识别结果用） */
   taskId: string;
+  /** 展示名称（巡检点位名称） */
+  taskName: string;
   status: 'loading' | 'success' | 'error';
   image?: string;
   title?: string;
@@ -164,7 +157,7 @@ const containerRef = ref<HTMLElement>();
 /** 全屏：以场景容器为目标，进入/退出全屏（ResizeObserver 会自动触发渲染尺寸更新） */
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(containerRef);
 const patrolState = ref<ModelPatrolSnapshot>();
-const cameraMode = ref<'orbit' | 'walk' | 'patrol'>('orbit');
+const cameraMode = ref<'orbit' | 'patrol'>('orbit');
 const facadeMode = ref<'show' | 'transparent' | 'hidden'>('transparent');
 const modelLoadingPercent = ref(0);
 const modelLoadingLabel = ref('');
@@ -174,7 +167,7 @@ const modelReady = ref(false);
 const taskPanelVisible = ref(true);
 const patrolTasks = ref<PatrolTaskItem[]>([]);
 /** 巡检结果卡片（跟随设备屏幕投影） */
-const resultCard = ref<PatrolResultCardState>({ visible: false, taskId: '', status: 'loading' });
+const resultCard = ref<PatrolResultCardState>({ visible: false, taskId: '', taskName: '', status: 'loading' });
 const cardPos = ref<TargetScreenPos | null>(null);
 let waterPlantScene: WaterPlantScene | undefined;
 let resizeObserver: ResizeObserver | undefined;
@@ -253,25 +246,26 @@ const onTaskClick = (index: number) => {
 const handlePatrolChange = (snapshot: ModelPatrolSnapshot) => {
   refreshPatrolTasks();
   if (snapshot.dwelling && snapshot.target) {
-    showResultCard(snapshot.target.id);
+    showResultCard(snapshot.target.id, snapshot.target.name);
   }
 };
 
 /** 展示巡检结果卡片：loading -> 识别结果 -> 自动淡出 */
-const showResultCard = (taskId: string) => {
+const showResultCard = (taskId: string, taskName: string) => {
   // 中止上一次请求，避免竞态
   resultAbort?.abort();
   resultAbort = new AbortController();
   window.clearTimeout(resultHideTimer);
-  resultCard.value = { visible: true, taskId, status: 'loading', time: '' };
+  resultCard.value = { visible: true, taskId, taskName, status: 'loading', time: '' };
 
-  requestPatrolResult(taskId, resultAbort.signal)
+  requestPatrolResult(taskId, resultAbort.signal, taskName)
     .then((payload) => {
       // 仅当仍为当前任务时更新结果，防止快速切换导致旧结果覆盖新卡片
       if (resultCard.value.taskId !== payload.taskId) return;
       resultCard.value = {
         visible: true,
         taskId: payload.taskId,
+        taskName,
         status: payload.status,
         image: payload.image,
         title: payload.title,
@@ -282,7 +276,7 @@ const showResultCard = (taskId: string) => {
     })
     .catch(() => {
       if (resultCard.value.taskId !== taskId) return;
-      resultCard.value = { visible: true, taskId, status: 'error', time: formatTime(new Date()) };
+      resultCard.value = { visible: true, taskId, taskName, status: 'error', time: formatTime(new Date()) };
     });
 
   // 结果卡片展示一段时间后自动淡出（镜头继续巡航时不会一直遮挡画面）
@@ -291,23 +285,11 @@ const showResultCard = (taskId: string) => {
   }, 15000);
 };
 
-/** 随相机模式变化的操作提示 */
-const hintText = computed(() => {
-  if (cameraMode.value === 'walk') return 'WASD 移动 · 按住左键拖动转视角';
-  if (cameraMode.value === 'patrol') return '自动跟随巡检 · 滚轮调整观察距离';
-  return '左键旋转 · 右键平移 · 滚轮缩放';
-});
-
-const setCameraMode = (mode: 'orbit' | 'walk' | 'patrol') => {
+const setCameraMode = (mode: 'orbit' | 'patrol') => {
   cameraMode.value = waterPlantScene?.setCameraMode(mode) ?? mode;
 };
 const setFacadeMode = (mode: 'show' | 'transparent' | 'hidden') => {
   facadeMode.value = waterPlantScene?.setFacadeMode(mode) ?? mode;
-};
-/** 预设视角：镜头丝滑飞到 整体/正面/侧面/内部（预设属于全景浏览，先切到 orbit） */
-const flyToPreset = (name: 'overall' | 'front' | 'side' | 'inside') => {
-  cameraMode.value = waterPlantScene?.setCameraMode('orbit') ?? 'orbit';
-  waterPlantScene?.flyToPreset(name);
 };
 const retryModel = () => {
   modelError.value = '';
@@ -433,15 +415,6 @@ onBeforeUnmount(() => {
   width: 1px;
   margin: 0 2px;
   background: rgb(0 212 255 / 25%);
-}
-.three-water-plant__hint {
-  position: absolute;
-  top: 14px;
-  right: 12px;
-  z-index: 2;
-  font-size: 11px;
-  color: #7aa7c4;
-  pointer-events: none;
 }
 
 // 智能巡检结果卡片：面板样式 + 锚定在设备上方
@@ -834,9 +807,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 720px) {
-  .three-water-plant__hint {
-    display: none;
-  }
   .patrol-tasks {
     width: 200px;
   }

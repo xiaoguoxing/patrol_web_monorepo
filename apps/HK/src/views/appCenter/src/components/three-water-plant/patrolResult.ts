@@ -40,7 +40,11 @@ const RESULT_TEMPLATES: ResultTemplate[] = [
 ];
 
 /** 根据 taskId 生成稳定的模拟结果（同一设备重复巡检结果一致） */
-export function requestPatrolResult(taskId: string, signal?: AbortSignal): Promise<PatrolResultPayload> {
+export function requestPatrolResult(
+  taskId: string,
+  signal?: AbortSignal,
+  displayName?: string
+): Promise<PatrolResultPayload> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(new Error('aborted'));
@@ -54,7 +58,7 @@ export function requestPatrolResult(taskId: string, signal?: AbortSignal): Promi
       resolve({
         taskId,
         status: 'success',
-        image: buildSnapshotImage(taskId, template.title),
+        image: buildSnapshotImage(displayName || taskId, template.title),
         title: template.title,
         detail: template.detail,
         confidence: template.confidence,

@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { TARGET_SIZE, WATER_PLANT_GLB_FILES, SCENE_CONFIG } from '../shared/constants';
+import {
+  TARGET_SIZE,
+  SCENE_CONFIG,
+  WATER_PLANT_MODELS as MODELS,
+  type WaterPlantModelSource as ModelSource,
+} from '../shared/constants';
 import { addSceneLights, addSceneEnvironment } from '../shared/environment';
 import { round2, isVisible, disposeObject } from '../shared/utils';
 
@@ -23,6 +28,9 @@ export interface ViewpointData extends ViewpointPos {
   modelId: string;
 }
 
+/** 外立面显示模式：show 完整显示 / transparent 半透明透视（默认） / hidden 隐藏 */
+export type FacadeMode = 'show' | 'transparent' | 'hidden';
+
 export interface PickOptions {
   /** 选中对象变化回调（对象名，空表示取消选中） */
   onSelect?: (modelId: string | null) => void;
@@ -30,14 +38,17 @@ export interface PickOptions {
   onReady?: () => void;
   /** 模型加载失败回调 */
   onError?: (message: string) => void;
+  /** 外立面初始显示模式（默认 transparent，与巡检场景一致） */
+  facadeMode?: FacadeMode;
 }
 
 /**
  * 巡检对象"配置视角"专用 3D 场景：
- * - 加载与巡检场景相同的内部 GLB 模型（不含外墙），归一化参数一致
+ * - 加载与巡检场景相同的外立面 + 内部结构 GLB，归一化参数一致，支持外立面 显示/透视/隐藏
  * - OrbitControls 自由观察（左键旋转 / 右键平移 / 滚轮缩放）
- * - 点击模型中的任意物体 → BoxHelper 高亮选中 + 自动计算最佳机位并平滑飞行（聚焦）
- * - 点击空白处取消选中；鼠标悬停物体显示手型
+ * - 点击内部结构中的任意物体 → BoxHelper 高亮选中 + 自动计算最佳机位并平滑飞行（聚焦）
+ * - 外立面构件不可选中（点击外墙时会穿透选择其背后的内部设备）
+ * - 点击空白处取消选中；鼠标悬停内部物体显示手型
  */
 export class ViewpointPicker {
   private readonly container: HTMLElement;
@@ -53,6 +64,8 @@ export class ViewpointPicker {
   private highlightBox: THREE.BoxHelper | null = null;
   private disposed = false;
   private modelReady = false;
+  /** 外立面显示模式（默认半透明透视，与巡检场景一致） */
+  private facadeMode: FacadeMode = 'transparent';
   private lastTime = performance.now() / 1000;
   /** 自动聚焦飞行动画状态 */
   private flyActive = false;
@@ -78,6 +91,7 @@ export class ViewpointPicker {
     this.onSelect = options.onSelect;
     this.onReady = options.onReady;
     this.onError = options.onError;
+    this.facadeMode = options.facadeMode ?? 'transparent';
     this.camera = new THREE.PerspectiveCamera(46, 1, SCENE_CONFIG.cameraNear, SCENE_CONFIG.cameraFar);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -89,7 +103,8 @@ export class ViewpointPicker {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-    this.controls.minDistance = 80;
+    // 拉近下限取较小值：配置视角允许贴近设备细节观察（近裁剪面 1，可安全近距离查看）
+    this.controls.minDistance = 20;
     this.controls.maxDistance = 4000;
     this.controls.maxPolarAngle = Math.PI * 0.9;
     addSceneLights(this.scene);
@@ -98,7 +113,7 @@ export class ViewpointPicker {
     this.bindEvents();
     this.resize();
     this.renderer.setAnimationLoop(this.animate);
-    this.loadModel();
+    this.loadModels();
   }
 
   public resize() {
@@ -130,6 +145,39 @@ export class ViewpointPicker {
       ],
       target: [round2(center.x), round2(center.y), round2(center.z)],
     });
+  }
+
+  /**
+   * 设置外立面显示模式（三态，逻辑与巡检场景 WaterPlantScene.setFacadeMode 一致）：
+   * - show        完整显示（不透明）
+   * - transparent 半透明透视（默认，可隐约看到内部设备）
+   * - hidden      隐藏（内部设备完全可见，便于点击选中）
+   */
+  public setFacadeMode(mode: FacadeMode): FacadeMode {
+    const facade = this.modelRoot.getObjectByName('glb-facade');
+    if (facade) {
+      if (mode === 'hidden') {
+        facade.visible = false;
+      } else {
+        facade.visible = true;
+        const opacity = mode === 'show' ? 1 : 0.45;
+        facade.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
+            materials.forEach((material) => {
+              material.transparent = opacity < 1;
+              material.opacity = opacity;
+            });
+          }
+        });
+      }
+    }
+    this.facadeMode = mode;
+    return this.facadeMode;
+  }
+
+  public getFacadeMode() {
+    return this.facadeMode;
   }
 
   /** 应用已有视角（编辑回显：直接定位相机，无动画） */
@@ -199,27 +247,28 @@ export class ViewpointPicker {
     this.controls.dispose();
   }
 
-  // ---------------- 模型加载（仅内部设备，去掉外墙） ----------------
+  // ---------------- 模型加载（外立面 + 内部结构，与巡检场景一致） ----------------
 
-  private loadModel() {
-    const url = new URL(`GLB/${WATER_PLANT_GLB_FILES.INTERIOR}`, window.location.href).href;
+  private loadModels() {
+    MODELS.forEach((model) => this.loadModel(model));
+  }
+
+  private loadModel(model: ModelSource) {
+    // 项目使用 hash 路由且 vite base 为 './'，基于当前地址解析即可兼容开发与部署子路径
+    const url = new URL(`GLB/${model.file}`, window.location.href).href;
     new GLTFLoader().load(
       url,
       (gltf) => {
         if (this.disposed) return;
-        const group = gltf.scene;
-        group.name = 'glb-interior';
-        group.traverse((object) => {
-          if (object instanceof THREE.Mesh) {
-            object.castShadow = true;
-            object.receiveShadow = true;
-          }
-        });
+        const group = this.normalizeModel(gltf.scene, model.facade);
+        group.name = `glb-${model.key}`;
         this.modelRoot.add(group);
-        this.tryModelReady();
+        const allLoaded = MODELS.every((item) => this.modelRoot.getObjectByName(`glb-${item.key}`) != null);
+        if (allLoaded) this.onModelsReady();
       },
       undefined,
       (error) => {
+        if (this.disposed) return;
         const detail =
           error && typeof error === 'object' && 'message' in error
             ? String((error as { message?: unknown }).message)
@@ -229,9 +278,32 @@ export class ViewpointPicker {
     );
   }
 
-  /** 模型加载后统一归一化：缩放到 TARGET_SIZE、水平居中、底面贴到 y=0（与巡检场景一致） */
-  private tryModelReady() {
-    if (this.modelReady) return;
+  /** 模型预处理：设置阴影；外立面统一半透明（与巡检场景 normalizeModel 一致），不做缩放/平移 */
+  private normalizeModel(root: THREE.Object3D, isFacade: boolean): THREE.Object3D {
+    root.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+        if (isFacade) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach((material) => {
+            material.transparent = true;
+            material.opacity = 0.45;
+            // depthWrite 保持默认 true，避免内部结构因深度排序异常而变暗
+            material.side = THREE.DoubleSide;
+          });
+        }
+      }
+    });
+    return root;
+  }
+
+  /**
+   * 全部模型加载完成后统一归一化：在 modelRoot 整体上缩放到 TARGET_SIZE、水平居中、底面贴到 y=0。
+   * 整体变换不改变内外模型相对位置，保证与巡检场景的视角坐标严格一致。
+   */
+  private onModelsReady() {
+    if (this.modelReady || this.disposed) return;
     this.modelReady = true;
     const box = new THREE.Box3().setFromObject(this.modelRoot);
     const size = box.getSize(new THREE.Vector3());
@@ -243,6 +315,8 @@ export class ViewpointPicker {
     const center = scaledBox.getCenter(new THREE.Vector3());
     const minY = scaledBox.min.y;
     this.modelRoot.position.set(-center.x, -minY, -center.z);
+    // 应用构造时传入的外立面显示模式（默认半透明透视）
+    this.setFacadeMode(this.facadeMode);
     this.resetView();
     this.onReady?.();
   }
@@ -276,7 +350,8 @@ export class ViewpointPicker {
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const hits = this.raycaster.intersectObjects(this.modelRoot.children, true);
     for (const hit of hits) {
-      if (!isVisible(hit.object)) continue;
+      // 外立面不可作为巡检对象：点击外墙时跳过该命中，继续选中其背后的内部设备
+      if (!isVisible(hit.object) || this.isInFacade(hit.object)) continue;
       const target = this.findPickableRoot(hit.object);
       if (target) {
         this.selectObject(target, true);
@@ -295,7 +370,8 @@ export class ViewpointPicker {
     const hits = this.raycaster.intersectObjects(this.modelRoot.children, true);
     let hover = false;
     for (const hit of hits) {
-      if (isVisible(hit.object) && this.findPickableRoot(hit.object)) {
+      // 外立面构件悬停时不显示手型（不可选中）
+      if (isVisible(hit.object) && !this.isInFacade(hit.object) && this.findPickableRoot(hit.object)) {
         hover = true;
         break;
       }
@@ -303,15 +379,25 @@ export class ViewpointPicker {
     this.renderer.domElement.style.cursor = hover ? 'pointer' : 'grab';
   };
 
-  /** 向上遍历找到最近的有名字的节点作为选中目标（模型任意物体均可选中） */
+  /** 向上遍历找到最近的有名字的内部构件作为选中目标（模型任意内部物体均可选中） */
   private findPickableRoot(object: THREE.Object3D): THREE.Object3D | null {
     let node: THREE.Object3D | null = object;
     while (node && node !== this.modelRoot) {
-      // 跳过无名字的子 mesh 和 'glb-interior' 容器组，取最近的有名字的构件
-      if (node.name && node.name !== 'glb-interior') return node;
+      // 跳过无名字的子 mesh 与 'glb-interior'/'glb-facade' 容器组，取最近的有名字的构件
+      if (node.name && node.name !== 'glb-interior' && node.name !== 'glb-facade') return node;
       node = node.parent;
     }
     return null;
+  }
+
+  /** 是否位于外立面（'glb-facade'）子树内：外墙构件不可作为巡检对象 */
+  private isInFacade(object: THREE.Object3D): boolean {
+    let node: THREE.Object3D | null = object;
+    while (node && node !== this.modelRoot) {
+      if (node.name === 'glb-facade') return true;
+      node = node.parent;
+    }
+    return false;
   }
 
   private selectObject(target: THREE.Object3D | null, autoFocus = false) {
