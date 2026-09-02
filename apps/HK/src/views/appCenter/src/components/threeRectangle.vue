@@ -22,6 +22,8 @@
       <button type="button" @click="flyToPreset('front')">正面</button>
       <button type="button" @click="flyToPreset('side')">侧面</button>
       <button type="button" @click="flyToPreset('inside')">内部</button>
+      <span class="three-water-plant__toolbar-sep"></span>
+      <button type="button" @click="toggleFullscreen">{{ isFullscreen ? '退出全屏' : '全屏' }}</button>
     </div>
     <div class="three-water-plant__hint">{{ hintText }}</div>
 
@@ -122,6 +124,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useFullscreen } from '@vueuse/core';
 import type { ModelPatrolSnapshot, TargetScreenPos } from './three-water-plant/types';
 import { requestPatrolResult } from './three-water-plant/patrolResult';
 import { WaterPlantScene } from './three-water-plant/WaterPlantScene';
@@ -158,6 +161,8 @@ const props = defineProps<{
   viewpoints?: Record<string, ViewpointConfig>;
 }>();
 const containerRef = ref<HTMLElement>();
+/** 全屏：以场景容器为目标，进入/退出全屏（ResizeObserver 会自动触发渲染尺寸更新） */
+const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(containerRef);
 const patrolState = ref<ModelPatrolSnapshot>();
 const cameraMode = ref<'orbit' | 'walk' | 'patrol'>('orbit');
 const facadeMode = ref<'show' | 'transparent' | 'hidden'>('transparent');
@@ -385,6 +390,14 @@ onBeforeUnmount(() => {
   border: 1px solid rgb(0 212 255 / 28%);
   border-radius: 6px;
   box-shadow: inset 0 0 28px rgb(0 120 220 / 12%);
+
+  // 全屏时撑满视口，去掉圆角与边框
+  &:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    border-radius: 0;
+  }
   button {
     color: #00d4ff;
     cursor: pointer;

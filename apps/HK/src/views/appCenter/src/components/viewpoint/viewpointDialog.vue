@@ -110,6 +110,7 @@ const handleSave = () => {
     ElMessage.warning('请先点击选中一个设备');
     return;
   }
+  console.log(viewpoint);
   emit('saved', viewpoint);
   ElMessage.success('视角保存成功，提交表单后生效');
   visible.value = false;

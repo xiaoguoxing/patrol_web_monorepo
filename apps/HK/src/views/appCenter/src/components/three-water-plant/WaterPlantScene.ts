@@ -7,6 +7,7 @@ import {
   PATROL_IDS,
   WATER_PLANT_MODELS as MODELS,
   SCENE_CONFIG,
+  type PatrolViewpoint,
   type WaterPlantModelKey as ModelKey,
   type WaterPlantModelSource as ModelSource,
 } from '../shared/constants';
@@ -39,7 +40,12 @@ export class WaterPlantScene {
   private readonly container: HTMLElement;
   private readonly callbacks: WaterPlantSceneCallbacks;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(46, 1, SCENE_CONFIG.cameraNear, SCENE_CONFIG.cameraFar);
+  private readonly camera = new THREE.PerspectiveCamera(
+    SCENE_CONFIG.cameraFov,
+    1,
+    SCENE_CONFIG.cameraNear,
+    SCENE_CONFIG.cameraFar
+  );
   private readonly renderer: THREE.WebGLRenderer;
   private readonly viewTarget = new THREE.Vector3();
   /** 跟随模式的平滑相机位置/注视点（避免镜头晃动） */
@@ -49,6 +55,12 @@ export class WaterPlantScene {
   /** 遮挡检测：目标 -> 相机的射线与解析出的无遮挡相机位置 */
   private readonly raycaster = new THREE.Raycaster();
   private readonly resolvedCamPos = new THREE.Vector3();
+  /** 巡检预设视角的注视点（复用临时向量） */
+  private readonly presetLook = new THREE.Vector3();
+  /** 巡航平移跟随：路径侧向向量 / 路径前方注视点 / 世界向上（复用临时向量） */
+  private readonly cruiseRight = new THREE.Vector3();
+  private readonly cruiseAhead = new THREE.Vector3();
+  private readonly upVec = new THREE.Vector3(0, 1, 0);
   /** 跟随模式下的观察距离（滚轮可调，默认贴近设备） */
   private followDist = 75;
   private occlusionAccum = 0;
@@ -107,6 +119,10 @@ export class WaterPlantScene {
     this.container = container;
     this.callbacks = callbacks;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Windows 下 ANGLE/D3D 后端会对 three 内置 shader 报 X4122 浮点精度警告
+    // （Program Info Log: sum of ... cannot be represented accurately in double precision），
+    // 该警告无害，关闭 shader 日志检查以静默，避免控制台刷屏
+    this.renderer.debug.checkShaderErrors = false;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
     // PCFSoftShadowMap 在 r155+ 已弃用，弃用路径会导致 shadow 采样器格式不匹配（地面消失）
@@ -720,34 +736,26 @@ export class WaterPlantScene {
     const dwelling = this.patrol?.isDwelling() ?? false;
     const aim = dwelling ? this.patrol?.getFocusedTargetPosition() : this.patrol?.getPathPosition();
     if (this.cameraMode === 'patrol' && aim) {
-      // 注视点锁定巡检目标设备中心，保证设备始终位于画面正中
-      const lookTarget = aim.clone();
-      const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
-      // 相机略高于设备中心形成轻微俯视（高度随设备大小适当调整）
-      const height = THREE.MathUtils.clamp(radius * 0.5, 20, 55);
-      // 保证设备整体入画：相机到设备中心的直线距离需使包围球张角不超过 85% FOV
-      const fovHalf = THREE.MathUtils.degToRad(this.camera.fov / 2);
-      const minDist = (radius + 8) / Math.tan(fovHalf * 0.85);
-      // 观察距离：停留时贴近设备，巡航时保持近中距（默认 75，滚轮可调）；均不低于整体入画所需距离
-      const base = dwelling ? Math.min(this.followDist, 42) : this.followDist;
-      const dist3 = Math.max(base, minDist, height + 1);
-      const flat = Math.sqrt(dist3 * dist3 - height * height);
-      const theta = THREE.MathUtils.degToRad(this.theta);
-      const desired = this.followPos.set(
-        lookTarget.x + flat * Math.sin(theta),
-        lookTarget.y + height,
-        lookTarget.z + flat * Math.cos(theta)
-      );
-      // 遮挡检测（每 4 帧一次）：被遮挡时仅沿视线拉近（保持高度），不做抬升
-      this.occlusionAccum += 1;
-      if (this.occlusionAccum % 4 === 1) {
-        this.resolvedCamPos.copy(this.resolveClearCamera(lookTarget, desired));
+      // fov 统一做平滑过渡，避免切换目标或 dwelling 状态时视角一跳一跳
+      this.smoothPatrolFov();
+      // 该点位配置了预设视角（配置视角页保存）：停留时相机直接采用预设机位（位置/注视点/fov）
+      const viewpoint = this.patrol?.getFocusedViewpoint();
+      if (dwelling && viewpoint?.position && viewpoint.target) {
+        this.resolvedCamPos.fromArray(viewpoint.position);
+        this.presetLook.fromArray(viewpoint.target);
+        this.camPos.lerp(this.resolvedCamPos, 0.12);
+        this.camLook.lerp(this.presetLook, 0.15);
+        this.camera.position.copy(this.camPos);
+        this.camera.lookAt(this.camLook);
+        return;
       }
-      // 相机位置与注视点均做平滑插值，形成平稳的水平平移跟随
-      this.camPos.lerp(this.resolvedCamPos, 0.12);
-      this.camLook.lerp(lookTarget, 0.15);
-      this.camera.position.copy(this.camPos);
-      this.camera.lookAt(this.camLook);
+      // 停留且未配置预设视角：自动跟随算法（注视点锁定设备中心，相机保持一定观察距离）
+      if (dwelling) {
+        this.updatePatrolFollow(aim);
+        return;
+      }
+      // 设备间巡航：相机沿路径切线平移跟随，避免镜头大角度转动
+      this.updatePatrolCruise(aim);
       return;
     }
     // 全景浏览（orbit）：球坐标手动旋转/平移
@@ -762,6 +770,83 @@ export class WaterPlantScene {
     // 同步跟随平滑状态，避免切换模式时跳变
     this.camPos.copy(this.camera.position);
     this.camLook.copy(this.viewTarget);
+  }
+
+  /** 巡检视角：fov 每帧平滑过渡到目标值，避免切换点位或 dwelling 状态时视角突变 */
+  private smoothPatrolFov() {
+    const viewpoint = this.patrol?.getFocusedViewpoint();
+    const desiredFov = viewpoint?.fov && viewpoint.fov > 0 ? viewpoint.fov : SCENE_CONFIG.cameraFov;
+    if (Math.abs(this.camera.fov - desiredFov) > 0.01) {
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, desiredFov, 0.08);
+      this.camera.updateProjectionMatrix();
+    }
+  }
+
+  /** 停留阶段自动跟随：注视点锁定设备中心，相机保持一定观察距离形成轻微俯视 */
+  private updatePatrolFollow(lookTarget: THREE.Vector3) {
+    const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
+    // 相机略高于设备中心形成轻微俯视（高度随设备大小适当调整）
+    const height = THREE.MathUtils.clamp(radius * 0.5, 20, 55);
+    // 保证设备整体入画：相机到设备中心的直线距离需使包围球张角不超过 85% FOV
+    const fovHalf = THREE.MathUtils.degToRad(this.camera.fov / 2);
+    const minDist = (radius + 8) / Math.tan(fovHalf * 0.85);
+    // 观察距离：贴近设备，不低于整体入画所需距离
+    const dist3 = Math.max(Math.min(this.followDist, 42), minDist, height + 1);
+    const flat = Math.sqrt(dist3 * dist3 - height * height);
+    const theta = THREE.MathUtils.degToRad(this.theta);
+    const desired = this.followPos.set(
+      lookTarget.x + flat * Math.sin(theta),
+      lookTarget.y + height,
+      lookTarget.z + flat * Math.cos(theta)
+    );
+    // 遮挡检测（每 4 帧一次）：被遮挡时仅沿视线拉近（保持高度），不做抬升
+    this.occlusionAccum += 1;
+    if (this.occlusionAccum % 4 === 1) {
+      this.resolvedCamPos.copy(this.resolveClearCamera(lookTarget, desired));
+    }
+    // 相机位置与注视点均做平滑插值，形成平稳的水平平移跟随
+    this.camPos.lerp(this.resolvedCamPos, 0.12);
+    this.camLook.lerp(lookTarget, 0.15);
+    this.camera.position.copy(this.camPos);
+    this.camera.lookAt(this.camLook);
+  }
+
+  /**
+   * 设备间巡航：相机置于路径侧上方，朝向沿路径切线方向（看前进方向）。
+   * 直线段相机纯平移不转动，转弯处随路径平缓转向，避免设备之间镜头大角度转动。
+   */
+  private updatePatrolCruise(pathPos: THREE.Vector3) {
+    const tangent = this.patrol?.getPathTangent();
+    if (!tangent) {
+      // 兜底：取不到切线时直接看路径点
+      this.camLook.lerp(pathPos, 0.15);
+      this.camera.position.copy(this.camPos);
+      this.camera.lookAt(this.camLook);
+      return;
+    }
+    // 侧向单位向量（路径切线 × 上），相机始终位于路径侧方，直线段即纯平移
+    this.cruiseRight.crossVectors(tangent, this.upVec).normalize();
+    if (this.cruiseRight.lengthSq() < 1e-6) this.cruiseRight.set(1, 0, 0);
+    const side = 34;
+    const camHeight = 22;
+    const desired = this.followPos.set(
+      pathPos.x + this.cruiseRight.x * side,
+      pathPos.y + camHeight,
+      pathPos.z + this.cruiseRight.z * side
+    );
+    // 注视点：路径前方一段距离（沿切线方向），朝向始终与前进方向一致
+    this.cruiseAhead.copy(pathPos).addScaledVector(tangent, 70);
+    this.cruiseAhead.y += 8;
+    // 遮挡检测（每 4 帧一次）：被遮挡时仅沿视线拉近（保持高度），不做抬升
+    this.occlusionAccum += 1;
+    if (this.occlusionAccum % 4 === 1) {
+      this.resolvedCamPos.copy(this.resolveClearCamera(this.cruiseAhead, desired));
+    }
+    // 位置/注视点平滑插值，形成平稳的平移跟随
+    this.camPos.lerp(this.resolvedCamPos, 0.1);
+    this.camLook.lerp(this.cruiseAhead, 0.12);
+    this.camera.position.copy(this.camPos);
+    this.camera.lookAt(this.camLook);
   }
 
   /**
@@ -833,9 +918,9 @@ export class WaterPlantScene {
       cb(null);
       return;
     }
-    // 投影点取设备包围球顶部上方，卡片悬浮在设备上面
+    // 投影点取设备顶部偏下一点，让卡片覆盖部分模型，避免离设备太远
     const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
-    const proj = this.projPoint.set(aim.x, aim.y + radius + 24, aim.z).project(this.camera);
+    const proj = this.projPoint.set(aim.x, aim.y + radius * 0.35, aim.z).project(this.camera);
     if (proj.z > 1 || proj.z < -1) {
       cb(null);
       return;

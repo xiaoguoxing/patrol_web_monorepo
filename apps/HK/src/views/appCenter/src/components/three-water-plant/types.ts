@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { PatrolViewpoint } from '../shared/constants';
 
 export interface ModelLoadProgress {
   percent: number;
@@ -15,6 +16,8 @@ export interface PatrolTargetInfo {
   position: THREE.Vector3;
   /** 设备包围球半径（世界坐标），用于计算"设备整体入画"所需的最小观察距离 */
   radius: number;
+  /** 该点位预设视角（配置视角页保存），未配置时为 undefined */
+  viewpoint?: PatrolViewpoint;
 }
 
 export interface ModelPatrolSnapshot {

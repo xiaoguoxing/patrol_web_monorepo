@@ -1,12 +1,13 @@
 import * as THREE from 'three';
+import type { PatrolViewpoint } from '../shared/constants';
 import type { ModelPatrolSnapshot, PatrolTargetInfo } from './types';
 
 interface PatrolControllerOptions {
   scene: THREE.Scene;
   /** 模型根节点（真实 GLB 的容器），巡检 id 在它下面递归查找 */
   root: THREE.Object3D;
-  /** 巡检对象模型 id 列表（对应 GLB 内的节点名） */
-  ids: string[];
+  /** 巡检点位列表（modelId 定位设备，可带预设视角） */
+  ids: PatrolViewpoint[];
   onChange: (snapshot: ModelPatrolSnapshot) => void;
 }
 
@@ -39,9 +40,10 @@ export class PatrolController {
 
   constructor(options: PatrolControllerOptions) {
     this.onChange = options.onChange;
-    // 解析巡检目标：按 id 在模型根节点下查找节点，取其包围盒中心上方的点
+    // 解析巡检目标：按 modelId 在模型根节点下查找节点，取其包围盒中心作为目标点
     options.root.updateWorldMatrix(true, true);
-    options.ids.forEach((id) => {
+    options.ids.forEach((item) => {
+      const id = item.modelId;
       const object = options.root.getObjectByName(id);
       if (!object) {
         // GLB 节点名与业务 id 不一致时提示，便于核对
@@ -51,7 +53,7 @@ export class PatrolController {
       const box = new THREE.Box3().setFromObject(object);
       const center = box.getCenter(new THREE.Vector3());
       const sphere = box.getBoundingSphere(new THREE.Sphere());
-      this.targets.push({ id, name: id, position: center, radius: sphere.radius });
+      this.targets.push({ id, name: id, position: center, radius: sphere.radius, viewpoint: item });
       this.objectsByTarget.set(id, object);
     });
 
@@ -120,6 +122,11 @@ export class PatrolController {
     return this.path.getPoint(this.progress);
   }
 
+  /** 当前巡航位置的路径切线方向（相机平移跟随用，保持朝向与前进方向一致） */
+  public getPathTangent() {
+    return this.path.getTangent(this.progress);
+  }
+
   /** 当前停留中的巡检目标位置（含高度），未停留时返回 undefined */
   public getFocusedTargetPosition() {
     return this.currentIndex >= 0 ? this.targets[this.currentIndex].position.clone() : undefined;
@@ -128,6 +135,11 @@ export class PatrolController {
   /** 当前目标设备的包围球半径（计算"设备整体入画"的最小观察距离用） */
   public getFocusedTargetRadius() {
     return this.currentIndex >= 0 ? this.targets[this.currentIndex].radius : undefined;
+  }
+
+  /** 当前停留目标的预设视角（配置视角页保存），未配置时返回 undefined */
+  public getFocusedViewpoint() {
+    return this.currentIndex >= 0 ? this.targets[this.currentIndex].viewpoint : undefined;
   }
 
   /** 全部巡检任务列表（按巡检顺序，返回副本避免外部修改内部状态） */
