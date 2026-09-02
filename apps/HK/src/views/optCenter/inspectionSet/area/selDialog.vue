@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts" name="areaSeldialog">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { getSelTreeApi, getSelListApi } from '@/api/modules/optCenter/inspectionSet/area';

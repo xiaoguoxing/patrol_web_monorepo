@@ -2,9 +2,16 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PatrolController } from './patrolController';
 import type { WaterPlantSceneCallbacks } from './types';
-
-/** 模型标识：facade 外立面 / interior 内部结构 */
-type ModelKey = 'facade' | 'interior';
+import {
+  TARGET_SIZE,
+  PATROL_IDS,
+  WATER_PLANT_MODELS as MODELS,
+  SCENE_CONFIG,
+  type WaterPlantModelKey as ModelKey,
+  type WaterPlantModelSource as ModelSource,
+} from '../shared/constants';
+import { addSceneLights, addSceneEnvironment } from '../shared/environment';
+import { disposeObject, isVisible, isObjectOrChildOf } from '../shared/utils';
 
 /**
  * 相机模式（设计文档明确拆分的三套相机）：
@@ -17,54 +24,10 @@ export type CameraMode = 'orbit' | 'walk' | 'patrol';
 /** 外立面显示模式：show 显示 / transparent 透视 / hidden 隐藏 */
 export type FacadeMode = 'show' | 'transparent' | 'hidden';
 
-interface ModelSource {
-  key: ModelKey;
-  label: string;
-  file: string;
-  facade: boolean;
-}
-
 interface ModelLoadingState {
   loaded: number;
   total: number;
 }
-
-/** 模型归一化后的最大边长（世界单位） */
-const TARGET_SIZE = 1200;
-
-const MODELS: ModelSource[] = [
-  { key: 'facade', label: '外立面', file: 'TWFWPS_WLM.glb', facade: true },
-  { key: 'interior', label: '内部结构', file: 'TWFWPS_SNSB.glb', facade: false },
-];
-
-/**
- * 巡检对象模型 id 列表（对应 GLB 内的节点名 / 对象名）。
- * 由业务侧提供（从 Babylon 场景调试中导出）：
- *   Line009 / Line012 / Line013 / Line019 / Line020 / Line021 / Line023 / Line024
- *   Rectangle008 / Rectangle019 ~ Rectangle028
- * 巡检会依次定位到这些节点。
- */
-const PATROL_IDS: string[] = [
-  'Line009',
-  'Line012',
-  'Line013',
-  'Line020',
-  'Line019',
-  'Line021',
-  'Rectangle008',
-  'Line023',
-  'Line024',
-  'Rectangle019',
-  'Rectangle020',
-  'Rectangle021',
-  'Rectangle022',
-  'Rectangle023',
-  'Rectangle024',
-  'Rectangle025',
-  'Rectangle026',
-  'Rectangle027',
-  'Rectangle028',
-];
 
 /**
  * 水厂三维模型巡检场景
@@ -76,7 +39,7 @@ export class WaterPlantScene {
   private readonly container: HTMLElement;
   private readonly callbacks: WaterPlantSceneCallbacks;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(46, 1, 1, 9000);
+  private readonly camera = new THREE.PerspectiveCamera(46, 1, SCENE_CONFIG.cameraNear, SCENE_CONFIG.cameraFar);
   private readonly renderer: THREE.WebGLRenderer;
   private readonly viewTarget = new THREE.Vector3();
   /** 跟随模式的平滑相机位置/注视点（避免镜头晃动） */
@@ -86,8 +49,8 @@ export class WaterPlantScene {
   /** 遮挡检测：目标 -> 相机的射线与解析出的无遮挡相机位置 */
   private readonly raycaster = new THREE.Raycaster();
   private readonly resolvedCamPos = new THREE.Vector3();
-  /** 跟随模式下的观察距离（滚轮可调） */
-  private followDist = 110;
+  /** 跟随模式下的观察距离（滚轮可调，默认贴近设备） */
+  private followDist = 75;
   private occlusionAccum = 0;
   /** 当前相机模式（默认全景浏览，加载完成后若有巡检对象则切到自动巡检） */
   private cameraMode: CameraMode = 'orbit';
@@ -102,8 +65,10 @@ export class WaterPlantScene {
   private readonly walkEyeHeight = 160;
   /** walk 漫游：鼠标转视角灵敏度（弧度/像素） */
   private readonly walkLookSpeed = 0.003;
-  /** 全局人眼观察高度（整体模型中部的 y），镜头全程保持该高度水平平移，不做拉升动作 */
-  private globalLookY = 0;
+  /** 视口尺寸（CSS 像素，用于世界坐标 -> 屏幕坐标投影） */
+  private readonly viewportRect = { width: 1, height: 1 };
+  /** 屏幕投影复用的临时向量 */
+  private readonly projPoint = new THREE.Vector3();
   /** 模型整体包围信息（加载完成后缓存，用于预设视角） */
   private readonly modelCenter = new THREE.Vector3();
   private readonly modelSphere = new THREE.Sphere();
@@ -152,8 +117,8 @@ export class WaterPlantScene {
     this.renderer.toneMappingExposure = 2.0;
     this.renderer.domElement.className = 'three-water-plant__canvas';
     container.appendChild(this.renderer.domElement);
-    this.addLights();
-    this.addEnvironment();
+    addSceneLights(this.scene);
+    addSceneEnvironment(this.scene, this.renderer);
     this.scene.add(this.modelRoot);
     this.bindEvents();
     this.resize();
@@ -165,6 +130,8 @@ export class WaterPlantScene {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
     if (!width || !height) return;
+    this.viewportRect.width = width;
+    this.viewportRect.height = height;
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
@@ -172,6 +139,22 @@ export class WaterPlantScene {
 
   public advanceToNextTarget() {
     this.patrol?.advanceToNextTarget();
+  }
+
+  /** 跳转到指定巡检任务（点击任务列表项时定位对应设备），自动进入自动巡检模式 */
+  public jumpToTarget(index: number) {
+    if (this.cameraMode !== 'patrol') this.setCameraMode('patrol');
+    this.patrol?.jumpToTarget(index);
+  }
+
+  /** 全部巡检任务列表（任务标题 = 巡检点位，按巡检顺序） */
+  public getPatrolTargets() {
+    return this.patrol?.getTargets() ?? [];
+  }
+
+  /** 当前巡检任务索引（未开始时为 -1） */
+  public getPatrolIndex() {
+    return this.patrol?.getCurrentIndex() ?? -1;
   }
 
   /**
@@ -247,6 +230,49 @@ export class WaterPlantScene {
     return this.cameraMode;
   }
 
+  /**
+   * 飞行到指定视角（巡检对象"配置视角"功能：巡视时恢复保存的角度）。
+   * @param position 相机位置 [x, y, z]（与配置页同一 GLB 归一化坐标系）
+   * @param target   注视点 [x, y, z]
+   * 自动反推球坐标（theta/phi/radius）并用 easeOutCubic 平滑过渡。
+   */
+  public flyToViewpoint(position: number[], target: number[]) {
+    if (!this.modelReady) return;
+    // 恢复视角属于自由观察能力，先切到 orbit 模式再飞行
+    this.setCameraMode('orbit');
+    const pos = new THREE.Vector3(position[0], position[1], position[2]);
+    const tgt = new THREE.Vector3(target[0], target[1], target[2]);
+    const dx = pos.x - tgt.x;
+    const dy = pos.y - tgt.y;
+    const dz = pos.z - tgt.z;
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (dist < 1e-4) return;
+    this.flyFromTarget.copy(this.viewTarget);
+    this.flyToTarget.copy(tgt);
+    this.flyFromTheta = this.theta;
+    // 球坐标约定：position = target + radius*sin(phi)*sin(theta), y + radius*cos(phi), z + radius*sin(phi)*cos(theta)
+    this.flyToTheta = THREE.MathUtils.radToDeg(Math.atan2(dx, dz));
+    this.flyFromPhi = this.phi;
+    this.flyToPhi = THREE.MathUtils.clamp(
+      THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(dy / dist, -1, 1))),
+      10,
+      84
+    );
+    this.flyFromRadius = this.radius;
+    this.flyToRadius = THREE.MathUtils.clamp(dist, 200, 4000);
+    this.flyActive = true;
+    this.flyTime = 0;
+    this.flyDuration = 1.2;
+  }
+
+  /** 获取当前相机视角（配置页保存视角用）：position + target */
+  public getViewpoint() {
+    return {
+      position: this.camera.position.toArray().map((v) => parseFloat(v.toFixed(2))),
+      target: this.viewTarget.toArray().map((v) => parseFloat(v.toFixed(2))),
+    };
+  }
+
   /** 重新加载真实模型（加载失败后重试） */
   public reloadModels() {
     if (this.disposed) return;
@@ -271,18 +297,7 @@ export class WaterPlantScene {
     window.removeEventListener('mouseup', this.handlePointerUp);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
-    this.scene.traverse((object) => {
-      if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.LineSegments) {
-        object.geometry.dispose();
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material) => {
-          Object.values(material).forEach((value: unknown) => {
-            if (value instanceof THREE.Texture) value.dispose();
-          });
-          material.dispose();
-        });
-      }
-    });
+    disposeObject(this.scene);
     if (this.scene.background instanceof THREE.Texture) {
       this.scene.background.dispose();
     }
@@ -299,212 +314,7 @@ export class WaterPlantScene {
     this.scene.clear();
   }
 
-  /**
-   * 灯光布置（少而精，突出立体感）：
-   * - 主光：太阳光（暖白方向光，带阴影，提供主体积感）
-   * - 环境光/半球光：低强度，仅防止纯黑
-   * - 内部补光（无阴影，穿透半透明外壳照亮内部设备）：仅正面方向光 + 顶部柔光，
-   *   避免多方向直射导致模型整体过亮、阴影变弱、失去工业层次。
-   */
-  private addLights() {
-    const sun = new THREE.DirectionalLight(0xfff3de, 2.8);
-    sun.position.set(500, 900, 300);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -1800;
-    sun.shadow.camera.right = 1800;
-    sun.shadow.camera.top = 1800;
-    sun.shadow.camera.bottom = -1800;
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 4000;
-    sun.shadow.bias = -0.0006;
-    sun.shadow.normalBias = 0.6;
-    this.scene.add(sun);
-    // 基础环境光：低强度，仅防止纯黑
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-    this.scene.add(new THREE.HemisphereLight(0xddeeff, 0x3a4a5a, 0.85));
-    // 内部补光：正面方向光 + 顶部柔光
-    const fill = new THREE.DirectionalLight(0xa8d4ff, 0.9);
-    fill.position.set(0, 300, 600);
-    this.scene.add(fill);
-    const topFill = new THREE.DirectionalLight(0xffffff, 0.5);
-    topFill.position.set(0, 800, 0);
-    this.scene.add(topFill);
-  }
-
-  /**
-   * 场景环境：
-   * - 蓝天白云全景背景（Canvas 程序化生成，随视角旋转）
-   * - 雾效：远处地面融入天空，增强纵深
-   * - 水泥地面：程序化生成水泥纹理，接收模型阴影
-   */
-  private addEnvironment() {
-    const skyTexture = this.createSkyTexture();
-    skyTexture.mapping = THREE.EquirectangularReflectionMapping;
-    this.scene.background = skyTexture;
-    // 雾色取天空地平线附近的灰蓝色，让远处地面自然融入背景
-    this.scene.fog = new THREE.Fog(0xbfd5e4, 3200, 8500);
-
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(9000, 9000),
-      new THREE.MeshStandardMaterial({
-        map: this.createGroundTexture(),
-        color: 0xb9b9b2,
-        roughness: 0.95,
-        metalness: 0,
-      })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    // 略低于模型底面，避免与模型底部 z-fighting
-    ground.position.y = -1;
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-
-    // 环境反射（HDR 的替代实现）：程序生成的柔和工业环境经 PMREM 烘焙后赋给
-    // scene.environment，让金属/设备材质获得自然的环境反射与补光；
-    // 背景仍用上面的天空纹理，避免环境贴图过于抢眼。
-    const envTexture = this.createEnvTexture();
-    envTexture.mapping = THREE.EquirectangularReflectionMapping;
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    const envRT = pmrem.fromEquirectangular(envTexture);
-    this.scene.environment = envRT.texture;
-    pmrem.dispose();
-    envTexture.dispose();
-  }
-
-  /**
-   * 生成用于环境反射的工业风环境纹理（上天空 / 下灰地面）。
-   * 亮度保持柔和，避免 Reinhard 曝光下金属设备过曝。
-   */
-  private createEnvTexture(): THREE.CanvasTexture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return new THREE.CanvasTexture(canvas);
-    // 上方柔和天空渐变，下方灰水泥地面（形成明暗层次，反射更有立体感）
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#3f7fbf');
-    gradient.addColorStop(0.5, '#9cc4e4');
-    gradient.addColorStop(0.58, '#77848a');
-    gradient.addColorStop(1, '#394248');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.format = THREE.RGBAFormat;
-    texture.type = THREE.UnsignedByteType;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }
-
-  /** 用 Canvas 生成蓝天白云全景纹理（宽高比 2:1，适配 Equirectangular 背景） */
-  private createSkyTexture(): THREE.CanvasTexture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 2048;
-    canvas.height = 1024;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return new THREE.CanvasTexture(canvas);
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#2f6fc0');
-    gradient.addColorStop(0.45, '#6ea8de');
-    gradient.addColorStop(0.72, '#bcdcf2');
-    gradient.addColorStop(0.9, '#e8f5fe');
-    gradient.addColorStop(1, '#eef8ff');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // 散落的云朵（上半天空域）
-    this.drawCloud(ctx, 420, 300, 90);
-    this.drawCloud(ctx, 1000, 210, 70);
-    this.drawCloud(ctx, 1560, 330, 100);
-    this.drawCloud(ctx, 1850, 190, 60);
-    this.drawCloud(ctx, 720, 450, 55);
-    this.drawCloud(ctx, 1300, 470, 45);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.format = THREE.RGBAFormat;
-    texture.type = THREE.UnsignedByteType;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }
-
-  /** 画一朵由多个椭圆拼成的蓬松白云 */
-  private drawCloud(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
-    const blobs: Array<[number, number, number]> = [
-      [-1.5, 0.25, 0.95],
-      [-0.85, -0.35, 0.85],
-      [0, -0.6, 1.05],
-      [0.85, -0.3, 0.9],
-      [1.5, 0.15, 0.75],
-      [0.1, 0.15, 0.8],
-    ];
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-    blobs.forEach(([dx, dy, dr]) => {
-      ctx.beginPath();
-      ctx.ellipse(x + dx * r, y + dy * r, r * dr, r * dr * 0.6, 0, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    // 底部轻微阴影，让云更有体积感
-    ctx.fillStyle = 'rgba(210, 228, 242, 0.5)';
-    ctx.beginPath();
-    ctx.ellipse(x, y + r * 0.55, r * 1.6, r * 0.28, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  /** 用 Canvas 生成水泥地面纹理（灰底 + 颗粒噪点 + 分割缝） */
-  private createGroundTexture(): THREE.CanvasTexture {
-    const size = 512;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return new THREE.CanvasTexture(canvas);
-    // 灰底（带轻微明暗变化）
-    const base = ctx.createLinearGradient(0, 0, size, size);
-    base.addColorStop(0, '#8d8d86');
-    base.addColorStop(1, '#7b7b74');
-    ctx.fillStyle = base;
-    ctx.fillRect(0, 0, size, size);
-    // 颗粒噪点
-    for (let i = 0; i < 6000; i++) {
-      const v = Math.floor(90 + Math.random() * 55);
-      ctx.fillStyle = `rgba(${v}, ${v}, ${v - 8}, ${0.12 + Math.random() * 0.18})`;
-      ctx.fillRect(Math.random() * size, Math.random() * size, 1.5 + Math.random() * 1.5, 1.5 + Math.random() * 1.5);
-    }
-    // 水泥分割缝（十字网格，加粗加深，保证可见）
-    ctx.strokeStyle = 'rgba(60, 60, 54, 0.55)';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(size / 2, 0);
-    ctx.lineTo(size / 2, size);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, size / 2);
-    ctx.lineTo(size, size / 2);
-    ctx.stroke();
-    // 细缝线
-    ctx.strokeStyle = 'rgba(70, 70, 64, 0.35)';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(size / 4, 0);
-    ctx.lineTo(size / 4, size);
-    ctx.moveTo(size * 0.75, 0);
-    ctx.lineTo(size * 0.75, size);
-    ctx.moveTo(0, size / 4);
-    ctx.lineTo(size, size / 4);
-    ctx.moveTo(0, size * 0.75);
-    ctx.lineTo(size, size * 0.75);
-    ctx.stroke();
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(16, 16);
-    texture.anisotropy = 8;
-    texture.format = THREE.RGBAFormat;
-    texture.type = THREE.UnsignedByteType;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }
+  // 灯光与环境（蓝天白云 / 雾 / 地面 / PMREM 环境反射）见 ../shared/environment.ts，与配置视角页共用
 
   /** 加载真实 GLB 模型：外立面 + 内部结构，两者同时展示 */
   private loadRealModels() {
@@ -603,8 +413,6 @@ export class WaterPlantScene {
     const box = new THREE.Box3().setFromObject(this.modelRoot);
     box.getCenter(this.modelCenter);
     box.getBoundingSphere(this.modelSphere);
-    // 全局人眼观察高度：整体模型中部的 y，镜头全程保持该高度水平平移
-    this.globalLookY = this.modelCenter.y;
     this.initPatrol();
     this.fitAll();
     this.callbacks.onModelLoaded?.();
@@ -739,23 +547,8 @@ export class WaterPlantScene {
     while (this.modelRoot.children.length > 0) {
       const child = this.modelRoot.children[0];
       this.modelRoot.remove(child);
-      this.disposeObject(child);
+      disposeObject(child);
     }
-  }
-
-  private disposeObject(root: THREE.Object3D) {
-    root.traverse((object) => {
-      if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.LineSegments) {
-        object.geometry.dispose();
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material) => {
-          Object.values(material).forEach((value) => {
-            if (value instanceof THREE.Texture) value.dispose();
-          });
-          material.dispose();
-        });
-      }
-    });
   }
 
   private bindEvents() {
@@ -923,22 +716,27 @@ export class WaterPlantScene {
       this.camLook.copy(this.playerPos).addScaledVector(dir, 50);
       return;
     }
-    // 自动巡检（patrol）：以固定人眼高度、平滑平移的方式跟随巡检位置，不自动旋转、不晃动
+    // 自动巡检（patrol）：镜头平滑跟随巡检目标，注视点锁定设备本体
     const dwelling = this.patrol?.isDwelling() ?? false;
     const aim = dwelling ? this.patrol?.getFocusedTargetPosition() : this.patrol?.getPathPosition();
     if (this.cameraMode === 'patrol' && aim) {
-      // 注视点固定在全局人眼观察高度：镜头只做水平平移，直接到达下一个点，不做拉升/俯冲动作
-      const lookY = this.globalLookY > 0 ? this.globalLookY : aim.y;
-      const lookTarget = new THREE.Vector3(aim.x, lookY, aim.z);
-      // 人眼高度由 phi（用户俯仰控制）决定，默认约 66，接近人在设备间行走的视线高度
-      const height = 30 + this.phi * 0.8;
-      // 观察距离：停留时贴近目标（不超过用户滚轮设定的距离），巡航时保持中距
-      const dist = dwelling ? Math.min(this.followDist, 60) : this.followDist;
+      // 注视点锁定巡检目标设备中心，保证设备始终位于画面正中
+      const lookTarget = aim.clone();
+      const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
+      // 相机略高于设备中心形成轻微俯视（高度随设备大小适当调整）
+      const height = THREE.MathUtils.clamp(radius * 0.5, 20, 55);
+      // 保证设备整体入画：相机到设备中心的直线距离需使包围球张角不超过 85% FOV
+      const fovHalf = THREE.MathUtils.degToRad(this.camera.fov / 2);
+      const minDist = (radius + 8) / Math.tan(fovHalf * 0.85);
+      // 观察距离：停留时贴近设备，巡航时保持近中距（默认 75，滚轮可调）；均不低于整体入画所需距离
+      const base = dwelling ? Math.min(this.followDist, 42) : this.followDist;
+      const dist3 = Math.max(base, minDist, height + 1);
+      const flat = Math.sqrt(dist3 * dist3 - height * height);
       const theta = THREE.MathUtils.degToRad(this.theta);
       const desired = this.followPos.set(
-        lookTarget.x + dist * Math.sin(theta),
+        lookTarget.x + flat * Math.sin(theta),
         lookTarget.y + height,
-        lookTarget.z + dist * Math.cos(theta)
+        lookTarget.z + flat * Math.cos(theta)
       );
       // 遮挡检测（每 4 帧一次）：被遮挡时仅沿视线拉近（保持高度），不做抬升
       this.occlusionAccum += 1;
@@ -997,30 +795,10 @@ export class WaterPlantScene {
     const focused = this.patrol?.getFocusedObject();
     for (const hit of hits) {
       // 跳过不可见对象（例如被隐藏的外立面）
-      if (!this.isRaycastVisible(hit.object)) continue;
+      if (!isVisible(hit.object)) continue;
       // 跳过当前巡检目标自身
-      if (focused && this.isObjectOrChildOf(focused, hit.object)) continue;
+      if (focused && isObjectOrChildOf(focused, hit.object)) continue;
       return true;
-    }
-    return false;
-  }
-
-  /** 判断对象在场景中是否可见（自身及祖先链上的 visible 都为 true） */
-  private isRaycastVisible(object: THREE.Object3D) {
-    let node: THREE.Object3D | null = object;
-    while (node) {
-      if (!node.visible) return false;
-      node = node.parent;
-    }
-    return true;
-  }
-
-  /** 判断 object 是否为 root 自身或其子孙节点（兼容旧版本 three，替代 Object3D.contains） */
-  private isObjectOrChildOf(root: THREE.Object3D, object: THREE.Object3D) {
-    let node: THREE.Object3D | null = object;
-    while (node) {
-      if (node === root) return true;
-      node = node.parent;
     }
     return false;
   }
@@ -1035,6 +813,36 @@ export class WaterPlantScene {
     this.updateOrbitMove(delta);
     this.updateWalkMove(delta);
     this.updateCamera();
+    this.emitTargetScreenPos();
     this.renderer.render(this.scene, this.camera);
   };
+
+  /**
+   * 每帧上报当前巡检目标在屏幕上的投影位置（设备上方一点），
+   * 供外部把"巡检结果卡片"锚定到设备上方。非巡检模式或无目标时上报 null。
+   */
+  private emitTargetScreenPos() {
+    const cb = this.callbacks.onTargetScreenPosition;
+    if (!cb) return;
+    if (this.cameraMode !== 'patrol') {
+      cb(null);
+      return;
+    }
+    const aim = this.patrol?.getFocusedTargetPosition();
+    if (!aim) {
+      cb(null);
+      return;
+    }
+    // 投影点取设备包围球顶部上方，卡片悬浮在设备上面
+    const radius = this.patrol?.getFocusedTargetRadius() ?? 30;
+    const proj = this.projPoint.set(aim.x, aim.y + radius + 24, aim.z).project(this.camera);
+    if (proj.z > 1 || proj.z < -1) {
+      cb(null);
+      return;
+    }
+    cb({
+      x: ((proj.x + 1) / 2) * this.viewportRect.width,
+      y: ((-proj.y + 1) / 2) * this.viewportRect.height,
+    });
+  }
 }

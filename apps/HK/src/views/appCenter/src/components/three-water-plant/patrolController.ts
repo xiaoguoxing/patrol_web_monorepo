@@ -50,9 +50,8 @@ export class PatrolController {
       }
       const box = new THREE.Box3().setFromObject(object);
       const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      center.y += Math.max(size.y, 1) / 2 + 8;
-      this.targets.push({ id, name: id, position: center });
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      this.targets.push({ id, name: id, position: center, radius: sphere.radius });
       this.objectsByTarget.set(id, object);
     });
 
@@ -109,6 +108,13 @@ export class PatrolController {
     this.focusTarget(index);
   }
 
+  /** 跳转到指定巡检任务（点击任务列表项定位对应设备用） */
+  public jumpToTarget(index: number) {
+    if (this.targets.length === 0) return;
+    const safe = ((index % this.targets.length) + this.targets.length) % this.targets.length;
+    this.focusTarget(safe);
+  }
+
   /** 当前巡航位置（路径上的点），供相机第一人称式跟随 */
   public getPathPosition() {
     return this.path.getPoint(this.progress);
@@ -117,6 +123,21 @@ export class PatrolController {
   /** 当前停留中的巡检目标位置（含高度），未停留时返回 undefined */
   public getFocusedTargetPosition() {
     return this.currentIndex >= 0 ? this.targets[this.currentIndex].position.clone() : undefined;
+  }
+
+  /** 当前目标设备的包围球半径（计算"设备整体入画"的最小观察距离用） */
+  public getFocusedTargetRadius() {
+    return this.currentIndex >= 0 ? this.targets[this.currentIndex].radius : undefined;
+  }
+
+  /** 全部巡检任务列表（按巡检顺序，返回副本避免外部修改内部状态） */
+  public getTargets() {
+    return this.targets.map((target) => ({ ...target, position: target.position.clone() }));
+  }
+
+  /** 当前巡检任务索引（尚未开始时为 -1） */
+  public getCurrentIndex() {
+    return this.currentIndex;
   }
 
   /** 当前停留中的巡检目标模型对象（遮挡检测时用于排除目标自身），未停留时返回 undefined */

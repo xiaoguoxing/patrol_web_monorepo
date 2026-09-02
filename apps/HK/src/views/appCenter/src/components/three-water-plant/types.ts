@@ -11,8 +11,10 @@ export interface PatrolTargetInfo {
   id: string;
   /** 展示名称 */
   name: string;
-  /** 目标巡检点（世界坐标，取节点包围盒上方） */
+  /** 目标巡检点（世界坐标，取节点包围盒中心，作为镜头注视点） */
   position: THREE.Vector3;
+  /** 设备包围球半径（世界坐标），用于计算"设备整体入画"所需的最小观察距离 */
+  radius: number;
 }
 
 export interface ModelPatrolSnapshot {
@@ -23,8 +25,17 @@ export interface ModelPatrolSnapshot {
   dwelling: boolean;
 }
 
+/** 巡检目标在屏幕上的投影位置（结果卡片跟随设备定位用） */
+export interface TargetScreenPos {
+  /** 相对视口容器的 CSS 像素坐标 */
+  x: number;
+  y: number;
+}
+
 export interface WaterPlantSceneCallbacks {
   onPatrolChange: (snapshot: ModelPatrolSnapshot) => void;
+  /** 每帧上报当前巡检目标在屏幕上的投影位置；非巡检模式或无目标时回调 null */
+  onTargetScreenPosition?: (screen: TargetScreenPos | null) => void;
   /** 真实 GLB 模型加载进度 */
   onModelLoadProgress?: (progress: ModelLoadProgress) => void;
   /** 全部模型加载完成（外立面 + 内部结构） */
