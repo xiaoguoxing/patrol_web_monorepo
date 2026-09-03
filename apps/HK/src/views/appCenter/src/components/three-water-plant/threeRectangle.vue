@@ -2,10 +2,6 @@
   <section ref="containerRef" class="three-water-plant" aria-label="水厂三维巡检场景">
     <div class="three-water-plant__viewport"></div>
     <div class="three-water-plant__tools">
-      <button type="button" :class="{ active: cameraMode === 'patrol' }" @click="setCameraMode('patrol')">
-        🤖 自动巡检
-      </button>
-      <span class="three-water-plant__toolbar-sep"></span>
       <button type="button" :class="{ active: facadeMode === 'show' }" @click="setFacadeMode('show')">外立面</button>
       <button type="button" :class="{ active: facadeMode === 'transparent' }" @click="setFacadeMode('transparent')">
         透视
@@ -75,14 +71,13 @@
           <div class="patrol-result-card__row">
             <span class="patrol-result-card__label">识别结果</span>
             <div class="patrol-result-card__result">
-              <span v-if="resultCard.status === 'loading'" class="patrol-result-card__loader" aria-hidden="true"></span>
               <img
-                v-else-if="resultCard.status === 'success' && resultCard.image"
+                v-if="resultCard.status === 'success' && resultCard.image"
                 class="patrol-result-card__thumb"
                 :src="resultCard.image"
                 :alt="resultCard.taskName || resultCard.taskId"
               />
-              <span class="patrol-result-card__text" :class="{ 'is-loading': resultCard.status === 'loading' }">
+              <span class="patrol-result-card__text">
                 {{ resultText }}
               </span>
             </div>
@@ -152,7 +147,6 @@ const containerRef = ref<HTMLElement>();
 /** 全屏：以场景容器为目标，进入/退出全屏（ResizeObserver 会自动触发渲染尺寸更新） */
 const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(containerRef);
 const patrolState = ref<ModelPatrolSnapshot>();
-const cameraMode = ref<'orbit' | 'patrol'>('orbit');
 const facadeMode = ref<'show' | 'transparent' | 'hidden'>('transparent');
 const modelLoadingPercent = ref(0);
 const modelLoadingLabel = ref('');
@@ -298,9 +292,6 @@ const showResultCard = (taskId: string, taskName: string) => {
   }, UI_CONFIG.RESULT_CARD_DURATION);
 };
 
-const setCameraMode = (mode: 'orbit' | 'patrol') => {
-  cameraMode.value = waterPlantScene?.setCameraMode(mode) ?? mode;
-};
 const setFacadeMode = (mode: 'show' | 'transparent' | 'hidden') => {
   facadeMode.value = waterPlantScene?.setFacadeMode(mode) ?? mode;
 };
@@ -342,8 +333,7 @@ onMounted(() => {
     },
     onModelLoaded: () => {
       modelReady.value = true;
-      // 模型加载完成后可能自动进入巡检跟随，同步 UI 上的模式高亮
-      cameraMode.value = waterPlantScene?.getCameraMode() ?? 'orbit';
+      // 模型加载完成后自动进入巡检跟随（场景内部按是否配置巡检对象自动切换）
       refreshPatrolTasks();
     },
     onModelError: (message) => {
@@ -534,15 +524,6 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   min-width: 0;
 }
-.patrol-result-card__loader {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgb(0 212 255 / 20%);
-  border-top-color: #00d4ff;
-  border-radius: 50%;
-  animation: glb-spin 0.8s linear infinite;
-}
 .patrol-result-card__thumb {
   flex: none;
   order: 2;
@@ -562,9 +543,6 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
-  &.is-loading {
-    color: #7aa7c4;
-  }
 }
 .patrol-result-card__time {
   color: #9fd8ff;

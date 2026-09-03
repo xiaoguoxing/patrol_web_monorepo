@@ -69,13 +69,13 @@ export class WaterPlantScene {
   /** GSAP 运镜补间代理：镜头位置 / 注视点 / fov 分开补间，可配不同缓动与时长 */
   private readonly flightPos = { x: 0, y: 0, z: 0 };
   private readonly flightLook = { x: 0, y: 0, z: 0 };
-  private readonly flightFov = { v: SCENE_CONFIG.cameraFov };
+  private readonly flightFov: { v: number } = { v: SCENE_CONFIG.cameraFov };
   /** 当前进行中的 GSAP 运镜时间轴 */
   private flightTimeline: gsap.core.Timeline | undefined;
   /** 运镜起点朝向（计算注视起点时复用） */
   private readonly camDir = new THREE.Vector3();
   /** 跟随模式下的观察距离（滚轮可调，默认贴近设备） */
-  private followDist = CAMERA_CONTROL_CONFIG.DEFAULT_FOLLOW_DISTANCE;
+  private followDist: number = CAMERA_CONTROL_CONFIG.DEFAULT_FOLLOW_DISTANCE;
   private occlusionAccum = 0;
   /** 当前相机模式（默认自由观察，加载完成后若有巡检对象则自动开始巡检） */
   private cameraMode: CameraMode = 'orbit';
@@ -179,22 +179,6 @@ export class WaterPlantScene {
 
   public getFacadeMode() {
     return this.facadeMode;
-  }
-
-  /** 切换相机模式（orbit 自由观察 / patrol 自动巡检） */
-  public setCameraMode(mode: CameraMode) {
-    if (mode === this.cameraMode) return this.cameraMode;
-    if (mode !== 'patrol') {
-      // 离开巡检模式：终止进行中的运镜（巡检阶段逻辑保留，切回时会从当前镜头继续）
-      this.flightTimeline?.kill();
-      this.flightTimeline = undefined;
-    }
-    this.cameraMode = mode;
-    return this.cameraMode;
-  }
-
-  public getCameraMode() {
-    return this.cameraMode;
   }
 
   /** 获取当前相机视角（配置页保存视角用）：position + target */
