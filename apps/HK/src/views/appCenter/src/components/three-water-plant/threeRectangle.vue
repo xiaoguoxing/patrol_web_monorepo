@@ -12,7 +12,7 @@
     </div>
 
     <!-- 左侧任务列表面板（巡检点位 = 任务，可显隐；仅展示巡检进度与状态，不支持点击跳转） -->
-    <aside class="patrol-tasks" :class="{ 'patrol-tasks--collapsed': !taskPanelVisible }">
+    <aside class="patrol-tasks" :class="{ 'patrol-tasks--collapsed1': !taskPanelVisible }">
       <header class="patrol-tasks__header">
         <span class="patrol-tasks__title">巡检任务</span>
         <span class="patrol-tasks__count" v-if="patrolTasks.length">{{ patrolTasks.length }}</span>
@@ -20,30 +20,28 @@
           {{ taskPanelVisible ? '收起' : '展开' }}
         </button>
       </header>
-      <template v-if="taskPanelVisible">
-        <div v-if="patrolTasks.length" class="patrol-tasks__progress">
-          <div class="patrol-tasks__progress-bar"><i :style="{ width: `${progress}%` }"></i></div>
-          <div class="patrol-tasks__progress-meta">
-            <span>已巡检 {{ completedCount }} / {{ patrolTasks.length }}</span>
-            <span>{{ Math.round(progress) }}%</span>
-          </div>
+      <div v-if="patrolTasks.length" class="patrol-tasks__progress">
+        <div class="patrol-tasks__progress-bar"><i :style="{ width: `${progress}%` }"></i></div>
+        <div class="patrol-tasks__progress-meta">
+          <span>已巡检 {{ completedCount }} / {{ patrolTasks.length }}</span>
+          <span>{{ Math.round(progress) }}%</span>
         </div>
-        <ul ref="taskListRef" class="patrol-tasks__list">
-          <li
-            v-for="(task, index) in patrolTasks"
-            :key="task.id"
-            class="patrol-tasks__item"
-            :class="`is-${task.state}`"
-            :title="task.name"
-          >
-            <span class="patrol-tasks__index">{{ index + 1 }}</span>
-            <span class="patrol-tasks__name">{{ task.name }}</span>
-            <span class="patrol-tasks__badge">
-              {{ task.state === 'done' ? '已巡检' : task.state === 'current' ? '巡检中' : '待巡检' }}
-            </span>
-          </li>
-        </ul>
-      </template>
+      </div>
+      <ul v-show="taskPanelVisible" ref="taskListRef" class="patrol-tasks__list">
+        <li
+          v-for="(task, index) in patrolTasks"
+          :key="task.id"
+          class="patrol-tasks__item"
+          :class="`is-${task.state}`"
+          :title="task.name"
+        >
+          <span class="patrol-tasks__index">{{ index + 1 }}</span>
+          <span class="patrol-tasks__name">{{ task.name }}</span>
+          <span class="patrol-tasks__badge">
+            {{ task.state === 'done' ? '已巡检' : task.state === 'current' ? '巡检中' : '待巡检' }}
+          </span>
+        </li>
+      </ul>
     </aside>
 
     <!-- 智能巡检结果卡片：直接采用"智能巡检结果面板"样式，锚定在设备上方 -->
@@ -186,9 +184,9 @@ const conclusionText = computed(() => {
 const resultText = computed(() => {
   if (resultCard.value.status === 'loading') return '正在获取识别结果…';
   if (resultCard.value.status === 'error') return '未获取到识别结果，请稍后重试';
-  const confidence =
-    resultCard.value.confidence != null ? `（置信度 ${Math.round(resultCard.value.confidence * 100)}%）` : '';
-  return `${resultCard.value.detail || '--'}${confidence}`;
+  /*const confidence =
+    resultCard.value.confidence != null ? `（置信度 ${Math.round(resultCard.value.confidence * 100)}%）` : '';*/
+  return `${resultCard.value.detail || '--'}`;
 });
 /** 格式化巡检时间（yyyy-MM-dd HH:mm:ss） */
 const formatTime = (date: Date) => {
