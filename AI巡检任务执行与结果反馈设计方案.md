@@ -2,31 +2,51 @@
 
 ## 一、业务流程概述
 
-### 1.1 核心流程
+### 1.1 核心流程（后端驱动模式）
 
 ```
-用户进入详情页
+【后端】巡检任务队列已启动，按序执行
     ↓
-获取巡检任务列表（HTTP）
+【前端】用户进入详情页
     ↓
-建立 WebSocket 连接
+【前端】HTTP 获取任务列表 + 当前执行状态
     ↓
-前端驱动 3D 场景自动巡检
+【前端】建立 WebSocket 连接订阅推送
     ↓
-到达设备 → 触发识别请求 → 等待结果
+【后端】推送："当前执行到 task-003"
     ↓
-收到识别结果 → 展示卡片 → 继续下一个
+【前端】3D 场景飞向对应设备，开始等待
     ↓
-全部完成 / 用户离开 → 断开连接
+【后端】AI 识别完成 → 推送识别结果
+    ↓
+【前端】展示结果卡片（15s）
+    ↓
+【后端】推送："开始执行 task-004"
+    ↓
+【前端】3D 场景飞向下一个设备，继续等待
+    ↓
+... 循环往复 ...
+    ↓
+【后端】推送："全部任务已完成"
+    ↓
+【前端】显示完成提示，断开连接
 ```
 
 ### 1.2 角色职责
 
-| 角色             | 职责                                                   |
-| ---------------- | ------------------------------------------------------ |
-| **后端**         | 提供任务列表、接收识别请求、调用 AI 模型、推送识别结果 |
-| **前端 3D 场景** | 按任务列表顺序巡检、到达设备时通知外层组件             |
-| **前端业务层**   | 管理 WebSocket 连接、请求识别、接收结果、更新 UI       |
+| 角色             | 职责                                                          |
+| ---------------- | ------------------------------------------------------------- |
+| **后端**         | 自主执行任务队列、调用 AI 模型、主动推送任务状态与识别结果    |
+| **前端 3D 场景** | 被动跟随后端进度、飞向对应设备、展示识别结果                  |
+| **前端业务层**   | 管理 WebSocket 连接、接收推送、同步 3D 场景状态、展示任务进度 |
+
+### 1.3 关键设计原则
+
+⚠️ **前端不发送识别请求，只接收推送**
+
+- 前端无 `INSPECTION_REQUEST` 消息
+- 后端完全自主决定何时执行哪个任务
+- 前端通过 WebSocket 被动接收 `TASK_STARTED`、`INSPECTION_RESULT` 等推送
 
 ---
 
@@ -67,15 +87,15 @@ interface PatrolTask {
 }
 ```
 
-### 2.2 识别请求（Inspection Request）
+### 2.2 任务开始推送（Task Started）
 
 ```typescript
 /**
- * 前端 → 后端：请求对某个设备进行 AI 识别
+ * 后端 → 前端：通知前端某个任务开始执行
  */
-interface InspectionRequest {
+interface TaskStarted {
   /** 消息类型 */
-  type: 'INSPECTION_REQUEST';
+  type: 'TASK_STARTED';
 
   /** 任务 ID */
   taskId: string;
@@ -83,18 +103,17 @@ interface InspectionRequest {
   /** 设备 ID */
   deviceId: string;
 
-  /** 相机快照（可选，Base64 编码的截图） */
-  snapshot?: string;
+  /** 设备名称 */
+  deviceName: string;
 
-  /** 当前视角参数（可选，用于后端记录） */
-  viewpoint?: {
-    position: [number, number, number];
-    target: [number, number, number];
-    fov: number;
-  };
+  /** 设备类型 */
+  deviceType: string;
 
-  /** 请求时间戳 */
-  timestamp: number;
+  /** 预计识别耗时（秒，可选） */
+  estimatedDuration?: number;
+
+  /** 开始时间 */
+  startedAt: string;
 }
 ```
 
@@ -140,7 +159,55 @@ interface InspectionResult {
 }
 ```
 
-### 2.4 WebSocket 消息协议
+### 2.4 任务完成推送（Task Completed）
+
+```typescript
+/**
+ * 后端 → 前端：通知前端某个任务已完成（无论成功/失败）
+ */
+interface TaskCompleted {
+  /** 消息类型 */
+  type: 'TASK_COMPLETED';
+
+  /** 任务 ID */
+  taskId: string;
+
+  /** 完成状态 */
+  status: 'success' | 'failed';
+
+  /** 完成时间 */
+  completedAt: string;
+}
+```
+
+### 2.5 全部任务完成推送（All Tasks Completed）
+
+```typescript
+/**
+ * 后端 → 前端：通知前端当前巡检记录的所有任务已执行完毕
+ */
+interface AllTasksCompleted {
+  /** 消息类型 */
+  type: 'ALL_TASKS_COMPLETED';
+
+  /** 巡检记录 ID */
+  inspectionId: string;
+
+  /** 总任务数 */
+  totalTasks: number;
+
+  /** 成功数 */
+  successCount: number;
+
+  /** 失败数 */
+  failedCount: number;
+
+  /** 完成时间 */
+  completedAt: string;
+}
+```
+
+### 2.6 WebSocket 消息协议
 
 ```typescript
 /**
@@ -150,21 +217,30 @@ interface WebSocketMessage {
   /** 消息类型 */
   type:
     | 'CONNECTION_ACK' // 连接确认（后端 → 前端）
-    | 'INSPECTION_REQUEST' // 识别请求（前端 → 后端）
+    | 'TASK_STARTED' // 任务开始（后端 → 前端）
     | 'INSPECTION_RESULT' // 识别结果（后端 → 前端）
-    | 'TASK_STATUS_UPDATE' // 任务状态更新（后端 → 前端）
-    | 'HEARTBEAT' // 心跳保活
-    | 'ERROR'; // 错误消息
+    | 'TASK_COMPLETED' // 任务完成（后端 → 前端）
+    | 'ALL_TASKS_COMPLETED' // 全部完成（后端 → 前端）
+    | 'HEARTBEAT' // 心跳保活（双向）
+    | 'ERROR'; // 错误消息（后端 → 前端）
 
   /** 消息负载（根据 type 不同而不同） */
   payload: Record<string, unknown>;
 
-  /** 消息 ID（用于请求-响应关联） */
+  /** 消息 ID（用于追踪） */
   messageId: string;
 
   /** 时间戳 */
   timestamp: number;
 }
+```
+
+**⚠️ 注意**：前端**只接收**推送，**不发送**业务消息（除心跳外）
+
+/\*_ 时间戳 _/
+timestamp: number;
+}
+
 ```
 
 ---
@@ -174,21 +250,23 @@ interface WebSocketMessage {
 ### 3.1 目录结构
 
 ```
+
 apps/HK/src/views/appCenter/src/
 ├── components/
-│   ├── three-water-plant/
-│   │   ├── threeRectangle.vue         # 3D 场景容器（现有）
-│   │   ├── WaterPlantScene.ts         # 场景渲染（现有）
-│   │   ├── patrolController.ts        # 巡检控制器（现有）
-│   │   └── patrolResult.ts            # 结果数据源（需改造）
-│   └── shared/
-│       └── constants.ts                # 配置常量（现有）
+│ ├── three-water-plant/
+│ │ ├── threeRectangle.vue # 3D 场景容器（现有）
+│ │ ├── WaterPlantScene.ts # 场景渲染（现有）
+│ │ ├── patrolController.ts # 巡检控制器（现有）
+│ │ └── patrolResult.ts # 结果数据源（需改造）
+│ └── shared/
+│ └── constants.ts # 配置常量（现有）
 ├── composables/
-│   └── usePatrolWebSocket.ts           # WebSocket 连接管理（新增）
+│ └── usePatrolWebSocket.ts # WebSocket 连接管理（新增）
 ├── services/
-│   └── patrolService.ts                # 巡检任务 API（新增）
-└── BIMdetail.vue                       # AI 巡检详情页（需改造）
-```
+│ └── patrolService.ts # 巡检任务 API（新增）
+└── BIMdetail.vue # AI 巡检详情页（需改造）
+
+````
 
 ### 3.2 核心模块职责
 
@@ -196,55 +274,64 @@ apps/HK/src/views/appCenter/src/
 
 **职责**：
 
-- 获取巡检任务列表（HTTP API）
+- 获取巡检任务列表 + 当前执行状态（HTTP API）
 - 管理 WebSocket 连接生命周期
-- 协调 3D 场景与 WebSocket 通信
-- 维护任务状态（pending/inspecting/completed）
+- 被动接收后端推送，驱动 3D 场景跟随
+- 维护前端任务状态同步
 
 **关键逻辑**：
 
 ```typescript
-// 1. 页面加载：获取任务列表
+// 1. 页面加载：获取任务列表和当前进度
 onMounted(async () => {
   try {
     // 从 URL 参数获取巡检记录 ID
     const inspectionId = route.query.id;
 
-    // HTTP 获取任务列表
-    const tasks = await PatrolService.getTaskList(inspectionId);
+    // HTTP 获取任务列表 + 当前执行状态
+    const { tasks, currentTaskId } = await PatrolService.getTaskListWithStatus(inspectionId);
 
-    // 建立 WebSocket 连接
-    const { connect, disconnect, requestInspection } = usePatrolWebSocket(inspectionId);
+    // 建立 WebSocket 连接，订阅推送
+    const { connect, disconnect } = usePatrolWebSocket(inspectionId);
     connect({
+      onTaskStarted: handleTaskStarted,
       onResult: handleInspectionResult,
-      onStatusUpdate: handleTaskStatusUpdate,
+      onTaskCompleted: handleTaskCompleted,
+      onAllCompleted: handleAllTasksCompleted,
     });
 
     // 传递任务列表给 3D 场景
     patrolTasks.value = tasks;
+
+    // 如果后端已经开始执行某个任务，立即飞向对应设备
+    if (currentTaskId) {
+      const currentTask = tasks.find(t => t.taskId === currentTaskId);
+      if (currentTask) {
+        flyToDevice(currentTask.deviceId, currentTask.deviceName);
+      }
+    }
   } catch (error) {
     ElMessage.error('任务列表加载失败');
   }
 });
 
-// 2. 3D 场景到达设备时触发识别
-const handleDeviceArrived = (taskId: string, deviceId: string) => {
-  // 更新任务状态为"识别中"
-  updateTaskStatus(taskId, 'inspecting');
+// 2. 收到"任务开始"推送
+const handleTaskStarted = (data: TaskStarted) => {
+  console.log(`[巡检] 后端开始执行任务: ${data.deviceName}`);
 
-  // 通过 WebSocket 请求识别
-  requestInspection({
-    taskId,
-    deviceId,
-    snapshot: captureSceneSnapshot(), // 可选：截取当前画面
-    viewpoint: getCurrentViewpoint(), // 可选：记录视角
-  });
+  // 更新任务状态为"执行中"
+  updateTaskStatus(data.taskId, 'inspecting');
+
+  // 驱动 3D 场景飞向对应设备
+  flyToDevice(data.deviceId, data.deviceName);
+
+  // 显示加载提示
+  ElMessage.info(`正在巡检 ${data.deviceName}，请稍候...`);
 };
 
-// 3. 收到识别结果
+// 3. 收到"识别结果"推送
 const handleInspectionResult = (result: InspectionResult) => {
-  // 更新任务状态
-  updateTaskStatus(result.taskId, result.status === 'success' ? 'completed' : 'failed');
+  console.log(`[巡检] 收到识别结果: ${result.taskId}`);
 
   // 传递结果给 3D 场景展示卡片
   resultCard.value = {
@@ -259,15 +346,47 @@ const handleInspectionResult = (result: InspectionResult) => {
     time: result.completedAt,
   };
 
-  // 等待卡片展示完毕（15s）后自动进入下一个任务
-  // 由 3D 场景的 patrolController 自动推进
+  // 卡片展示 15s 后自动隐藏（由 3D 场景内部控制）
+  // 后端会在适当时机推送下一个 TASK_STARTED
 };
 
-// 4. 页面卸载：断开连接
+// 4. 收到"任务完成"推送
+const handleTaskCompleted = (data: TaskCompleted) => {
+  console.log(`[巡检] 任务完成: ${data.taskId}, 状态: ${data.status}`);
+
+  // 更新任务状态
+  updateTaskStatus(data.taskId, data.status === 'success' ? 'completed' : 'failed');
+};
+
+// 5. 收到"全部完成"推送
+const handleAllTasksCompleted = (data: AllTasksCompleted) => {
+  console.log(`[巡检] 全部任务已完成，成功: ${data.successCount}, 失败: ${data.failedCount}`);
+
+  ElMessage.success(`巡检完成！共 ${data.totalTasks} 个任务，成功 ${data.successCount} 个`);
+
+  // 可选：自动跳转到报告页
+  // router.push(`/patrol/report/${data.inspectionId}`);
+};
+
+// 6. 驱动 3D 场景飞向设备
+const flyToDevice = (deviceId: string, deviceName: string) => {
+  // 通知 3D 场景组件
+  waterPlantSceneRef.value?.flyToDevice(deviceId, deviceName);
+};
+
+// 7. 页面卸载：断开连接
 onBeforeUnmount(() => {
   disconnect();
 });
-```
+````
+
+**关键变化**：
+
+- ❌ 删除 `handleDeviceArrived` —— 前端不再主动触发识别
+- ✅ 新增 `handleTaskStarted` —— 被动接收后端推送，驱动 3D 场景
+- ✅ 新增 `handleAllTasksCompleted` —— 监听全部完成事件
+
+````
 
 #### 3.2.2 `usePatrolWebSocket.ts` - WebSocket 管理
 
@@ -276,7 +395,7 @@ onBeforeUnmount(() => {
 - 建立和维护 WebSocket 连接
 - 处理重连逻辑（指数退避）
 - 心跳保活
-- 消息发送与接收
+- **仅接收**后端推送消息，分发给回调函数
 
 **核心实现**：
 
@@ -284,10 +403,14 @@ onBeforeUnmount(() => {
 import { ref, onUnmounted } from 'vue';
 
 interface UsePatrolWebSocketOptions {
+  /** 任务开始回调 */
+  onTaskStarted?: (data: TaskStarted) => void;
   /** 识别结果回调 */
   onResult?: (result: InspectionResult) => void;
-  /** 任务状态更新回调 */
-  onStatusUpdate?: (taskId: string, status: string) => void;
+  /** 任务完成回调 */
+  onTaskCompleted?: (data: TaskCompleted) => void;
+  /** 全部完成回调 */
+  onAllCompleted?: (data: AllTasksCompleted) => void;
   /** 连接错误回调 */
   onError?: (error: Error) => void;
 }
@@ -304,7 +427,7 @@ export function usePatrolWebSocket(inspectionId: string) {
    * 建立 WebSocket 连接
    */
   function connect(options: UsePatrolWebSocketOptions) {
-    const { onResult, onStatusUpdate, onError } = options;
+    const { onTaskStarted, onResult, onTaskCompleted, onAllCompleted, onError } = options;
 
     // WebSocket URL（开发环境 / 生产环境）
     const wsUrl = import.meta.env.DEV
@@ -329,13 +452,20 @@ export function usePatrolWebSocket(inspectionId: string) {
             console.log('[WebSocket] 连接确认', message.payload);
             break;
 
+          case 'TASK_STARTED':
+            onTaskStarted?.(message.payload as TaskStarted);
+            break;
+
           case 'INSPECTION_RESULT':
             onResult?.(message.payload as InspectionResult);
             break;
 
-          case 'TASK_STATUS_UPDATE':
-            const { taskId, status } = message.payload;
-            onStatusUpdate?.(taskId as string, status as string);
+          case 'TASK_COMPLETED':
+            onTaskCompleted?.(message.payload as TaskCompleted);
+            break;
+
+          case 'ALL_TASKS_COMPLETED':
+            onAllCompleted?.(message.payload as AllTasksCompleted);
             break;
 
           case 'ERROR':
@@ -364,29 +494,6 @@ export function usePatrolWebSocket(inspectionId: string) {
         scheduleReconnect(options);
       }
     };
-  }
-
-  /**
-   * 请求识别（前端 → 后端）
-   */
-  function requestInspection(request: Omit<InspectionRequest, 'type' | 'timestamp'>) {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      console.error('[WebSocket] 连接未建立，无法发送识别请求');
-      return;
-    }
-
-    const message: WebSocketMessage = {
-      type: 'INSPECTION_REQUEST',
-      payload: {
-        ...request,
-        timestamp: Date.now(),
-      },
-      messageId: generateMessageId(),
-      timestamp: Date.now(),
-    };
-
-    ws.send(JSON.stringify(message));
-    console.log('[WebSocket] 发送识别请求', request.taskId);
   }
 
   /**
@@ -434,13 +541,6 @@ export function usePatrolWebSocket(inspectionId: string) {
     }, delay);
   }
 
-  /**
-   * 生成唯一消息 ID
-   */
-  function generateMessageId() {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
   // 组件卸载时自动断开
   onUnmounted(() => {
     disconnect();
@@ -450,17 +550,23 @@ export function usePatrolWebSocket(inspectionId: string) {
     isConnected,
     connect,
     disconnect,
-    requestInspection,
   };
 }
-```
+````
+
+**关键变化**：
+
+- ❌ 删除 `requestInspection` 方法 —— 前端不再发送识别请求
+- ✅ 新增 `onTaskStarted` 回调 —— 监听任务开始推送
+- ✅ 新增 `onTaskCompleted` / `onAllCompleted` 回调
+
+````
 
 #### 3.2.3 `patrolService.ts` - HTTP API
 
 **职责**：
 
-- 获取巡检任务列表
-- 提交巡检报告
+- 获取巡检任务列表 + 当前执行状态
 - 查询历史记录
 
 ```typescript
@@ -468,20 +574,17 @@ import http from '@/api';
 
 export class PatrolService {
   /**
-   * 获取巡检任务列表
+   * 获取巡检任务列表 + 当前执行状态
    * @param inspectionId 巡检记录 ID
    */
-  static async getTaskList(inspectionId: string): Promise<PatrolTask[]> {
-    const { data } = await http.get<PatrolTask[]>(`/api/patrol/inspection/${inspectionId}/tasks`);
+  static async getTaskListWithStatus(inspectionId: string): Promise<{
+    tasks: PatrolTask[];
+    currentTaskId: string | null; // 当前正在执行的任务 ID（null 表示尚未开始或已全部完成）
+    totalTasks: number;
+    completedTasks: number;
+  }> {
+    const { data } = await http.get(`/api/patrol/inspection/${inspectionId}/tasks`);
     return data;
-  }
-
-  /**
-   * 提交巡检报告（全部完成后调用）
-   * @param inspectionId 巡检记录 ID
-   */
-  static async submitReport(inspectionId: string, results: InspectionResult[]): Promise<void> {
-    await http.post(`/api/patrol/inspection/${inspectionId}/submit`, { results });
   }
 
   /**
@@ -497,65 +600,81 @@ export class PatrolService {
     }
   }
 }
-```
+````
+
+**关键变化**：
+
+- ❌ 删除 `submitReport` —— 后端自主执行，无需前端提交
+- ✅ 修改 `getTaskList` → `getTaskListWithStatus` —— 返回当前执行状态
+
+````
 
 #### 3.2.4 `patrolResult.ts` 改造
 
-**现状**：本地模拟数据源  
-**改造方向**：接入 WebSocket，保留降级方案
+**现状**：本地模拟数据源
+**改造方向**：完全依赖外层 WebSocket 推送，不再主动请求
 
 ```typescript
 /**
- * 改造后的请求识别结果函数
+ * 改造后：不再主动请求，仅提供数据转换
  *
- * 策略：
- * 1. 优先使用 WebSocket 实时推送
- * 2. WebSocket 超时（如 10s）后降级为 HTTP 轮询
- * 3. 仍支持 AbortSignal 取消请求
+ * 实际识别结果由 BIMdetail.vue 通过 WebSocket 接收后，
+ * 通过 props/event 传递给 3D 场景组件
+ *
+ * 本模块仅保留：
+ * 1. 类型定义
+ * 2. 数据格式转换函数
+ * 3. 降级兜底（HTTP 轮询）
  */
-export function requestPatrolResult(
+
+/**
+ * HTTP 轮询兜底（仅在 WebSocket 完全失败时使用）
+ * 外层应优先使用 WebSocket，此函数作为最后保障
+ */
+export async function pollTaskResult(
   taskId: string,
-  signal?: AbortSignal,
-  displayName?: string
-): Promise<PatrolResultPayload> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(new Error('aborted'));
-      return;
+  maxAttempts = 15, // 最多轮询 15 次（30s）
+  interval = 2000    // 每 2s 一次
+): Promise<PatrolResultPayload | null> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const result = await PatrolService.getTaskResult(taskId);
+      if (result) {
+        return {
+          taskId: result.taskId,
+          status: result.status,
+          image: result.image || buildDefaultImage(taskId),
+          title: result.title,
+          detail: result.detail,
+          confidence: result.confidence || 0,
+        };
+      }
+    } catch (error) {
+      console.error(`[轮询] 第 ${attempt + 1} 次查询失败`, error);
     }
 
-    // WebSocket 优先，由外层 usePatrolWebSocket 推送结果
-    // 此函数仅作为兜底，等待外层 resolve
+    // 等待 interval 后继续
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
 
-    // 设置 10s 超时，超时后降级为 HTTP 轮询
-    const timeoutTimer = window.setTimeout(async () => {
-      console.warn(`[Patrol] WebSocket 超时，降级为 HTTP 轮询: ${taskId}`);
-
-      try {
-        const result = await PatrolService.getTaskResult(taskId);
-        if (result) {
-          resolve({
-            taskId: result.taskId,
-            status: result.status,
-            image: result.image || buildSnapshotImage(displayName || taskId, result.title),
-            title: result.title,
-            detail: result.detail,
-            confidence: result.confidence || 0,
-          });
-        } else {
-          reject(new Error('未获取到识别结果'));
-        }
-      } catch (error) {
-        reject(error);
-      }
-    }, 10000);
-
-    signal?.addEventListener('abort', () => {
-      window.clearTimeout(timeoutTimer);
-      reject(new Error('aborted'));
-    });
-  });
+  return null;
 }
+
+/**
+ * 构建默认快照图片（兜底）
+ */
+function buildDefaultImage(taskId: string): string {
+  // 返回占位图或默认图
+  return `https://via.placeholder.com/400x300?text=${encodeURIComponent(taskId)}`;
+}
+````
+
+**关键变化**：
+
+- ❌ 删除 `requestPatrolResult` 的 WebSocket 超时逻辑 —— 外层统一处理
+- ✅ 简化为纯粹的 HTTP 轮询兜底函数
+- ✅ 主流程完全依赖 `BIMdetail.vue` 的 WebSocket 推送
+
 ```
 
 ---
@@ -564,11 +683,13 @@ export function requestPatrolResult(
 
 ### 4.1 RESTful API
 
-#### 4.1.1 获取巡检任务列表
+#### 4.1.1 获取巡检任务列表 + 当前执行状态
 
 ```
+
 GET /api/patrol/inspection/{inspectionId}/tasks
-```
+
+````
 
 **请求参数**：
 
@@ -580,78 +701,59 @@ GET /api/patrol/inspection/{inspectionId}/tasks
 {
   "success": true,
   "code": 200,
-  "data": [
-    {
-      "taskId": "task-001",
-      "deviceId": "Line009",
-      "deviceName": "1#输水管道",
-      "deviceType": "pipe",
-      "status": "pending",
-      "viewpoint": {
-        "position": [462.92, 104.29, 110.19],
-        "target": [376.73, 65.86, 67.48],
-        "fov": 46
-      },
-      "createdAt": "2025-01-15T10:30:00Z"
-    },
-    {
-      "taskId": "task-002",
-      "deviceId": "Rectangle004",
-      "deviceName": "9#电机",
-      "deviceType": "motor",
-      "status": "pending",
-      "createdAt": "2025-01-15T10:30:00Z"
-    }
-    // ... 更多任务
-  ]
-}
-```
-
-#### 4.1.2 提交巡检报告
-
-```
-POST /api/patrol/inspection/{inspectionId}/submit
-```
-
-**请求体**：
-
-```json
-{
-  "results": [
-    {
-      "taskId": "task-001",
-      "deviceId": "Line009",
-      "status": "success",
-      "conclusion": "normal",
-      "title": "设备运行正常",
-      "detail": "振动幅值处于正常范围，无异常温升。",
-      "confidence": 0.97,
-      "completedAt": "2025-01-15T10:35:12Z"
-    }
-    // ... 更多结果
-  ]
-}
-```
-
-**响应示例**：
-
-```json
-{
-  "success": true,
-  "code": 200,
-  "message": "巡检报告提交成功",
   "data": {
-    "reportId": "report-12345",
-    "submittedAt": "2025-01-15T10:40:00Z"
+    "tasks": [
+      {
+        "taskId": "task-001",
+        "deviceId": "Line009",
+        "deviceName": "1#输水管道",
+        "deviceType": "pipe",
+        "status": "completed",
+        "viewpoint": {
+          "position": [462.92, 104.29, 110.19],
+          "target": [376.73, 65.86, 67.48],
+          "fov": 46
+        },
+        "createdAt": "2025-01-15T10:30:00Z"
+      },
+      {
+        "taskId": "task-002",
+        "deviceId": "Rectangle004",
+        "deviceName": "9#电机",
+        "deviceType": "motor",
+        "status": "inspecting",
+        "createdAt": "2025-01-15T10:30:00Z"
+      },
+      {
+        "taskId": "task-003",
+        "deviceId": "Box001",
+        "deviceName": "3#控制柜",
+        "deviceType": "cabinet",
+        "status": "pending",
+        "createdAt": "2025-01-15T10:30:00Z"
+      }
+    ],
+    "currentTaskId": "task-002",
+    "totalTasks": 10,
+    "completedTasks": 1
   }
 }
+````
+
+**字段说明**：
+
+- `currentTaskId`：当前正在执行的任务 ID，`null` 表示尚未开始或已全部完成
+- `status`：任务状态（`pending` / `inspecting` / `completed` / `failed`）
+
 ```
 
-#### 4.1.3 获取单个任务结果（兜底）
+#### 4.1.2 获取单个任务结果（兜底）
 
 ```
+
 GET /api/patrol/task/{taskId}/result
-```
+
+````
 
 **响应示例**：
 
@@ -671,18 +773,24 @@ GET /api/patrol/task/{taskId}/result
     "completedAt": "2025-01-15T10:35:12Z"
   }
 }
+````
+
+**用途**：仅在 WebSocket 连接失败时，前端降级为 HTTP 轮询使用
+
 ```
 
-### 4.2 WebSocket 协议
+### 4.2 WebSocket 协议（后端驱动模式）
 
 #### 4.2.1 连接建立
 
 ```
+
 WebSocket URL: wss://api.example.com/api/patrol/ws/{inspectionId}
 
 Headers:
-  Authorization: Bearer <token>
-```
+Authorization: Bearer <token>
+
+````
 
 **连接成功后，后端推送确认消息**：
 
@@ -691,79 +799,109 @@ Headers:
   "type": "CONNECTION_ACK",
   "payload": {
     "inspectionId": "inspection-12345",
-    "connectedAt": "2025-01-15T10:30:00Z"
+    "connectedAt": "2025-01-15T10:30:00Z",
+    "currentTaskId": "task-002"
   },
   "messageId": "msg-001",
   "timestamp": 1736935800000
 }
-```
+````
 
-#### 4.2.2 前端请求识别
+**说明**：`currentTaskId` 告知前端当前正在执行哪个任务（如果有）
+
+#### 4.2.2 后端推送：任务开始
 
 ```json
 {
-  "type": "INSPECTION_REQUEST",
+  "type": "TASK_STARTED",
   "payload": {
-    "taskId": "task-001",
-    "deviceId": "Line009",
-    "snapshot": "data:image/png;base64,iVBORw0KG...",
-    "viewpoint": {
-      "position": [462.92, 104.29, 110.19],
-      "target": [376.73, 65.86, 67.48],
-      "fov": 46
-    }
+    "taskId": "task-003",
+    "deviceId": "Box001",
+    "deviceName": "3#控制柜",
+    "deviceType": "cabinet",
+    "estimatedDuration": 5,
+    "startedAt": "2025-01-15T10:35:00Z"
   },
   "messageId": "msg-002",
-  "timestamp": 1736935810000
+  "timestamp": 1736935900000
 }
 ```
 
-**后端处理流程**：
+**前端收到后的处理**：
 
-1. 接收识别请求
-2. 将快照/参数传递给 AI 模型服务
-3. AI 模型异步识别（2-5s）
-4. 识别完成后推送结果
+1. 更新任务状态为 `inspecting`
+2. 驱动 3D 场景飞向对应设备（`Box001`）
+3. 显示加载提示："正在巡检 3#控制柜，请稍候..."
 
-#### 4.2.3 后端推送结果
+#### 4.2.3 后端推送：识别结果
 
 ```json
 {
   "type": "INSPECTION_RESULT",
   "payload": {
-    "taskId": "task-001",
-    "deviceId": "Line009",
+    "taskId": "task-003",
+    "deviceId": "Box001",
     "status": "success",
     "conclusion": "normal",
     "title": "设备运行正常",
     "detail": "振动幅值处于正常范围，无异常温升。",
     "confidence": 0.97,
-    "image": "https://cdn.example.com/inspection/task-001.jpg",
+    "image": "https://cdn.example.com/inspection/task-003.jpg",
     "completedAt": "2025-01-15T10:35:12Z"
   },
   "messageId": "msg-003",
-  "timestamp": 1736935812000
+  "timestamp": 1736935912000
 }
 ```
 
-#### 4.2.4 任务状态更新（可选）
+**前端收到后的处理**：
 
-后端可主动推送任务状态变化（如其他客户端修改、管理员干预等）：
+1. 展示结果卡片（标题 + 详情 + 图片 + 置信度）
+2. 卡片显示 15s 后自动隐藏
+3. 等待后端推送下一个 `TASK_STARTED`
+
+#### 4.2.4 后端推送：任务完成
 
 ```json
 {
-  "type": "TASK_STATUS_UPDATE",
+  "type": "TASK_COMPLETED",
   "payload": {
-    "taskId": "task-002",
-    "status": "inspecting",
-    "reason": "AI 模型正在处理"
+    "taskId": "task-003",
+    "status": "success",
+    "completedAt": "2025-01-15T10:35:12Z"
   },
   "messageId": "msg-004",
-  "timestamp": 1736935815000
+  "timestamp": 1736935912000
 }
 ```
 
-#### 4.2.5 心跳保活
+**前端收到后的处理**：
+
+- 更新任务状态为 `completed`
+
+#### 4.2.5 后端推送：全部任务完成
+
+```json
+{
+  "type": "ALL_TASKS_COMPLETED",
+  "payload": {
+    "inspectionId": "inspection-12345",
+    "totalTasks": 10,
+    "successCount": 9,
+    "failedCount": 1,
+    "completedAt": "2025-01-15T10:45:00Z"
+  },
+  "messageId": "msg-005",
+  "timestamp": 1736936700000
+}
+```
+
+**前端收到后的处理**：
+
+- 显示完成提示："巡检完成！共 10 个任务，成功 9 个"
+- 可选：跳转到报告页
+
+#### 4.2.6 心跳保活
 
 **前端每 30s 发送**：
 
@@ -787,6 +925,38 @@ Headers:
 }
 ```
 
+#### 4.2.7 后端执行流程
+
+```
+【后端任务队列】
+    ↓
+取出下一个任务（task-003）
+    ↓
+推送 TASK_STARTED
+    ↓
+调用 AI 模型识别（2-5s）
+    ↓
+推送 INSPECTION_RESULT
+    ↓
+推送 TASK_COMPLETED
+    ↓
+【可选】等待 15s（给前端展示卡片）
+    ↓
+取出下一个任务（task-004）
+    ↓
+... 循环往复 ...
+    ↓
+全部完成 → 推送 ALL_TASKS_COMPLETED
+```
+
+**⚠️ 关键点**：
+
+- 后端完全自主决定何时执行哪个任务
+- 前端无法命令后端"开始识别"或"跳过"
+- 前端只能被动接收推送，同步 3D 场景状态
+
+```
+
 ---
 
 ## 五、状态管理与同步
@@ -794,12 +964,14 @@ Headers:
 ### 5.1 任务状态机
 
 ```
+
 pending（待巡检）
-    ↓ 3D 场景到达设备
+↓ 3D 场景到达设备
 inspecting（识别中）
-    ↓ 收到识别结果
+↓ 收到识别结果
 completed（已完成） / failed（失败）
-```
+
+````
 
 ### 5.2 前端状态维护
 
@@ -837,41 +1009,60 @@ const progress = computed(() => {
     percentage: Math.round((completed / patrolTasks.value.length) * 100),
   };
 });
-```
+````
 
 ### 5.3 3D 场景与业务层协同
 
-**时序图**：
+**时序图（后端驱动模式）**：
 
 ```
-用户          BIMdetail.vue    WebSocket         3D Scene          后端
- |                |                |                  |               |
- |-- 进入页面 --→|                |                  |               |
- |                |-- 获取任务 --→|                  |               |
- |                |←-- 任务列表 --|                  |               |
- |                |                |                  |               |
- |                |-- 建立连接 --→|                  |               |
- |                |←- CONNECTION_ACK -|               |               |
- |                |                |                  |               |
- |                |-- 传递任务 --→|                  |               |
- |                |                |-- 开始巡检 --→  |               |
- |                |                |                  |               |
- |                |←- 到达设备 -←|                  |               |
- |                |                |                  |               |
- |                |-- 请求识别 --→|                  |               |
- |                |                |-- INSPECTION_REQUEST --→        |
- |                |                |                  |-- 调用 AI -→|
- |                |                |                  |               |
- |                |                |←- INSPECTION_RESULT -|←- 返回 -|
- |                |                |                  |               |
- |                |-- 展示结果 --→|                  |               |
- |                |                |-- 显示卡片 --→  |               |
- |                |                |                  |               |
- |                |                |-- 15s 后继续 -→  |               |
- |                |                |                  |               |
- |                |←- 到达下一设备 -|                |               |
- |               ...              ...                ...             ...
+后端任务队列   后端           WebSocket         BIMdetail.vue    3D Scene
+     |            |                |                  |               |
+     |-- 开始执行 task-003 --→|                  |               |
+     |            |                |                  |               |
+     |            |-- TASK_STARTED --→              |               |
+     |            |                |                  |               |
+     |            |                |←- 收到推送 -←|               |
+     |            |                |                  |               |
+     |            |                |                  |-- 飞向设备 -→|
+     |            |                |                  |               |
+     |            |-- 调用 AI 识别（2-5s）--→      |               |
+     |            |                |                  |               |
+     |            |←- 识别完成 -←|                  |               |
+     |            |                |                  |               |
+     |            |-- INSPECTION_RESULT --→         |               |
+     |            |                |                  |               |
+     |            |                |←- 收到结果 -←|               |
+     |            |                |                  |               |
+     |            |                |                  |-- 展示卡片 -→|
+     |            |                |                  |               |
+     |            |-- TASK_COMPLETED --→            |               |
+     |            |                |                  |               |
+     |            |                |←- 更新状态 -←|               |
+     |            |                |                  |               |
+     |-- 【可选等待 15s 卡片展示】--→              |               |
+     |            |                |                  |               |
+     |-- 开始执行 task-004 --→|                  |               |
+     |            |                |                  |               |
+     |            |-- TASK_STARTED --→              |               |
+     |           ...              ...                ...             ...
+     |            |                |                  |               |
+     |-- 全部完成 --→          |                  |               |
+     |            |                |                  |               |
+     |            |-- ALL_TASKS_COMPLETED --→       |               |
+     |            |                |                  |               |
+     |            |                |←- 显示完成提示 -|               |
 ```
+
+**关键流程说明**：
+
+1. **后端主导**：任务队列完全由后端控制，前端无法干预
+2. **推送驱动**：每个 `TASK_STARTED` 推送触发前端 3D 场景飞向对应设备
+3. **结果展示**：`INSPECTION_RESULT` 推送后，前端展示卡片 15s
+4. **状态同步**：`TASK_COMPLETED` 推送后，前端更新任务状态
+5. **循环往复**：后端按序推送下一个任务，前端被动跟随
+
+````
 
 ---
 
@@ -888,75 +1079,114 @@ const progress = computed(() => {
 3. 超过最大重连次数后，降级为 HTTP 轮询模式
 
 ```typescript
-// HTTP 轮询兜底（每 2s 查询一次结果）
-function fallbackToPolling(taskId: string) {
+// HTTP 轮询兜底（每 2s 查询一次当前任务状态）
+function fallbackToPolling(inspectionId: string) {
   const pollInterval = setInterval(async () => {
     try {
-      const result = await PatrolService.getTaskResult(taskId);
-      if (result) {
-        clearInterval(pollInterval);
-        handleInspectionResult(result);
+      const { currentTaskId, tasks } = await PatrolService.getTaskListWithStatus(inspectionId);
+
+      // 检查是否有新的任务开始
+      if (currentTaskId && currentTaskId !== lastTaskId.value) {
+        lastTaskId.value = currentTaskId;
+        const task = tasks.find(t => t.taskId === currentTaskId);
+        if (task) {
+          handleTaskStarted({
+            type: 'TASK_STARTED',
+            taskId: task.taskId,
+            deviceId: task.deviceId,
+            deviceName: task.deviceName,
+            deviceType: task.deviceType,
+            startedAt: new Date().toISOString(),
+          });
+        }
+      }
+
+      // 轮询当前任务的结果
+      if (currentTaskId) {
+        const result = await PatrolService.getTaskResult(currentTaskId);
+        if (result) {
+          handleInspectionResult(result);
+        }
       }
     } catch (error) {
-      console.error('[Polling] 查询失败', error);
+      console.error('[轮询] 查询失败', error);
     }
   }, 2000);
 
-  // 最多轮询 30s
+  // 最多轮询 5 分钟
   setTimeout(() => {
     clearInterval(pollInterval);
-    ElMessage.error('识别超时，请稍后重试');
-  }, 30000);
+    ElMessage.error('连接超时，请刷新页面重试');
+  }, 300000);
 }
-```
+````
 
-### 6.2 识别超时
+### 6.2 后端任务执行超时
 
-**场景**：后端 AI 模型处理时间过长（> 10s）
+**场景**：后端某个任务长时间未完成（如 AI 模型卡死）
 
 **处理**：
 
-1. 前端显示"识别耗时较长，请稍候..."
-2. 继续等待，不中断
-3. 30s 后仍无结果，标记任务为 `failed`，跳过继续下一个
+1. 前端监控：如果某个任务超过 2 分钟仍处于 `inspecting` 状态，显示警告
+2. 提示用户："当前任务执行时间较长，请稍候或联系管理员"
+3. 前端**不主动跳过**，等待后端推送（可能是 `TASK_COMPLETED` 失败或超时）
 
 ```typescript
-function requestInspection(request) {
-  const timeoutTimer = setTimeout(() => {
-    ElMessage.warning('识别超时，已跳过该设备');
-    updateTaskStatus(request.taskId, 'failed');
-    // 通知 3D 场景继续下一个
-    waterPlantScene.advanceToNextTarget();
-  }, 30000);
-
-  // 收到结果后清除定时器
-  signal.addEventListener('result', () => {
-    clearTimeout(timeoutTimer);
-  });
-}
-```
-
-### 6.3 快照截取失败
-
-**场景**：WebGL 上下文丢失、浏览器安全策略
-
-**处理**：
-
-- 不传递 `snapshot` 字段
-- 后端使用默认识别模式（基于设备类型）
-
-```typescript
-function captureSceneSnapshot(): string | undefined {
-  try {
-    const canvas = document.querySelector('.three-water-plant__canvas') as HTMLCanvasElement;
-    if (!canvas) return undefined;
-
-    return canvas.toDataURL('image/png');
-  } catch (error) {
-    console.warn('[Snapshot] 截图失败', error);
-    return undefined;
+// 监控任务执行超时
+watch(currentTaskId, (newTaskId) => {
+  // 清除旧的超时定时器
+  if (taskTimeoutTimer) {
+    clearTimeout(taskTimeoutTimer);
   }
-}
+
+  if (newTaskId) {
+    // 2 分钟后仍未完成，显示警告
+    taskTimeoutTimer = setTimeout(() => {
+      ElMessage.warning('当前任务执行时间较长，请稍候...');
+    }, 120000);
+  }
+});
+```
+
+### 6.3 推送消息丢失
+
+**场景**：网络抖动导致某条 WebSocket 消息未送达
+
+**处理**：
+
+1. 前端定期（每 30s）轮询任务状态，对比本地状态与服务端状态
+2. 发现不一致时，主动同步（如本地显示 `pending`，服务端已 `completed`）
+
+```typescript
+// 定期同步状态（每 30s）
+setInterval(async () => {
+  try {
+    const { tasks, currentTaskId } = await PatrolService.getTaskListWithStatus(inspectionId);
+
+    // 对比本地任务状态与服务端状态
+    tasks.forEach((serverTask) => {
+      const localTask = patrolTasks.value.find((t) => t.taskId === serverTask.taskId);
+      if (localTask && localTask.status !== serverTask.status) {
+        console.warn(
+          `[同步] 任务 ${serverTask.taskId} 状态不一致，本地: ${localTask.status}, 服务端: ${serverTask.status}`
+        );
+        localTask.status = serverTask.status;
+      }
+    });
+
+    // 同步当前执行任务
+    if (currentTaskId && currentTaskId !== lastTaskId.value) {
+      console.warn(`[同步] 检测到任务切换，currentTaskId: ${currentTaskId}`);
+      lastTaskId.value = currentTaskId;
+      const task = tasks.find((t) => t.taskId === currentTaskId);
+      if (task) {
+        flyToDevice(task.deviceId, task.deviceName);
+      }
+    }
+  } catch (error) {
+    console.error('[同步] 状态同步失败', error);
+  }
+}, 30000);
 ```
 
 ### 6.4 任务列表为空
@@ -1007,11 +1237,11 @@ class GlobalPatrolWebSocket {
 
 ### 7.2 识别结果缓存
 
-**问题**：用户返回页面需重新识别
+**问题**：用户返回页面需重新获取结果
 
 **方案**：
 
-- 本地缓存已识别的结果（Map/IndexedDB）
+- 本地缓存已完成任务的结果（Map/IndexedDB）
 - 下次进入直接展示缓存，标注"历史结果"
 
 ```typescript
@@ -1031,48 +1261,47 @@ async function loadCachedResult(taskId: string): Promise<InspectionResult | null
 }
 ```
 
-### 7.3 快照压缩
+### 7.3 状态同步优化
 
-**问题**：Base64 编码的 PNG 快照体积大（200-500KB）
+**问题**：定期轮询任务状态开销大
 
 **方案**：
 
-- 使用 JPEG 格式（`canvas.toDataURL('image/jpeg', 0.8)`）
-- 降低分辨率（缩小 canvas 尺寸）
-- 前端压缩后再传输
+- WebSocket 连接正常时，不轮询
+- 仅在检测到连接异常（如 30s 未收到任何消息）时，才启动轮询
 
 ```typescript
-function captureCompressedSnapshot(maxWidth = 800): string | undefined {
-  try {
-    const canvas = document.querySelector('.three-water-plant__canvas') as HTMLCanvasElement;
-    if (!canvas) return undefined;
+let lastMessageTime = Date.now();
 
-    // 创建缩小的 canvas
-    const scale = Math.min(1, maxWidth / canvas.width);
-    const smallCanvas = document.createElement('canvas');
-    smallCanvas.width = canvas.width * scale;
-    smallCanvas.height = canvas.height * scale;
+// WebSocket 收到任何消息时更新时间戳
+ws.onmessage = (event) => {
+  lastMessageTime = Date.now();
+  // ... 处理消息
+};
 
-    const ctx = smallCanvas.getContext('2d');
-    ctx?.drawImage(canvas, 0, 0, smallCanvas.width, smallCanvas.height);
-
-    // JPEG 压缩
-    return smallCanvas.toDataURL('image/jpeg', 0.8);
-  } catch (error) {
-    console.warn('[Snapshot] 压缩截图失败', error);
-    return undefined;
+// 检测连接健康度（每 60s 检查一次）
+setInterval(() => {
+  const silentDuration = Date.now() - lastMessageTime;
+  if (silentDuration > 30000) {
+    console.warn(`[健康检查] ${silentDuration}ms 未收到消息，启动轮询兜底`);
+    fallbackToPolling(inspectionId);
   }
-}
+}, 60000);
 ```
 
-### 7.4 批量上报
+### 7.4 3D 场景飞行动画优化
 
-**问题**：每个设备识别完立即上报，请求频繁
+**问题**：频繁切换设备时，飞行动画卡顿
 
 **方案**：
 
-- 全部任务完成后批量提交报告
-- WebSocket 仅用于实时反馈，最终结果由 HTTP 统一提交
+- 使用 `requestAnimationFrame` 驱动相机动画
+- 动画插值使用 `easeInOutCubic`，避免突兀
+- 飞行时长根据距离自适应（近距离 1s，远距离 3s）
+
+````typescript
+// 参考 patrolController.ts 中的 flyToTarget 实现
+// 已在之前的优化中实现
 
 ---
 
@@ -1089,7 +1318,7 @@ function captureCompressedSnapshot(maxWidth = 800): string | undefined {
 // 前端携带 Token
 const token = getAuthToken();
 const wsUrl = `wss://api.example.com/api/patrol/ws/${inspectionId}?token=${token}`;
-```
+````
 
 **后端验证**（Spring Boot 示例）：
 
@@ -1146,21 +1375,22 @@ function verifySignature(message: SignedMessage): boolean {
 
 ### 9.1 正常流程测试
 
-| 测试场景           | 前置条件            | 操作步骤                       | 预期结果                                |
-| ------------------ | ------------------- | ------------------------------ | --------------------------------------- |
-| 完整巡检流程       | 任务列表有 3 个任务 | 进入页面 → 自动巡检 → 全部完成 | 3 个任务依次识别，结果卡片展示正确      |
-| WebSocket 实时反馈 | 连接正常            | 到达设备 → 发送请求            | 2-5s 内收到识别结果                     |
-| 任务状态同步       | 多客户端同时连接    | A 客户端完成任务 1             | B 客户端看到任务 1 状态更新为 completed |
+| 测试场景                 | 前置条件                                | 操作步骤                          | 预期结果                                         |
+| ------------------------ | --------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| 完整巡检流程（后端驱动） | 后端任务队列已启动，任务列表有 3 个任务 | 进入页面 → 接收推送 → 全部完成    | 3 个任务依次执行，前端被动跟随，结果卡片展示正确 |
+| WebSocket 实时推送       | 连接正常，后端正在执行任务              | 页面加载 → 收到 TASK_STARTED 推送 | 前端立即飞向对应设备，显示加载提示               |
+| 中途进入页面             | 后端已完成 2 个任务，正在执行第 3 个    | 进入页面                          | 前端获取当前任务状态，飞向第 3 个设备            |
+| 识别结果展示             | 收到 INSPECTION_RESULT 推送             | 卡片展示 15s                      | 卡片正确显示标题/详情/图片/置信度，15s 后隐藏    |
 
 ### 9.2 异常流程测试
 
-| 测试场景       | 模拟条件         | 操作步骤     | 预期结果                           |
-| -------------- | ---------------- | ------------ | ---------------------------------- |
-| WebSocket 断连 | 手动断开网络     | 识别中途断网 | 自动重连，重连后继续               |
-| 识别超时       | 后端延迟 30s     | 等待识别结果 | 30s 后提示超时，跳过该设备         |
-| 任务列表为空   | 返回空数组       | 进入页面     | 显示空状态，不启动巡检             |
-| 快照截取失败   | WebGL 上下文丢失 | 到达设备     | 不传递快照，识别继续               |
-| 重复进入页面   | 已识别部分任务   | 退出后再进入 | 加载缓存结果，已完成任务不重复识别 |
+| 测试场景       | 模拟条件                     | 操作步骤            | 预期结果                           |
+| -------------- | ---------------------------- | ------------------- | ---------------------------------- |
+| WebSocket 断连 | 手动断开网络                 | 识别中途断网        | 自动重连，重连后同步状态，继续跟随 |
+| 后端任务超时   | 后端某任务卡死 2 分钟        | 等待推送            | 2 分钟后显示警告，继续等待后端推送 |
+| 推送消息丢失   | 模拟网络抖动，某条消息未送达 | 定期状态同步（30s） | 检测到不一致，主动同步状态         |
+| 任务列表为空   | 返回空数组                   | 进入页面            | 显示空状态，不启动巡检             |
+| 中途进入页面   | 后端已完成部分任务           | 退出后再进入        | 加载缓存结果，飞向当前执行任务     |
 
 ### 9.3 性能测试
 
@@ -1285,22 +1515,39 @@ reportMetric('inspection_failed', { taskId, error: error.message });
 
 ## 十二、总结
 
-本方案设计了一套完整的"任务列表 → 自动巡检 → 实时识别 → 结果反馈"闭环系统，核心特点：
+本方案设计了一套**后端驱动**的"任务队列自动执行 → WebSocket 推送 → 前端被动跟随"系统，核心特点：
 
-1. **前后端分离**：HTTP 获取任务，WebSocket 实时通信，职责清晰
-2. **性能优化**：连接复用、结果缓存、快照压缩，保证流畅体验
-3. **高可用性**：自动重连、降级方案、异常处理，保证系统稳定
-4. **扩展性强**：支持离线模式、视频流、多人协同等未来需求
+1. **后端自主执行**：任务队列完全由后端控制，前端无法干预执行顺序或跳过任务
+2. **实时推送驱动**：WebSocket 推送 `TASK_STARTED`/`INSPECTION_RESULT`/`TASK_COMPLETED`，前端被动响应
+3. **状态同步保障**：定期轮询 + WebSocket 重连，确保状态一致性
+4. **高可用性**：自动重连、降级方案（HTTP 轮询）、异常处理
+5. **性能优化**：连接复用、结果缓存、状态同步优化
+
+**与传统"前端驱动"方案的区别**：
+
+| 对比项             | 前端驱动（旧方案）                | 后端驱动（本方案）                 |
+| ------------------ | --------------------------------- | ---------------------------------- |
+| **执行控制**       | 前端决定何时识别哪个设备          | 后端自主执行任务队列               |
+| **WebSocket 消息** | 前端发送 `INSPECTION_REQUEST`     | 前端**只接收**推送，无业务消息发送 |
+| **3D 场景驱动**    | 前端主动触发飞行 → 到达后请求识别 | 后端推送 → 前端被动飞向设备        |
+| **适用场景**       | 交互式巡检（用户点击设备）        | 自动化巡检（任务队列批量执行）     |
 
 **推荐实施步骤**：
 
-1. **Phase 1**（2 周）：实现 HTTP API + 本地模拟 WebSocket，验证业务流程
-2. **Phase 2**（2 周）：接入真实 WebSocket，对接后端 AI 服务
-3. **Phase 3**（1 周）：优化性能（缓存、压缩、批量），完善异常处理
-4. **Phase 4**（1 周）：测试、监控、文档，上线验证
+1. **Phase 1**（1 周）：实现 HTTP API（`getTaskListWithStatus`），验证数据结构
+2. **Phase 2**（2 周）：实现 WebSocket 推送（`TASK_STARTED`/`INSPECTION_RESULT`/`TASK_COMPLETED`），对接前端
+3. **Phase 3**（1 周）：完善异常处理（重连、降级、状态同步）
+4. **Phase 4**（1 周）：性能优化（缓存、连接复用）、测试、上线
 
 ---
 
-**文档版本**：v1.0  
+**关键设计原则重申**：
+
+✅ **前端职责**：被动接收推送、驱动 3D 场景跟随、展示识别结果  
+❌ **前端不做**：主动请求识别、控制任务执行顺序、跳过任务
+
+---
+
+**文档版本**：v2.0（后端驱动模式）  
 **编写日期**：2025-01-15  
 **维护者**：前端团队
