@@ -146,7 +146,7 @@ interface PatrolResultCardState {
 }
 
 const props = defineProps<{
-  activeItem?: Record<string, unknown>;
+  id?: string;
 }>();
 const containerRef = ref<HTMLElement>();
 /** 全屏：以场景容器为目标，进入/退出全屏（ResizeObserver 会自动触发渲染尺寸更新） */

@@ -121,7 +121,7 @@ HK 的 AI 巡检执行详情页 `BIMdetail`（`inspectionMonitor/aiInspection/BI
 
 - `three-water-plant/`：`threeRectangle.vue`（组件壳：工具栏、任务面板、结果卡片、全屏、加载遮罩）、`WaterPlantScene.ts`（渲染、相机、交互、GSAP 镜头运镜、模型加载与资源释放）、`patrolController.ts`（点位解析、transit/dwell 巡检节奏、停留高亮与进度）、`patrolResult.ts`（模拟 AI 识别结果数据源）、`types.ts`（场景回调与目标类型）。
 - 同级 `shared/`（巡视页与"配置视角"页共用，保证保存的视角坐标两侧互通）：`constants.ts`（`TARGET_SIZE=1200` 归一化边长、GLB 文件名、`WATER_PLANT_MODELS`、`SCENE_CONFIG` 相机/雾/地面参数、`PATROL_CONFIG` 巡检控制配置、`CAMERA_CONTROL_CONFIG` 相机控制配置、`UI_CONFIG` UI 配置、`VIEWPOINT_PICKER_CONFIG` 配置视角选择器参数、`PATROL_IDS` 巡检点位列表，每项含展示名 `name` 与可选预设视角数据）、`environment.ts`（灯光与场景环境）、`utils.ts`（可见性/命中判定、递归释放几何材质纹理、Canvas 纹理）。
-- `viewpoint/`：`ViewpointPicker.ts` + `viewpointDialog.vue`，巡检对象"配置视角"弹窗场景。
+- `viewpoint/`：`ViewpointPicker.ts` + `viewpointDialog.vue`，巡检对象"配置视角"弹窗场景。点击设备自动聚焦运镜同样用 GSAP timeline（相机位置与注视点同步 `power2.inOut` 缓入缓出，时长 `FOCUS_FLIGHT_DURATION=0.8`），与巡检场景运镜观感一致，不再手写渲染循环补间。
 
 ### 模型加载与场景搭建
 

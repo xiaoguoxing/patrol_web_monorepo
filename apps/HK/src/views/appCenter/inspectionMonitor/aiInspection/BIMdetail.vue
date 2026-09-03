@@ -8,7 +8,7 @@
         </div>
       </template>
       <div class="flex-1">
-        <ThreeRectangle :active-item="activeItem" />
+        <ThreeRectangle :id="$route.query.id" />
       </div>
     </kr-card>
   </div>

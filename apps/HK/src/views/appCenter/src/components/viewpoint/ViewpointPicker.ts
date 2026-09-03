@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
@@ -67,15 +68,8 @@ export class ViewpointPicker {
   private modelReady = false;
   /** 外立面显示模式（默认半透明透视，与巡检场景一致） */
   private facadeMode: FacadeMode = 'transparent';
-  private lastTime = performance.now() / 1000;
-  /** 自动聚焦飞行动画状态 */
-  private flyActive = false;
-  private flyTime = 0;
-  private flyDuration = 0;
-  private readonly flyFromPos = new THREE.Vector3();
-  private readonly flyToPos = new THREE.Vector3();
-  private readonly flyFromTarget = new THREE.Vector3();
-  private readonly flyToTarget = new THREE.Vector3();
+  /** 自动聚焦运镜 timeline（重复聚焦 / dispose 时打断） */
+  private flightTween: gsap.core.Timeline | null = null;
   /** 拖拽判定：记录按下位置，位移过小视为点击 */
   private downPos = { x: 0, y: 0 };
   private dragging = false;
@@ -191,7 +185,8 @@ export class ViewpointPicker {
     const position = new THREE.Vector3(viewpoint.position[0], viewpoint.position[1], viewpoint.position[2]);
     const lookAt = new THREE.Vector3(viewpoint.target[0], viewpoint.target[1], viewpoint.target[2]);
     if (position.lengthSq() > 0 && lookAt.lengthSq() > 0) {
-      this.flyActive = false;
+      this.flightTween?.kill();
+      this.flightTween = null;
       this.camera.position.copy(position);
       this.controls.target.copy(lookAt);
       this.controls.update();
@@ -230,6 +225,10 @@ export class ViewpointPicker {
 
     // 停止渲染循环
     this.renderer.setAnimationLoop(null);
+
+    // 打断进行中的聚焦运镜
+    this.flightTween?.kill();
+    this.flightTween = null;
 
     const canvas = this.renderer.domElement;
 
@@ -508,37 +507,48 @@ export class ViewpointPicker {
     };
   }
 
-  // ---------------- 飞行动画 ----------------
+  // ---------------- 飞行动画（GSAP timeline，与巡检场景运镜观感一致） ----------------
 
   private flyToViewpoint(viewpoint: ViewpointPos) {
-    this.flyFromPos.copy(this.camera.position);
-    this.flyFromTarget.copy(this.controls.target);
-    this.flyToPos.set(viewpoint.position[0], viewpoint.position[1], viewpoint.position[2]);
-    this.flyToTarget.set(viewpoint.target[0], viewpoint.target[1], viewpoint.target[2]);
-    this.flyActive = true;
-    this.flyTime = 0;
-    this.flyDuration = VIEWPOINT_PICKER_CONFIG.FOCUS_FLIGHT_DURATION;
-  }
-
-  private updateFly(delta: number) {
-    if (!this.flyActive) return;
-    this.flyTime += delta;
-    const t = Math.min(1, this.flyTime / this.flyDuration);
-    // power2.inOut 缓动
-    const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    this.camera.position.lerpVectors(this.flyFromPos, this.flyToPos, ease);
-    this.controls.target.lerpVectors(this.flyFromTarget, this.flyToTarget, ease);
-    if (t >= 1) this.flyActive = false;
+    const { FOCUS_FLIGHT_DURATION } = VIEWPOINT_PICKER_CONFIG;
+    this.flightTween?.kill();
+    // 相机位置与注视点同步缓入缓出（power2.inOut：出发平稳、到位减速滑入）。
+    // OrbitControls 每帧 update() 会重读 camera.position/controls.target，
+    // 无用户输入时不会覆盖 GSAP 写入的值，并据 target 自动 lookAt，故可直接补间两者
+    const tl = gsap.timeline({
+      onComplete: () => {
+        this.flightTween = null;
+      },
+    });
+    tl.to(
+      this.camera.position,
+      {
+        x: viewpoint.position[0],
+        y: viewpoint.position[1],
+        z: viewpoint.position[2],
+        duration: FOCUS_FLIGHT_DURATION,
+        ease: 'power2.inOut',
+      },
+      0
+    );
+    tl.to(
+      this.controls.target,
+      {
+        x: viewpoint.target[0],
+        y: viewpoint.target[1],
+        z: viewpoint.target[2],
+        duration: FOCUS_FLIGHT_DURATION,
+        ease: 'power2.inOut',
+      },
+      0
+    );
+    this.flightTween = tl;
   }
 
   // ---------------- 渲染循环 ----------------
 
   private readonly animate = () => {
     if (this.disposed) return;
-    const now = performance.now() / 1000;
-    const delta = Math.min(0.1, now - this.lastTime);
-    this.lastTime = now;
-    this.updateFly(delta);
     this.controls.update();
     // BoxHelper 自动跟随目标对象更新
     this.highlightBox?.update();
