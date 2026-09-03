@@ -32,7 +32,7 @@
             <span>{{ Math.round(progress) }}%</span>
           </div>
         </div>
-        <ul class="patrol-tasks__list">
+        <ul ref="taskListRef" class="patrol-tasks__list">
           <li
             v-for="(task, index) in patrolTasks"
             :key="task.id"
@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useFullscreen } from '@vueuse/core';
 import type { ModelPatrolSnapshot, TargetScreenPos } from './types';
 import { requestPatrolResult } from './patrolResult';
@@ -204,6 +204,36 @@ const formatTime = (date: Date) => {
   )}:${pad(date.getSeconds())}`;
 };
 
+const taskListRef = ref<HTMLElement>();
+/** 上一次已滚入可视区的巡检项索引：仅当"巡检中"项切换时滚动一次，避免反复触发 */
+let lastVisibleTaskIndex = -1;
+
+/**
+ * 自动滚动跟随：让"巡检中"项始终保持在列表可视范围内。
+ * 巡检点位较多时列表出现纵向滚动，若用户未手动浏览，当前项切换后可能滚出可视区，
+ * 这里把它平滑滚到可视区中部（上下各留上下文空间）；已在可视中部则不打扰用户浏览。
+ */
+const ensureCurrentTaskVisible = () => {
+  const currentIndex = patrolTasks.value.findIndex((task) => task.state === 'current');
+  if (currentIndex < 0 || currentIndex === lastVisibleTaskIndex) return;
+  lastVisibleTaskIndex = currentIndex;
+  // 等待列表 DOM 渲染完成后再测量滚动
+  nextTick(() => {
+    const list = taskListRef.value;
+    if (!list) return;
+    const currentItem = list.querySelector<HTMLElement>('.patrol-tasks__item.is-current');
+    if (!currentItem) return;
+    const listRect = list.getBoundingClientRect();
+    const itemRect = currentItem.getBoundingClientRect();
+    // 目标：当前项中心对齐列表可视区中部
+    const targetScrollTop = list.scrollTop + (itemRect.top + itemRect.height / 2 - listRect.top) - listRect.height / 2;
+    // 已完全可见且偏离中心很小时不滚动（顶部几项时目标会被 clamp 到 0，天然不打扰）
+    const fullyVisible = itemRect.top >= listRect.top && itemRect.bottom <= listRect.bottom;
+    if (fullyVisible && Math.abs(list.scrollTop - targetScrollTop) < 8) return;
+    list.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+  });
+};
+
 /** 从巡检控制器拉取任务列表并计算各任务状态 */
 const refreshPatrolTasks = () => {
   const targets = waterPlantScene?.getPatrolTargets() ?? [];
@@ -214,6 +244,7 @@ const refreshPatrolTasks = () => {
     state:
       currentIndex < 0 ? 'pending' : index < currentIndex ? 'done' : index === currentIndex ? 'current' : 'pending',
   }));
+  ensureCurrentTaskVisible();
 };
 
 /** 切换左侧任务列表面板显隐 */
@@ -277,15 +308,6 @@ const retryModel = () => {
   modelError.value = '';
   waterPlantScene?.reloadModels();
 };
-
-watch(
-  () => props.activeItem?.itemId,
-  (itemId, previousItemId) => {
-    if (itemId !== undefined && itemId !== null && itemId !== '' && itemId !== previousItemId) {
-      waterPlantScene?.advanceToNextTarget();
-    }
-  }
-);
 
 onMounted(() => {
   const container = containerRef.value;
@@ -623,6 +645,12 @@ onBeforeUnmount(() => {
   margin: 0;
   overflow-y: auto;
   list-style: none;
+
+  // 隐藏滚动条（Firefox + WebKit），滚动跟随功能不受影响
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 .patrol-tasks__item {
   display: flex;

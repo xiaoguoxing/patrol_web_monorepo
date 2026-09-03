@@ -115,7 +115,7 @@ app.use(znxjUi, {
 
 ## HK Three.js 水厂巡检场景
 
-HK 的 AI 巡检执行详情页 `BIMdetail`（`inspectionMonitor/aiInspection/BIMdetail.vue`）挂载 `ThreeRectangle`（`three-water-plant/threeRectangle.vue`）展示水厂三维巡检场景。场景已从早期的程序化几何体/写死模拟设备演进为真实 GLB 模型巡检：并发加载外立面与内部结构两份模型，按业务提供的 28 个巡检点位（GLB 节点，巡检点位即"任务"）自动循环巡检（点位间镜头由 GSAP 时间轴平滑运镜，加载完成后首个点位镜头直接定格就位），并集成 orbit/patrol 两种相机模式（patrol 自动巡检为主，orbit 仅用于鼠标手动自由查看）、外立面三态、悬浮结果卡片、左侧任务面板、全屏与"巡检对象配置视角"联动。早期全景浏览/厂房漫游切换按钮及整体/正面/侧面/内部预设视角飞行、操作提示均已按需求移除；任务列表不支持点击跳转（点击跳转会导致巡检 currentIndex 非顺序跳变、completed 计数错乱，破坏任务状态与进度条，故取消）。模型文件位于 `apps/HK/public/GLB/`：`TWFWPS_WLM.glb`（外立面）、`TWFWPS_SNSB.glb`（内部设备，由 Babylon 场景调试导出）。
+HK 的 AI 巡检执行详情页 `BIMdetail`（`inspectionMonitor/aiInspection/BIMdetail.vue`）挂载 `ThreeRectangle`（`three-water-plant/threeRectangle.vue`）展示水厂三维巡检场景。场景已从早期的程序化几何体/写死模拟设备演进为真实 GLB 模型巡检：并发加载外立面与内部结构两份模型，按业务提供的 28 个巡检点位（GLB 节点，巡检点位即"任务"）自动循环巡检（点位间镜头由 GSAP 时间轴平滑运镜，加载完成后首个点位镜头直接定格就位），并集成 orbit/patrol 两种相机模式（patrol 自动巡检为主，orbit 仅用于鼠标手动自由查看）、外立面三态、悬浮结果卡片、左侧任务面板（自动巡检推进时列表平滑滚动跟随，保证"巡检中"项始终在可视范围内）、全屏与"巡检对象配置视角"联动。早期全景浏览/厂房漫游切换按钮及整体/正面/侧面/内部预设视角飞行、操作提示均已按需求移除；任务列表不支持点击跳转（点击跳转会导致巡检 currentIndex 非顺序跳变、completed 计数错乱，破坏任务状态与进度条，故取消）。模型文件位于 `apps/HK/public/GLB/`：`TWFWPS_WLM.glb`（外立面）、`TWFWPS_SNSB.glb`（内部设备，由 Babylon 场景调试导出）。
 
 ### 目录与职责
 
@@ -152,7 +152,7 @@ renderer：`antialias + alpha`、`pixelRatio ≤ 2`、`SRGBColorSpace`、`Reinha
 - 点位间镜头运镜由 `WaterPlantScene.updateCamera` 按阶段分派到 GSAP（`gsap@3.14.2`，pnpm catalog 管理）：`transit` 调 `ensurePatrolFlight()`——确保存在一次朝向 pending 点位的 GSAP 运镜，该点位未配置预设视角则直接 `completeTransit()`；`dwell` 调 `updateDwellCamera()`——点位有预设机位且镜头已在位时逐帧锁定 position/lookAt/fov，不在位（如从 orbit 切回）先 `flyCameraTo` 补一次运镜；未配置预设视角的点位走 `updatePatrolFollow` 自动跟随（注视点锁定设备中心、相机略高轻微俯视、距离保证设备整体入画、每 8 帧沿视线射线检测遮挡并拉近，不做抬升）。
 - `flyCameraTo` 用 `gsap.timeline` 三轨编排：位置/注视点均为 `power2.inOut` 三次缓入缓出（位置全程、注视点 0.8× 时长，先转看目标再推进，出发缓起、临近目标减速滑入、到点速度趋零，避免"快速冲到设备前戛然而止"）、fov `sine.inOut`（0.7× 时长），时长按两点距离与 `CAMERA_CONTROL_CONFIG.FLIGHT_DURATION_FACTOR` 计算并限制在配置范围；注视起点取视线前方远点避免起飞瞬间镜头转动生硬，`onComplete` 统一收尾精确到位，消除旧方案逐帧 lerp"永远差一点、镜头晃动"的问题。所有运镜参数（时长系数、缓动、起点距离等）均由 `CAMERA_CONTROL_CONFIG` 统一配置。
 - 首次进入：模型加载完成后若首个巡检点位配置了预设机位，`snapToFirstPatrolTarget()` 把相机直接定格到该机位（同步 `camPos`/`camLook` 平滑状态、写入机位 fov）并 `completeTransit()` 直接进入首段停留，跳过"整体鸟瞰 → 首个点位"的长距离运镜——页面进入即显示设备特写，不再从高空晃入。
-- 外部驱动：`advanceToNextTarget()`（组件 watch `activeItem.itemId` 变化时触发）。控制器只按顺序自动推进/循环，不再提供"跳转到任意点位"的 `jumpToTarget`（随任务列表点击跳转一并移除），保证 `currentIndex`/`completed` 的顺序语义不被破坏。
+- 推进驱动：控制器只按顺序自动推进/循环，不再提供外部驱动入口（原先组件 watch `activeItem.itemId` → `advanceToNextTarget()` 的接入链已随 `activeItem` prop 移除并整体删除）与"跳转到任意点位"的 `jumpToTarget`（随任务列表点击跳转一并移除），保证 `currentIndex`/`completed` 的顺序语义不被破坏。
 
 ### 前端面板与结果卡片（threeRectangle.vue）
 
@@ -166,7 +166,7 @@ renderer：`antialias + alpha`、`pixelRatio ≤ 2`、`SRGBColorSpace`、`Reinha
 
 - 巡检设置-巡检对象表单（`optCenter/inspectionSet/area/formDialog.vue`）提供"配置视角/重新配置"按钮，打开 `viewpointDialog`：在 `ViewpointPicker` 场景中点击模型内部设备（`BoxHelper` 青色高亮边框，不改材质避免替换 bug）自动计算右前上方 45° 机位并平滑飞行聚焦，可再手动微调后保存 `{ modelId, position, target, fov, distance }` 回写巡检对象。
 - `ViewpointPicker` 与巡视场景共用同一套 GLB（外立面 + 内部结构）与 `TARGET_SIZE` 归一化参数、`shared/environment` 环境，保证保存视角坐标在巡视侧直接复用；巡视侧停留在点位时按点位内置视角数据（`PATROL_IDS` 的 `position/target/fov`）恢复机位，任务列表点击跳转入口已下线。配置弹窗侧栏提供外立面 显示/透视/隐藏 三态切换（默认半透明透视，与巡视场景一致），隐藏后内部设备完全可见便于选中；外立面构件不可拾取——点击外墙会跳过该命中、穿透选中其背后的内部设备，悬停外墙不显示手型。
-- 组件 props 保留 `activeItem.itemId`（外部驱动切换到下一台，触发 `advanceToNextTarget`）可选接入点；原 `viewpoints`（点位 → 机位映射，用于点击任务恢复机位）已随点击跳转功能移除。当前 `BIMdetail` 详情页未传入 `activeItem`，页面进入后由 `PatrolController` 自动循环巡检全部内置点位。
+- 组件 props 收敛为仅保留 `id`（`BIMdetail` 传入当前巡检任务 id，仅作标识，不参与场景逻辑）；`activeItem` 外部驱动（watch → `advanceToNextTarget`）已整体移除，`WaterPlantScene`/`PatrolController` 对应方法同步删除。页面进入后由 `PatrolController` 自动循环巡检全部内置点位；原 `viewpoints`（点位 → 机位映射，用于点击任务恢复机位）已随点击跳转功能移除。
 
 ### 与旧版本描述差异
 

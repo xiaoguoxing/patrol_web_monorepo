@@ -138,10 +138,6 @@ export class WaterPlantScene {
     this.camera.updateProjectionMatrix();
   }
 
-  public advanceToNextTarget() {
-    this.patrol?.advanceToNextTarget();
-  }
-
   /** 全部巡检任务列表（任务标题 = 巡检点位，按巡检顺序） */
   public getPatrolTargets() {
     return this.patrol?.getTargets() ?? [];

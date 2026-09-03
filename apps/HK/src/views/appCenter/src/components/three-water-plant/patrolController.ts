@@ -109,22 +109,6 @@ export class PatrolController {
     this.beginDwell(this.pendingIndex);
   }
 
-  /** 手动切换到下一个巡检对象（运镜途中重复调用无效） */
-  public advanceToNextTarget() {
-    if (this.targets.length === 0) return;
-    if (this.targets.length === 1) {
-      // 单个对象：外部"开始下一轮"时直接重启停留
-      if (this.phase === 'dwell') this.beginDwell(0);
-      return;
-    }
-    if (this.phase === 'transit') return;
-    this.phase = 'transit';
-    this.pendingIndex = (this.currentIndex + 1) % this.targets.length;
-    this.dwellRemaining = 0;
-    this.restoreFlicker();
-    this.emitSnapshot();
-  }
-
   /** 当前巡检阶段 */
   public getPhase() {
     return this.phase;
