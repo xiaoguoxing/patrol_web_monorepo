@@ -4,7 +4,7 @@
   </el-tooltip>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { TITLE } from '@/config/config';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
@@ -14,7 +14,7 @@ interface TitleProps {
 withDefaults(defineProps<TitleProps>(), {
   isCollapse: false,
 });
-const title = ref(t(TITLE));
+const title = computed(() => t(TITLE));
 </script>
 
 <style scoped lang="scss">

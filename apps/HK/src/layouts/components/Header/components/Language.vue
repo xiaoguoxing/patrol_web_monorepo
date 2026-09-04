@@ -1,5 +1,5 @@
 <template>
-  <el-dropdown trigger="click" @command="handleSetLanguage">
+  <el-dropdown trigger="click" @command="(lang:string) => handleSetLanguage(lang,false)">
     <i :class="'iconfont icon-zhongyingwen'" class="toolBar-icon" :title="$t('header.langChangeTitle')"></i>
     <template #dropdown>
       <el-dropdown-menu>
@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { GlobalStore } from '@/stores';
 import { getBrowserLang } from '@/utils/util';
@@ -22,12 +22,20 @@ const globalStore = GlobalStore();
 const language = computed((): string => globalStore.language);
 
 // 切换语言
-const handleSetLanguage = (lang: string) => {
+const handleSetLanguage = (lang: string, is: boolean = false): void => {
   i18n.locale.value = lang;
   globalStore.updateLanguage(lang);
+  console.log(is);
+  if (!is) reloadPage();
 };
-
+const reloadPage = () => {
+  nextTick(() => {
+    if (typeof window !== 'undefined') {
+      window.history.go(0);
+    }
+  });
+};
 onMounted(() => {
-  handleSetLanguage(language.value || getBrowserLang());
+  handleSetLanguage(language.value || getBrowserLang(), true);
 });
 </script>

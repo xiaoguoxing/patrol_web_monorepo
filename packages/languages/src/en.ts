@@ -1,7 +1,7 @@
 export default {
   home: {
     welcome: 'Welcome',
-    sysName: 'Intelligent Inspection Management Platform',
+    sysName: 'Smart Inspection',
   },
   tabs: {
     more: 'More',

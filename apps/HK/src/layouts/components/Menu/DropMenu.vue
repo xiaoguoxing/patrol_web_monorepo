@@ -1,7 +1,7 @@
 <template>
   <ul class="drop-menu" :style="`flex-direction:${moreLevel ? 'row' : 'column'} ;`">
     <template v-for="subItem in menuList" :key="subItem.path">
-      <li v-if="watchLevel(subItem)" class="drop-menu-col" :index="subItem.path">
+      <li v-if="watchLevel(subItem)" class="drop-menu-col" :class="locale" :index="subItem.path">
         <div class="drop-menu-title">
           <span>{{ subItem.meta.title }}</span>
         </div>
@@ -16,7 +16,7 @@
           </el-menu-item>
         </ul>
       </li>
-      <el-menu-item class="first-row" v-else :index="subItem.path" @click="changeSubMenu(subItem)">
+      <el-menu-item class="first-row" :class="locale" v-else :index="subItem.path" @click="changeSubMenu(subItem)">
         <!-- <el-icon>
           <component :is="subItem.meta.icon"></component>
         </el-icon> -->
@@ -34,7 +34,8 @@ import { RouteRecordRaw, useRouter } from 'vue-router';
 import { ref } from 'vue';
 import { useMenu } from '@/layouts/hooks/useMenu';
 import SvgIcon from '@/components/SvgIcon/index.vue';
-
+import { useI18n } from 'vue-i18n';
+const { locale } = useI18n();
 const props = defineProps<{ menuList: RouteRecordRaw[] }>();
 const moreLevel = ref(false);
 const watchLevel = (subItem: RouteRecordRaw) => {
@@ -60,6 +61,10 @@ const { activeMenu, changeSubMenu } = useMenu();
   }
   .drop-menu-col {
     width: 148px;
+    &.en,
+    &.en .el-menu-item {
+      width: auto !important;
+    }
     .drop-menu-title {
       @extend %first-row;
 
@@ -74,6 +79,9 @@ const { activeMenu, changeSubMenu } = useMenu();
     padding: 0 12px;
     line-height: $kr-menu-item-height;
     color: var(--el-text-color-regular);
+    &.en {
+      width: auto !important;
+    }
     &.first-row {
       @extend %first-row;
     }

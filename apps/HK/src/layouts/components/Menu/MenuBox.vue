@@ -7,6 +7,7 @@
     :collapse="collapseShow && themeConfig.isCollapse"
     :collapse-transition="false"
     :unique-opened="true"
+    :class="locale"
     :popper-offset="popperOffset"
   >
     <!--     :background-color="menuTheme.bgColor"
@@ -22,6 +23,7 @@
       :collapse="collapseShow && themeConfig.isCollapse"
       :collapse-transition="false"
       :unique-opened="true"
+      :class="locale"
     >
       <slot></slot>
     </el-menu>
@@ -40,7 +42,8 @@ import CollapseIcon from '@/layouts/components/Header/components/CollapseIcon.vu
 const globalStore = GlobalStore();
 
 const themeConfig = computed(() => globalStore.themeConfig);
-
+import { useI18n } from 'vue-i18n';
+const { locale } = useI18n();
 // const styleObj: { [key: string]: any } = {
 //   primary: {
 //     bgColor: globalStore.themeConfig.primary,
@@ -86,3 +89,28 @@ const menuTheme = computed(() => {
   }
 });
 </script>
+<style>
+/* 侧边菜单文字区域 */
+.el-menu.en {
+  .el-menu-item,
+  .el-sub-menu__title {
+    display: flex;
+    align-items: center;
+    padding-right: 40px !important; /* 给右侧箭头留空间，可按实际调整 */
+  }
+  .el-menu-item span,
+  .el-sub-menu__title span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 箭头本身定位更稳 */
+  .el-sub-menu__icon-arrow {
+    position: absolute;
+    right: 16px; /* 根据你的菜单宽度微调 */
+    margin-top: 0 !important;
+  }
+}
+</style>

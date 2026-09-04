@@ -43,7 +43,7 @@ import type { ElForm } from 'element-plus';
 // tsconfig disabled
 import JSEncrypt from 'jsencrypt/bin/jsencrypt';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+const { t, locale } = useI18n();
 // import md5 from 'js-md5';
 const router = useRouter();
 const tabsStore = TabsStore();
@@ -67,7 +67,7 @@ const loginRules = reactive({
     },
   ],
 });
-
+console.log(locale);
 const loading = ref(false);
 const loginForm = reactive<Login.ReqLoginForm>({ account: '', password: '' });
 const login = (formEl: FormInstance | undefined) => {

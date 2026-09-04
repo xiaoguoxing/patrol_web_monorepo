@@ -111,5 +111,7 @@ const onConfirm = async (ids: string[], arr: any[]) => {
 defineExpose({
   acceptParams,
 });
-await getTreeList();
+try {
+  await getTreeList();
+} catch (e) {}
 </script>
