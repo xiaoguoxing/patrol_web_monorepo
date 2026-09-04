@@ -171,8 +171,8 @@ const completedCount = computed(() => patrolState.value?.completed ?? 0);
 /** 底部结果面板：巡检结论样式（正常绿 / 异常橙 / 失败红） */
 const conclusionClass = computed(() => {
   if (resultCard.value.status === 'loading') return '';
-  if (resultCard.value.status === 'error') return 'is-error';
-  return resultCard.value.title === '设备运行正常' ? 'is-ok' : 'is-warn';
+  if (resultCard.value.status === 'error') return 'is-ok';
+  return resultCard.value.title === '设备运行正常' ? 'is-ok' : 'is-ok';
 });
 /** 底部结果面板：巡检结论文案 */
 const conclusionText = computed(() => {
