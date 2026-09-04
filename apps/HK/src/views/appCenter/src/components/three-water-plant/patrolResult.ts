@@ -32,8 +32,7 @@ interface ResultTemplate {
 
 const RESULT_TEMPLATES: ResultTemplate[] = [
   { title: '设备运行正常', detail: '振动幅值处于正常范围，无异常温升。', confidence: 0.97 },
-  { title: '设备运行正常', detail: '运行声音平稳，电流值符合额定参数。', confidence: 0.94 },
-  { title: '存在轻微异响', detail: '检测到轻微摩擦噪声，建议关注轴承润滑状态。', confidence: 0.82 },
+  { title: '设备运行正常', detail: '电流值符合额定参数。', confidence: 0.94 },
   { title: '温度略偏高', detail: '表面温度略高于同类设备均值，请安排现场复核。', confidence: 0.88 },
   { title: '压力正常', detail: '进出口压力差在允许范围内。', confidence: 0.96 },
   { title: '无异常渗漏', detail: '管口及法兰连接处无渗漏迹象。', confidence: 0.93 },
@@ -55,10 +54,11 @@ export function requestPatrolResult(
     const timer = window.setTimeout(() => {
       const hash = [...taskId].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
       const template = RESULT_TEMPLATES[hash % RESULT_TEMPLATES.length];
+      const url = new URL(`/demoImg/demo${Math.random() < 0.5 ? 1 : 2}.jpg`, window.location.href).href;
       resolve({
         taskId,
         status: 'success',
-        image: buildSnapshotImage(displayName || taskId, template.title),
+        image: url || buildSnapshotImage(displayName || taskId, template.title),
         title: template.title,
         detail: template.detail,
         confidence: template.confidence,
