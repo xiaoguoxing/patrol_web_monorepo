@@ -159,6 +159,17 @@ export class PatrolController {
     return this.phase === 'dwell' && this.dwellRemaining > 0;
   }
 
+  /**
+   * 停止巡检并恢复当前高亮对象。
+   *
+   * 模型重载时旧 GLB 会被释放；若仍保留闪烁材质，控制器会持有已释放
+   * mesh 的引用，同时原材质也不会被及时恢复。
+   */
+  public dispose() {
+    this.restoreFlicker();
+    this.objectsByTarget.clear();
+  }
+
   /** 切换到指定点位并开始停留 */
   private beginDwell(index: number) {
     // 边界检查：防止数组越界

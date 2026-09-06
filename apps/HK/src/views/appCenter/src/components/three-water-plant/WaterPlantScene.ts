@@ -64,6 +64,13 @@ export class WaterPlantScene {
   /** 遮挡检测：目标 -> 相机的射线与解析出的无遮挡相机位置 */
   private readonly raycaster = new THREE.Raycaster();
   private readonly resolvedCamPos = new THREE.Vector3();
+  /** 遮挡检测复用向量，避免巡检停留期间产生短生命周期对象 */
+  private readonly occlusionDirection = new THREE.Vector3();
+  private readonly occlusionCandidate = new THREE.Vector3();
+  private readonly orbitForward = new THREE.Vector3();
+  private readonly orbitRight = new THREE.Vector3();
+  private readonly orbitUp = new THREE.Vector3();
+  private readonly worldUp = new THREE.Vector3(0, 1, 0);
   /** 巡检点位机位缓存（index -> 机位；未配置预设视角的点位为 undefined） */
   private poseCache: (PatrolCamPose | undefined)[] | undefined;
   /** GSAP 运镜补间代理：镜头位置 / 注视点 / fov 分开补间，可配不同缓动与时长 */
@@ -90,6 +97,8 @@ export class WaterPlantScene {
   private readonly modelLoading = new Map<ModelKey, ModelLoadingState>();
   private readonly glbLoader = new GLTFLoader();
   private patrol: PatrolController | undefined;
+  /** 每次重载递增，用于忽略上一批仍在返回的 GLB 请求 */
+  private modelLoadGeneration = 0;
   private modelReady = false;
   private lastTime = performance.now() / 1000;
   private theta = -55;
@@ -192,13 +201,21 @@ export class WaterPlantScene {
   /** 重新加载真实模型（加载失败后重试） */
   public reloadModels() {
     if (this.disposed) return;
+    this.modelLoadGeneration += 1;
     this.modelReady = false;
+    this.flightTimeline?.kill();
+    this.flightTimeline = undefined;
+    this.patrol?.dispose();
+    this.patrol = undefined;
+    this.poseCache = undefined;
+    this.occlusionAccum = 0;
     this.clearModelRoot();
     // 重置整体归一化状态，避免重载后缩放/位移叠加
     this.modelRoot.scale.set(1, 1, 1);
     this.modelRoot.position.set(0, 0, 0);
     MODELS.forEach((model) => this.modelLoading.set(model.key, { loaded: 0, total: 0 }));
-    MODELS.forEach((model) => this.loadModel(model));
+    const generation = this.modelLoadGeneration;
+    MODELS.forEach((model) => this.loadModel(model, generation));
   }
 
   public dispose() {
@@ -213,6 +230,10 @@ export class WaterPlantScene {
     } finally {
       this.flightTimeline = undefined;
     }
+
+    // 先恢复巡检临时材质，再释放 GLB 资源。
+    this.patrol?.dispose();
+    this.patrol = undefined;
 
     // 停止渲染循环
     this.renderer.setAnimationLoop(null);
@@ -268,16 +289,21 @@ export class WaterPlantScene {
   /** 加载真实 GLB 模型：外立面 + 内部结构，两者同时展示 */
   private loadRealModels() {
     MODELS.forEach((model) => this.modelLoading.set(model.key, { loaded: 0, total: 0 }));
-    MODELS.forEach((model) => this.loadModel(model));
+    const generation = this.modelLoadGeneration;
+    MODELS.forEach((model) => this.loadModel(model, generation));
   }
 
-  private loadModel(model: ModelSource) {
+  private loadModel(model: ModelSource, generation: number) {
     // 项目使用 hash 路由且 vite base 为 './'，基于当前地址解析即可兼容开发与部署子路径
     const url = new URL(`GLB/${model.file}`, window.location.href).href;
     this.glbLoader.load(
       url,
       (gltf) => {
-        if (this.disposed) return;
+        // 重载后旧请求仍可能完成；它不应再写入新场景，并应立即释放解析出的资源。
+        if (this.disposed || generation !== this.modelLoadGeneration) {
+          disposeObject(gltf.scene);
+          return;
+        }
         const group = this.normalizeModel(gltf.scene, model.facade);
         group.name = `glb-${model.key}`;
         this.modelRoot.add(group);
@@ -291,7 +317,7 @@ export class WaterPlantScene {
         if (allLoaded) this.onModelsReady();
       },
       (event) => {
-        if (this.disposed) return;
+        if (this.disposed || generation !== this.modelLoadGeneration) return;
         const state = this.modelLoading.get(model.key);
         if (!state) return;
         state.loaded = event.loaded;
@@ -299,7 +325,7 @@ export class WaterPlantScene {
         this.reportModelProgress(model.key);
       },
       (error) => {
-        if (this.disposed) return;
+        if (this.disposed || generation !== this.modelLoadGeneration) return;
         const detail =
           error && typeof error === 'object' && 'message' in error
             ? String((error as { message?: unknown }).message)
@@ -514,13 +540,13 @@ export class WaterPlantScene {
   private panCamera(dx: number, dy: number) {
     const theta = THREE.MathUtils.degToRad(this.theta);
     const phi = THREE.MathUtils.degToRad(this.phi);
-    const forward = new THREE.Vector3(
+    const forward = this.orbitForward.set(
       -Math.sin(phi) * Math.sin(theta),
       -Math.cos(phi),
       -Math.sin(phi) * Math.cos(theta)
     );
-    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-    const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+    const right = this.orbitRight.crossVectors(forward, this.worldUp).normalize();
+    const up = this.orbitUp.crossVectors(right, forward).normalize();
     const scale = this.radius * CAMERA_CONTROL_CONFIG.DRAG_SENSITIVITY.pan;
     this.viewTarget.addScaledVector(right, -dx * scale);
     this.viewTarget.addScaledVector(up, dy * scale);
@@ -744,17 +770,16 @@ export class WaterPlantScene {
    * 保持同一高度水平视角，被遮挡时仅沿视线方向拉近（不做抬升/俯视动作），
    * 保证镜头始终水平平移、直接到达目标附近。
    *
-   * 性能优化：限制射线投射递归深度为 false（只检测顶层模型容器），
-   * 避免遍历所有子节点，显著降低复杂场景开销。
+   * 使用复用向量，避免周期性遮挡检测制造 GC 压力。
    */
   private resolveClearCamera(target: THREE.Vector3, desired: THREE.Vector3) {
     if (this.modelRoot.children.length === 0) return desired;
-    const dir = desired.clone().sub(target);
+    const dir = this.occlusionDirection.subVectors(desired, target);
     const dist = dir.length();
     if (dist < 1) return desired;
     dir.normalize();
     for (const factor of [1, 0.7, 0.5, 0.35]) {
-      const candidate = target.clone().addScaledVector(dir, dist * factor);
+      const candidate = this.occlusionCandidate.copy(target).addScaledVector(dir, dist * factor);
       if (!this.isCameraBlocked(target, candidate)) return candidate;
     }
     return desired;
@@ -763,21 +788,18 @@ export class WaterPlantScene {
   /**
    * 目标 -> 相机方向上是否有遮挡物（排除当前巡检目标自身）
    *
-   * 性能优化：不递归检查所有子节点（recursive = false），
-   * 只检测模型根节点的直接子级（glb-facade / glb-interior 容器），
-   * 大幅减少射线投射的计算量。
+   * GLB 的可射线命中对象位于 Group 容器的子树中，因此必须递归检测；
+   * 对 Group 使用 recursive=false 不会命中其内部 Mesh，遮挡判断会始终失效。
    */
   private isCameraBlocked(from: THREE.Vector3, to: THREE.Vector3) {
-    const dir = to.clone().sub(from);
+    const dir = this.occlusionDirection.subVectors(to, from);
     const dist = dir.length();
     if (dist < 1) return false;
     dir.normalize();
     this.raycaster.set(from, dir);
     this.raycaster.far = dist;
 
-    // 性能优化：不递归检查所有子节点，只检测顶层容器
-    // 足以判断是否被外立面或主要结构遮挡，无需精确到细小部件
-    const hits = this.raycaster.intersectObjects(this.modelRoot.children, false);
+    const hits = this.raycaster.intersectObjects(this.modelRoot.children, true);
 
     if (hits.length === 0) return false;
     const focused = this.patrol?.getFocusedObject();
