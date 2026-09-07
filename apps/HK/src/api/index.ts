@@ -9,7 +9,6 @@ import { LOGIN_URL } from '@/config/config';
 import router from '@/routers';
 import qs from 'qs';
 import I18n from '@/languages/index';
-const { t } = I18n.global as any;
 /**
  * pinia 错误使用说明示例
  * https://github.com/vuejs/pinia/discussions/971
@@ -115,8 +114,9 @@ class RequestHttp {
         const { response } = error;
         tryHideFullScreenLoading();
         // 请求超时单独判断，因为请求超时没有 response
-        if (error.message.indexOf('timeout') !== -1) ElMessage.error(t('error.408'));
-        if (error.message.indexOf('Network Error') !== -1) ElMessage.error(t('error.networkError'));
+        // 不在模块初始化阶段读取 I18n，避免语言初始化请求与请求层形成循环依赖。
+        if (error.message.indexOf('timeout') !== -1) ElMessage.error(I18n.global.t('error.408'));
+        if (error.message.indexOf('Network Error') !== -1) ElMessage.error(I18n.global.t('error.networkError'));
         // 根据响应的错误状态码，做不同的处理
         if (response) checkStatus(response.status);
         // 服务器结果都没有返回(可能服务器错误可能客户端断网)，断网处理:可以跳转到断网页面

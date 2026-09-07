@@ -12,6 +12,7 @@ import '@/styles/theme/element-dark.scss';
 
 import router from '@/routers/index';
 import I18n from '@/languages/index';
+import { initializeRemoteI18n } from '@/languages/bootstrap';
 import pinia from '@/stores/index';
 import { AuthStore } from '@/stores/modules/auth';
 import auth from '@/directives/modules/auth';
@@ -37,5 +38,7 @@ app
     getCurrentPage: () => router.currentRoute.value.name,
     getTableCol,
     setTableCol,
-  })
-  .mount('#app');
+  });
+
+// 挂载前加载语言和词条，避免首屏先显示本地文本再切换成服务端文本。
+initializeRemoteI18n().finally(() => app.mount('#app'));

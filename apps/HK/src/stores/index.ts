@@ -1,5 +1,5 @@
 import { defineStore, createPinia } from 'pinia';
-import { GlobalState, ThemeConfigProps } from './interface';
+import { GlobalState, LanguageOption, ThemeConfigProps } from './interface';
 import { DEFAULT_PRIMARY } from '@/config/config';
 import piniaPersistConfig from '@/config/piniaPersist';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
@@ -18,6 +18,8 @@ export const GlobalStore = defineStore({
     assemblySize: 'default',
     // language
     language: '',
+    // 服务端允许使用的语言列表
+    languageOptions: [],
     // themeConfig
     themeConfig: {
       // 布局切换 ==>  纵向：vertical | 经典：classic | 横向：transverse | 分栏：columns
@@ -71,6 +73,9 @@ export const GlobalStore = defineStore({
     // updateLanguage
     updateLanguage(language: string) {
       this.language = language;
+    },
+    setLanguageOptions(languageOptions: LanguageOption[]) {
+      this.languageOptions = languageOptions;
     },
     // setThemeConfig
     setThemeConfig(themeConfig: ThemeConfigProps) {

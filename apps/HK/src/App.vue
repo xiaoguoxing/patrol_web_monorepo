@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed, onMounted } from 'vue';
+import { reactive, computed } from 'vue';
 import { GlobalStore } from '@/stores';
 import { useTheme } from '@/hooks/useTheme';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
@@ -13,7 +13,6 @@ import en from 'element-plus/es/locale/lang/en';
 import zhHK from 'element-plus/es/locale/lang/zh-hk';
 import type { Language, TranslatePair } from 'element-plus/es/locale';
 import { en as appEn, zh as appZh, zhHK as appZhHK } from '@patrol/languages';
-import { useI18n } from 'vue-i18n';
 
 // 使用主题
 useTheme();
@@ -40,14 +39,14 @@ const elementLocales: Record<string, Language> = {
 };
 
 // Element Plus 及共享 UI 语言与应用默认语言保持一致
-const i18nLocale = computed(() => elementLocales[globalStore.language] ?? elementLocales.zh);
+const i18nLocale = computed(() => {
+  const language = globalStore.language;
+  if (elementLocales[language]) return elementLocales[language];
+  if (language.toLowerCase().startsWith('en')) return elementLocales.en;
+  if (/^zh[-_](hk|tw)/i.test(language)) return elementLocales['zh-HK'];
+  return elementLocales.zh;
+});
 
 // 配置全局组件大小 (small/default(medium)/large)
 const assemblySize = computed((): string => globalStore.assemblySize);
-const i18n = useI18n();
-onMounted(() => {
-  const language = globalStore.language;
-  i18n.locale.value = language as string;
-  globalStore.updateLanguage(language);
-});
 </script>

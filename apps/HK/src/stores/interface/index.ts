@@ -16,6 +16,12 @@ export interface ThemeConfigProps {
   maximize: boolean;
 }
 
+export interface LanguageOption {
+  code: string;
+  name: string;
+  isDefault: boolean;
+}
+
 /* GlobalState */
 export interface GlobalState {
   token: string;
@@ -24,6 +30,7 @@ export interface GlobalState {
   // userInfo: any;
   assemblySize: string;
   language: string;
+  languageOptions: LanguageOption[];
   themeConfig: ThemeConfigProps;
 }
 

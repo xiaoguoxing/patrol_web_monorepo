@@ -38,6 +38,7 @@ import { TabsStore } from '@/stores/modules/tabs';
 import { getTimeState } from '@/utils/util';
 import { HOME_URL } from '@/config/config';
 import { initDynamicRouter } from '@/routers/modules/dynamicRouter';
+import { refreshRemoteI18n } from '@/languages/bootstrap';
 import { CircleClose, UserFilled } from '@element-plus/icons-vue';
 import type { ElForm } from 'element-plus';
 // tsconfig disabled
@@ -82,6 +83,8 @@ const login = (formEl: FormInstance | undefined) => {
         password: (await encryptPassword(loginForm.password)) as string,
       };
       await loginApi(formData);
+      // 多语言接口需要登录态，登录成功后重新加载服务端语言列表及当前语言包。
+      await refreshRemoteI18n();
       // TODO:后端改接口接收登录信息
       // globalStore.setToken(data.access_token);
 
