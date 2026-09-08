@@ -102,6 +102,10 @@ const columns = computed<tableProps<Row>[]>(() => [
     prop: 'algorithmUrl',
     label: t('model.algorithmUrl'),
   },
+  {
+    prop: 'i18nKey',
+    label: 'i18nKey',
+  },
   /*{
     prop: 'algorithmPort',
     label: '端口',

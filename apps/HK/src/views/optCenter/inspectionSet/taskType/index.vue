@@ -76,7 +76,7 @@ const tableSource = [
   { id: '6', taskType: '测试', priorityLevel: 6 },
 ];
 // 表格配置项
-const columns  = computed<ColumnProps[]>(()=>[
+const columns = computed<ColumnProps[]>(() => [
   { type: 'selection', width: 60 },
 
   { type: 'index', label: t('table.sort'), width: 60 },
@@ -89,6 +89,10 @@ const columns  = computed<ColumnProps[]>(()=>[
         placeholder: t('task.taskTypeNamePlaceholder'),
       },
     },
+  },
+  {
+    prop: 'i18nKey',
+    label: 'i18nKey',
   },
 
   {

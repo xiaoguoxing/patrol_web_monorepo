@@ -23,6 +23,12 @@
           :placeholder="$t('inputPlaceholder.placeholderBase') + $t('task.taskTypeName')"
         ></el-input>
       </el-form-item>
+      <el-form-item label="i18nKey" prop="i18nKey">
+        <el-input
+          v-model="props.rowData!.i18nKey"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + ' i18nKey'"
+        ></el-input>
+      </el-form-item>
       <el-form-item :label="$t('task.priorityLevel')" prop="priorityLevel">
         <el-slider v-model="props.rowData!.priorityLevel" show-input :step="1" :min="1" :max="10" show-stops />
       </el-form-item>
@@ -36,6 +42,7 @@ import { ElMessage, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const rules = reactive({
+  i18nKey: [{ required: true, message: t('inputPlaceholder.placeholderBase') + 'i18nKey' }],
   taskType: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('task.taskTypeName') }],
   priorityLevel: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('task.priorityLevel') }],
 });
