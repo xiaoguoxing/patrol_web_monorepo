@@ -27,22 +27,22 @@
             <el-form ref="formRef" :rules="rules" label-suffix=" :" :model="userFormData" label-width="auto">
               <el-row class="">
                 <el-col :span="24">
-                  <el-form-item :label="$t('inputPlaceholder.username')" prop="name" label-width="100">
+                  <el-form-item :label="$t('inputPlaceholder.username')" prop="name">
                     <el-input v-model="userFormData.name" disabled></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item :label="$t('input.account')" prop="account" label-width="100">
+                  <el-form-item :label="$t('input.account')" prop="account">
                     <el-input v-model="userFormData.account" disabled></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item :label="$t('input.phone')" prop="phone" label-width="100">
+                  <el-form-item :label="$t('input.phone')" prop="phone">
                     <el-input v-model="userFormData.phone" disabled></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item :label="$t('input.defaultOrg')" prop="defaultOrgId" label-width="100">
+                  <el-form-item :label="$t('input.defaultOrg')" prop="defaultOrgId">
                     <!-- <el-input v-model="userFormData.defaultOrgId" clearable></el-input> -->
                     <el-select v-model="userFormData.defaultOrgId" placeholder="">
                       <el-option v-for="item in zzOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -50,7 +50,7 @@
                   </el-form-item>
                 </el-col>
                 <!-- <el-col :span="24">
-                <el-form-item label="默认租户" prop="defaultAppId" label-width="100">
+                <el-form-item label="默认租户" prop="defaultAppId">
                   <el-select v-model="userFormData.defaultAppId" placeholder="">
                     <el-option v-for="item in zhOptions" :key="item.value" :label="item.label" :value="item.value" />
                   </el-select>
@@ -66,17 +66,17 @@
             <el-form ref="pswFormRef" :rules="rules1" label-suffix=" :" :model="passwdFormData" label-width="auto">
               <el-row class="">
                 <el-col :span="24">
-                  <el-form-item :label="$t('input.oldPassword')" prop="oldPassword" label-width="100">
+                  <el-form-item :label="$t('input.oldPassword')" prop="oldPassword">
                     <el-input v-model="passwdFormData.oldPassword" type="password" show-password></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item :label="$t('input.newPassword')" prop="newPassword" label-width="100">
+                  <el-form-item :label="$t('input.newPassword')" prop="newPassword">
                     <el-input v-model="passwdFormData.newPassword" type="password" show-password></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="24">
-                  <el-form-item :label="$t('input.newPasswordAgin')" prop="newPasswordAgin" label-width="100">
+                  <el-form-item :label="$t('input.newPasswordAgin')" prop="newPasswordAgin">
                     <el-input v-model="passwdFormData.newPasswordAgin" type="password" show-password></el-input>
                   </el-form-item>
                 </el-col>
@@ -421,7 +421,7 @@ const checkNewPassword = (rule: any, val: any, callback: any) => {
   width: 50%;
   margin-left: 130px;
   .el-button {
-    width: 100px;
+    width: auto;
   }
 }
 </style>

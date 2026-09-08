@@ -22,9 +22,13 @@ const applyLanguages = (languages: LanguageOption[], preserveCurrent = true): st
   globalStore.setLanguageOptions(selectableLanguages);
 
   const currentLanguage =
-    preserveCurrent && selectableLanguages.some(item => item.code === globalStore.language) ? globalStore.language : '';
-  const defaultLanguage = selectableLanguages.find(item => item.isDefault)?.code ?? selectableLanguages[0].code;
-  const selectedLanguage = selectableLanguages.some(item => item.code === currentLanguage) ? currentLanguage : defaultLanguage;
+    preserveCurrent && selectableLanguages.some((item) => item.code === globalStore.language)
+      ? globalStore.language
+      : '';
+  const defaultLanguage = selectableLanguages.find((item) => item.isDefault)?.code ?? selectableLanguages[0].code;
+  const selectedLanguage = selectableLanguages.some((item) => item.code === currentLanguage)
+    ? currentLanguage
+    : defaultLanguage;
   i18n.global.locale.value = selectedLanguage;
   globalStore.updateLanguage(selectedLanguage);
   return selectedLanguage;
