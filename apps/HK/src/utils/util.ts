@@ -249,6 +249,7 @@ export function generateRoute(
         isHide: item.isHide,
         isFull: false,
         isAffix: false,
+        entryKey: item.entryKey,
         isOpen: parentOpen && item.isOpen,
         isEnable: parentStatue && item.status,
       },

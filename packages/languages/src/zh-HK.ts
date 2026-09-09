@@ -184,6 +184,7 @@ export default {
     finished: '已結束',
     during: '執行中',
     no_execute: '未執行',
+    app: '常用應用',
   },
   device: {
     camera: '攝影機',
@@ -435,6 +436,7 @@ export default {
     step1: '設定任務資訊',
     step2: '選擇巡檢項',
     m: '每',
+    m2: '每{val}{label}',
   },
   linkageSet: {
     treePlaceholder: '請輸入聯動信號',
@@ -610,6 +612,7 @@ export default {
     qkx: '請框選',
     msg3: '該攝影機正在執行智能巡檢任務，請稍後嘗試',
     msg4: '僅允許框選一處',
+    rect: '矩形',
   },
   inspection: {
     inspection: '巡檢項',

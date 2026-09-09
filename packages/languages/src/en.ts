@@ -184,6 +184,7 @@ export default {
     finished: 'Finished',
     during: 'In Progress',
     no_execute: 'Not Started',
+    app: 'Common Applications',
   },
   device: {
     camera: 'Camera',
@@ -436,6 +437,7 @@ export default {
     step1: 'Set Task Information',
     step2: 'Select Inspection Items',
     m: 'Every',
+    m2: 'Every {val} {label}',
   },
   linkageSet: {
     treePlaceholder: 'Enter a linkage signal',
@@ -611,6 +613,7 @@ export default {
     qkx: 'Please select an area',
     msg3: 'This camera is running an intelligent inspection task. Please try again later',
     msg4: 'Only one area can be selected',
+    rect: 'Rectangle',
   },
   inspection: {
     inspection: 'Inspection Item',

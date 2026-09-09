@@ -9,6 +9,7 @@ declare module 'vue-router' {
     isAffix: boolean;
     isKeepAlive: boolean;
     parentIcon?: string;
+    entryKey?: string;
   }
 }
 export {};

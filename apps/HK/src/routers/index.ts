@@ -129,6 +129,7 @@ router.afterEach((to, from, failure) => {
       moduleName: targetMenu.meta?.title,
       photo: targetMenu.meta?.icon || targetMenu.meta?.parentIcon,
       route: targetMenu.path,
+      entryKey: targetMenu.meta?.entryKey,
     };
     postUsageApp(param)
       .then((res) => {
