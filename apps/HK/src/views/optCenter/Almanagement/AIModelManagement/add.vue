@@ -163,8 +163,8 @@ defineExpose({ openDialog });
       <el-form-item label="端口号" v-if="false" prop="algorithmPort">
         <el-input v-model="formData.algorithmPort" placeholder="请输入端口号" clearable></el-input>
       </el-form-item>
-      <el-form-item label="entryKey" prop="entryKey">
-        <el-input v-model="formData.entryKey" placeholder="entryKey" clearable></el-input>
+      <el-form-item label="i18nKey" prop="entryKey">
+        <el-input v-model="formData.entryKey" placeholder="i18nKey" clearable></el-input>
       </el-form-item>
       <el-form-item :label="$t('model.identifyType')" prop="identifyType">
         <el-select clearable v-model="formData[identifyType]">

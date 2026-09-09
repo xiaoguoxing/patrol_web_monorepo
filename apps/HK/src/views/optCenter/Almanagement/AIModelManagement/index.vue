@@ -104,7 +104,7 @@ const columns = computed<tableProps<Row>[]>(() => [
   },
   {
     prop: 'entryKey',
-    label: 'entryKey',
+    label: 'i18nKey',
   },
   /*{
     prop: 'algorithmPort',

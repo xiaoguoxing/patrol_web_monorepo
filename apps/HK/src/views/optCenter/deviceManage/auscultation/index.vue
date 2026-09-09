@@ -29,7 +29,7 @@
             icon="CirclePlus"
             type="primary"
             @click="openForm($t('buttonName.add'))"
-            >{{ $t('buttonName.add') }}{{ $t('device.auscultation') }}</el-button
+            >{{ $t('buttonName.add') }} {{ $t('device.auscultation') }}</el-button
           >
           <el-button
             v-auth="'batchDelete'"

@@ -54,7 +54,7 @@
             :disabled="syncData"
             type="primary"
             @click="openForm($t('buttonName.add'))"
-            >{{ $t('buttonName.add') }}{{ $t('overHaulArea.object') }}</el-button
+            >{{ $t('buttonName.add') }} {{ $t('overHaulArea.object') }}</el-button
           >
           <el-button
             v-auth="'add'"
@@ -63,7 +63,7 @@
             :disabled="syncData"
             type="primary"
             @click="openForm($t('buttonName.add2'))"
-            >{{ $t('buttonName.add2') }}{{ $t('overHaulArea.object') }}</el-button
+            >{{ $t('buttonName.add2') }} {{ $t('overHaulArea.object') }}</el-button
           >
           <el-button
             v-auth="'batchDelete'"

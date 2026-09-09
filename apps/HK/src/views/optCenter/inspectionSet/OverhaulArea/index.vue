@@ -29,7 +29,7 @@
             :disabled="syncData"
             type="primary"
             @click="openForm($t('buttonName.add'))"
-            >{{ $t('buttonName.add') }}{{ $t('overHaulArea.overHaulAreaName') }}</el-button
+            >{{ $t('buttonName.add') }} {{ $t('overHaulArea.overHaulAreaName') }}</el-button
           >
           <el-button
             icon="Delete"

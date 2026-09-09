@@ -36,7 +36,7 @@
             type="primary"
             v-auth="'add'"
             @click="openDialogChange('add')"
-            >{{ $t('buttonName.add') }}{{ $t('position.position') }}</el-button
+            >{{ $t('buttonName.add') }} {{ $t('position.position') }}</el-button
           >
           <el-button
             icon="Delete"

@@ -12,7 +12,7 @@
         <!-- 表格 header 按钮 -->
         <template #tableHeader="scope">
           <el-button v-auth="'add'" icon="CirclePlus" type="primary" @click="openForm($t('buttonName.add'))"
-            >{{ $t('buttonName.add') }}{{ $t('camera.storageName') }}</el-button
+            >{{ $t('buttonName.add') }} {{ $t('camera.storageName') }}</el-button
           >
           <el-button
             v-auth="'batchDelete'"
