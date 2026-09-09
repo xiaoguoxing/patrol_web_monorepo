@@ -91,7 +91,7 @@ const columns = computed<ColumnProps[]>(() => [
     },
   },
   {
-    prop: 'i18nKey',
+    prop: 'entryKey',
     label: 'i18nKey',
   },
 

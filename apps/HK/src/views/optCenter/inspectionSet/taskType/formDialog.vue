@@ -23,10 +23,10 @@
           :placeholder="$t('inputPlaceholder.placeholderBase') + $t('task.taskTypeName')"
         ></el-input>
       </el-form-item>
-      <el-form-item label="i18nKey" prop="i18nKey">
+      <el-form-item label="entryKey" prop="entryKey">
         <el-input
-          v-model="props.rowData!.i18nKey"
-          :placeholder="$t('inputPlaceholder.placeholderBase') + ' i18nKey'"
+          v-model="props.rowData!.entryKey"
+          :placeholder="$t('inputPlaceholder.placeholderBase') + ' entryKey'"
         ></el-input>
       </el-form-item>
       <el-form-item :label="$t('task.priorityLevel')" prop="priorityLevel">
@@ -42,7 +42,7 @@ import { ElMessage, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const rules = reactive({
-  i18nKey: [{ required: true, message: t('inputPlaceholder.placeholderBase') + 'i18nKey' }],
+  entryKey: [{ required: true, message: t('inputPlaceholder.placeholderBase') + 'entryKey' }],
   taskType: [{ required: true, message: t('inputPlaceholder.placeholderBase') + t('task.taskTypeName') }],
   priorityLevel: [{ required: true, message: t('inputPlaceholder.placeholderSelect') + t('task.priorityLevel') }],
 });

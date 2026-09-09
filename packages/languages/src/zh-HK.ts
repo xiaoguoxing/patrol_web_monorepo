@@ -208,7 +208,7 @@ export default {
     back: '返回',
     edit: '編輯',
     add: '新增',
-    add2: '新增',
+    add2: '添加',
     add3: '立即新增',
     add4: '儲存並提交',
     check: '檢視',

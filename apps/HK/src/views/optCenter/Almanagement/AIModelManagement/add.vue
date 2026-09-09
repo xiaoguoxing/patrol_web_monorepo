@@ -35,7 +35,7 @@ async function openDialog() {
 const ruleFormRef = ref();
 let formRule = reactive<FormRules<Row>>({
   algorithmCode: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
-  i18nKey: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
+  entryKey: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
   algorithmName: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
   algorithmPort: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
   algorithmUrl: [{ required: true, message: t('inputPlaceholder.placeholderBase') }],
@@ -48,6 +48,7 @@ let formRule = reactive<FormRules<Row>>({
 let formData = ref<Row>({
   id: '',
   algorithmPort: '',
+  entryKey: '',
   algorithmUrl: '',
   algorithmVersion: '',
   algorithmSkill: '',
@@ -162,8 +163,8 @@ defineExpose({ openDialog });
       <el-form-item label="端口号" v-if="false" prop="algorithmPort">
         <el-input v-model="formData.algorithmPort" placeholder="请输入端口号" clearable></el-input>
       </el-form-item>
-      <el-form-item label="i18nKey" prop="i18nKey">
-        <el-input v-model="formData.i18nKey" placeholder="i18nKey" clearable></el-input>
+      <el-form-item label="entryKey" prop="entryKey">
+        <el-input v-model="formData.entryKey" placeholder="entryKey" clearable></el-input>
       </el-form-item>
       <el-form-item :label="$t('model.identifyType')" prop="identifyType">
         <el-select clearable v-model="formData[identifyType]">

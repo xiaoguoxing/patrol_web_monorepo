@@ -18,7 +18,7 @@ export interface Row {
   authenticationUrl: string;
   runtimeEnvironment: string;
   identifyType: string;
-  i18nKey: string;
+  entryKey: string;
   needBusiness: boolean;
   needMarked: boolean;
 }
