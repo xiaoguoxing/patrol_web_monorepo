@@ -63,7 +63,7 @@ export interface PatrolViewpoint {
  */
 export const PATROL_IDS: PatrolViewpoint[] = [
   {
-    name: '1#输水管道',
+    name: '1#水泵',
     modelId: 'Line009',
     position: [462.92, 104.29, 110.19],
     target: [376.73, 65.86, 67.48],
@@ -71,7 +71,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 103.58,
   },
   {
-    name: '2#输水管道',
+    name: '2#水泵',
     modelId: 'Line012',
     position: [402.57, 92.2, 113.11],
     target: [325.08, 64.49, 69.14],
@@ -79,7 +79,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 93.31,
   },
   {
-    name: '3#输水管道',
+    name: '3#水泵',
     modelId: 'Line013',
     position: [350.64, 113.91, 111.77],
     target: [269.41, 62.92, 72.65],
@@ -87,7 +87,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 103.58,
   },
   {
-    name: '4#输水管道',
+    name: '4#水泵',
     modelId: 'Object011',
     position: [299.08, 111.75, 110.39],
     target: [213.86, 63.81, 76.21],
@@ -95,7 +95,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 103.58,
   },
   {
-    name: '5#输水管道',
+    name: '5#水泵',
     modelId: 'Line019',
     position: [249.02, 115.15, 98.72],
     target: [164.55, 62.24, 71.27],
@@ -103,7 +103,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 103.39,
   },
   {
-    name: '6#输水管道',
+    name: '6#水泵',
     modelId: 'Line021',
     position: [203.03, 102.56, 107.28],
     target: [115.57, 60.98, 71.06],
@@ -111,7 +111,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 103.39,
   },
   {
-    name: '7#输水管道',
+    name: '7#水泵',
     modelId: 'Rectangle008',
     position: [147.93, 102.7, 107.35],
     target: [57.61, 52.33, 73.46],
@@ -119,7 +119,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 108.83,
   },
   {
-    name: '8#输水管道',
+    name: '8#水泵',
     modelId: 'Line023',
     position: [89.45, 115.68, 100.6],
     target: [6.96, 47.88, 66.44],
@@ -127,7 +127,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     distance: 112.1,
   },
   {
-    name: '9#输水管道',
+    name: '9#水泵',
     modelId: 'Line024',
     position: [49.69, 111.69, 99.04],
     target: [-46.08, 46.52, 65.53],
