@@ -5,9 +5,9 @@ import i18n, { resetLocaleMessage } from './index';
 import { buildRemoteMessages, normalizeLanguages } from './remote';
 
 const LOCAL_LANGUAGES: LanguageOption[] = [
-  { code: 'zh', name: '简体中文', isDefault: true },
+  { code: 'zh-CN', name: '简体中文', isDefault: true },
   { code: 'zh-HK', name: '繁體中文', isDefault: false },
-  { code: 'en', name: 'English', isDefault: false },
+  { code: 'en-US', name: 'English', isDefault: false },
 ];
 
 let loading: Promise<void> | undefined;

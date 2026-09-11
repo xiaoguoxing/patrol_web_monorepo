@@ -135,7 +135,7 @@ function cancel() {
       display: flex;
       font-size: 14px;
       .detail-description-label {
-        &.en {
+        &.en-US {
           width: 180px;
         }
 

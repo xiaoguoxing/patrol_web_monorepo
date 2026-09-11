@@ -575,7 +575,7 @@ async function imgSave() {
       align-items: center;
       margin-bottom: 15px;
       .dimension-right-description-items-label {
-        &.en {
+        &.en-US {
           width: 140px;
           text-align: left;
         }

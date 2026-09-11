@@ -91,7 +91,7 @@ const menuTheme = computed(() => {
 </script>
 <style>
 /* 侧边菜单文字区域 */
-.el-menu.en {
+.el-menu.en-US {
   .el-menu-item,
   .el-sub-menu__title {
     display: flex;

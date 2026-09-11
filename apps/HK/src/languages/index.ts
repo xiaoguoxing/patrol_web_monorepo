@@ -2,7 +2,7 @@ import { createI18n } from 'vue-i18n';
 import { en, zh, zhHK } from '@patrol/languages';
 import { provideHandleDataTranslator } from '@patrol/shared/hooks/useHandleData';
 const cloneMessages = <T>(messages: T): T => JSON.parse(JSON.stringify(messages)) as T;
-const LOCAL_MESSAGES = { zh, en, 'zh-HK': zhHK };
+const LOCAL_MESSAGES = { 'zh-CN': zh, 'en-US': en, 'zh-HK': zhHK };
 
 const getLocalMessage = (language: string) => {
   return LOCAL_MESSAGES[language as keyof typeof LOCAL_MESSAGES];
@@ -10,7 +10,7 @@ const getLocalMessage = (language: string) => {
 
 const i18n = createI18n({
   legacy: false,
-  locale: 'zh',
+  locale: 'zh-CN',
   globalInjection: true,
   // 使用副本，避免 mergeLocaleMessage 修改作为刷新基线的本地语言包。
   messages: cloneMessages(LOCAL_MESSAGES),

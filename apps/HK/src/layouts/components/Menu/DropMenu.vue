@@ -61,8 +61,8 @@ const { activeMenu, changeSubMenu } = useMenu();
   }
   .drop-menu-col {
     width: 148px;
-    &.en,
-    &.en .el-menu-item {
+    &.en-US,
+    &.en-US .el-menu-item {
       width: auto !important;
     }
     .drop-menu-title {
@@ -79,7 +79,7 @@ const { activeMenu, changeSubMenu } = useMenu();
     padding: 0 12px;
     line-height: $kr-menu-item-height;
     color: var(--el-text-color-regular);
-    &.en {
+    &.en-US {
       width: auto !important;
     }
     &.first-row {

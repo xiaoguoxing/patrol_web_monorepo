@@ -33,8 +33,8 @@ const extendLocale = (locale: Language, patrol: TranslatePair): Language => ({
 });
 
 const elementLocales: Record<string, Language> = {
-  zh: extendLocale(zhCn, appZh.ui),
-  en: extendLocale(en, appEn.ui),
+  'zh-CN': extendLocale(zhCn, appZh.ui),
+  'en-US': extendLocale(en, appEn.ui),
   'zh-HK': extendLocale(zhHK, appZhHK.ui),
 };
 

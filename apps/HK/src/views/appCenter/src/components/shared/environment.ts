@@ -15,8 +15,9 @@ import { createCanvasTexture } from './utils';
  * - 内部补光（无阴影，穿透照亮内部设备）：正面方向光 + 顶部柔光
  */
 export function addSceneLights(scene: THREE.Scene): void {
-  const sun = new THREE.DirectionalLight(0xfff3de, 2.8);
-  sun.position.set(500, 900, 300);
+  // 主光：太阳光（暖白主方向光，带柔和阴影，提供主体积感与地面阴影）
+  const sun = new THREE.DirectionalLight(0xfff8ee, 2.4);
+  sun.position.set(600, 1000, 400);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -1800;
@@ -24,20 +25,32 @@ export function addSceneLights(scene: THREE.Scene): void {
   sun.shadow.camera.top = 1800;
   sun.shadow.camera.bottom = -1800;
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 4000;
-  sun.shadow.bias = -0.0006;
-  sun.shadow.normalBias = 0.6;
+  sun.shadow.camera.far = 4200;
+  sun.shadow.bias = -0.0003;
+  sun.shadow.normalBias = 0.4;
   scene.add(sun);
-  // 基础环境光：低强度，仅防止纯黑
-  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-  scene.add(new THREE.HemisphereLight(0xddeeff, 0x3a4a5a, 0.85));
-  // 内部补光：正面方向光 + 顶部柔光
-  const fill = new THREE.DirectionalLight(0xa8d4ff, 0.9);
-  fill.position.set(0, 300, 600);
-  scene.add(fill);
-  const topFill = new THREE.DirectionalLight(0xffffff, 0.5);
-  topFill.position.set(0, 800, 0);
-  scene.add(topFill);
+
+  // 基础环境光与天光：保证暗部有层次，不出现死黑
+  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+  scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x475569, 0.95));
+
+  // 室内工矿天棚照明（模拟厂房高天棚 LED 工矿灯组，垂直照亮泵组与管道走廊）
+  const bayLight1 = new THREE.DirectionalLight(0xf0fdf4, 1.4);
+  bayLight1.position.set(250, 700, 150);
+  scene.add(bayLight1);
+
+  const bayLight2 = new THREE.DirectionalLight(0xf8fafc, 1.2);
+  bayLight2.position.set(-200, 700, -100);
+  scene.add(bayLight2);
+
+  // 正面与侧方柔和设备补光：让泵体铭牌、侧面法兰与手轮细节清晰
+  const frontFill = new THREE.DirectionalLight(0xbae6fd, 0.85);
+  frontFill.position.set(100, 350, 650);
+  scene.add(frontFill);
+
+  const backFill = new THREE.DirectionalLight(0xfff7ed, 0.6);
+  backFill.position.set(-300, 300, -600);
+  scene.add(backFill);
 }
 
 /**
@@ -59,8 +72,8 @@ export function addSceneEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRen
     new THREE.MeshStandardMaterial({
       map: createGroundTexture(),
       color: SCENE_CONFIG.groundColor,
-      roughness: 0.95,
-      metalness: 0,
+      roughness: 0.92,
+      metalness: 0.05,
     })
   );
   ground.rotation.x = -Math.PI / 2;
@@ -69,9 +82,8 @@ export function addSceneEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRen
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // 环境反射（HDR 的替代实现）：程序生成的柔和工业环境经 PMREM 烘焙后赋给
-  // scene.environment，让金属/设备材质获得自然的环境反射与补光；
-  // 背景仍用上面的天空纹理，避免环境贴图过于抢眼。
+  // 环境反射（HDR 的替代实现）：程序生成的工业环境经 PMREM 烘焙后赋给 scene.environment，
+  // 带有天棚光带反射，让金属设备与圆柱管道呈现逼真的弧面光泽
   const envTexture = createEnvTexture();
   envTexture.mapping = THREE.EquirectangularReflectionMapping;
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -82,8 +94,8 @@ export function addSceneEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRen
 }
 
 /**
- * 生成用于环境反射的工业风环境纹理（上天空 / 下灰地面）。
- * 亮度保持柔和，避免 Reinhard 曝光下金属设备过曝。
+ * 生成用于环境反射的工业风环境纹理（上天空与天棚灯带 / 下灰地坪）。
+ * 带有高光反射光条，使管道圆柱体与水泵泵体在 PBR 渲染下呈现真实弧面高光。
  */
 function createEnvTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
@@ -91,14 +103,26 @@ function createEnvTexture(): THREE.CanvasTexture {
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
   if (!ctx) return createCanvasTexture(canvas);
-  // 上方柔和天空渐变，下方灰水泥地面（形成明暗层次，反射更有立体感）
+
+  // 上方天空与天棚渐变，下方工业地面渐变
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, '#3f7fbf');
-  gradient.addColorStop(0.5, '#9cc4e4');
-  gradient.addColorStop(0.58, '#77848a');
-  gradient.addColorStop(1, '#394248');
+  gradient.addColorStop(0, '#2563eb');
+  gradient.addColorStop(0.35, '#60a5fa');
+  gradient.addColorStop(0.5, '#bae6fd');
+  gradient.addColorStop(0.52, '#94a3b8');
+  gradient.addColorStop(0.7, '#64748b');
+  gradient.addColorStop(1, '#334155');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 绘制 3 道天棚工业灯条高光反射带（使金属管道表面产生清晰的圆柱光斑）
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+  ctx.fillRect(100, 90, 824, 28);
+  ctx.fillRect(180, 160, 664, 22);
+
+  ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+  ctx.fillRect(60, 60, 904, 80);
+
   return createCanvasTexture(canvas);
 }
 

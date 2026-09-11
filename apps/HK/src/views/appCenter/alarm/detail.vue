@@ -494,7 +494,7 @@ async function openUploadDialog() {
         align-items: baseline;
         margin-bottom: 20px;
         .alarm-right-description-items-label {
-          &.en {
+          &.en-US {
             width: 110px;
           }
 
