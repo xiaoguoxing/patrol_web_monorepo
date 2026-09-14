@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { PatrolController } from './patrolController';
 import type { WaterPlantSceneCallbacks } from './types';
 import {
@@ -96,7 +97,7 @@ export class WaterPlantScene {
   /** 真实 GLB 模型容器（外立面 + 内部结构） */
   private readonly modelRoot = new THREE.Group();
   private readonly modelLoading = new Map<ModelKey, ModelLoadingState>();
-  private readonly glbLoader = new GLTFLoader();
+  private readonly glbLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   private patrol: PatrolController | undefined;
   /** 每次重载递增，用于忽略上一批仍在返回的 GLB 请求 */
   private modelLoadGeneration = 0;

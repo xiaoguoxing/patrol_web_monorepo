@@ -13,7 +13,7 @@ export const WATER_PLANT_GLB_FILES = {
   /** 外立面 */
   FACADE: 'TWFWPS-S-0-00.glb',
   /** 内部结构（巡检对象所在） */
-  INTERIOR: 'TWFWPS-M-0-00.glb',
+  INTERIOR: 'TWFWPS-M-0-00-optimized.glb',
 } as const;
 
 /** 模型标识：facade 外立面 / interior 内部结构 */

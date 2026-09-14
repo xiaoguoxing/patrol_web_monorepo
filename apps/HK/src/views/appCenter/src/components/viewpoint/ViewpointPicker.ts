@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
   TARGET_SIZE,
@@ -298,7 +299,7 @@ export class ViewpointPicker {
   private loadModel(model: ModelSource) {
     // 项目使用 hash 路由且 vite base 为 './'，基于当前地址解析即可兼容开发与部署子路径
     const url = new URL(`GLB/${model.file}`, window.location.href).href;
-    new GLTFLoader().load(
+    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
       url,
       (gltf) => {
         if (this.disposed) return;
