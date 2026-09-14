@@ -16,7 +16,6 @@ import {
 } from '../shared/constants';
 import { addSceneLights, addSceneEnvironment } from '../shared/environment';
 import { disposeObject, isVisible, isObjectOrChildOf } from '../shared/utils';
-import { applyWaterPlantAesthetics } from '../shared/waterPlantAesthetics';
 
 /**
  * 相机模式：
@@ -123,8 +122,9 @@ export class WaterPlantScene {
     // PCFSoftShadowMap 在 r155+ 已弃用，弃用路径会导致 shadow 采样器格式不匹配（地面消失）
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.25;
+    // 不用 ACESFilmic，改用 Reinhard；曝光 2.0 保证内部明亮同时避免地面过曝发白
+    this.renderer.toneMapping = THREE.ReinhardToneMapping;
+    this.renderer.toneMappingExposure = 2.0;
     this.renderer.domElement.className = 'three-water-plant__canvas';
     container.appendChild(this.renderer.domElement);
     addSceneLights(this.scene);
@@ -170,26 +170,13 @@ export class WaterPlantScene {
         facade.visible = false;
       } else {
         facade.visible = true;
-        const isTransparent = mode === 'transparent';
-        const opacity = isTransparent ? 0.38 : 1.0;
+        const opacity = mode === 'show' ? 1 : 0.45;
         facade.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             const materials = Array.isArray(object.material) ? object.material : [object.material];
             materials.forEach((material) => {
               material.transparent = opacity < 1;
               material.opacity = opacity;
-              if (material instanceof THREE.MeshStandardMaterial) {
-                if (isTransparent) {
-                  material.color.setHex(0x7dd3fc);
-                  material.roughness = 0.15;
-                  material.metalness = 0.12;
-                  material.depthWrite = true;
-                  material.side = THREE.DoubleSide;
-                } else {
-                  material.roughness = 0.45;
-                  material.metalness = 0.05;
-                }
-              }
             });
           }
         });
@@ -349,12 +336,26 @@ export class WaterPlantScene {
   }
 
   /**
-   * 模型预处理：设置阴影并赋予专业水厂 PBR 工业美术材质，不做缩放/平移。
+   * 模型预处理：只处理材质与阴影，不做缩放/平移。
    * 缩放与对齐在全部模型加载完成后统一进行（见 alignModels），
    * 避免外立面与内部结构各自居中导致相对位置错位。
    */
   private normalizeModel(root: THREE.Object3D, isFacade: boolean): THREE.Object3D {
-    applyWaterPlantAesthetics(root, isFacade);
+    root.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+        if (isFacade) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach((material) => {
+            material.transparent = true;
+            material.opacity = 0.45;
+            // depthWrite 保持 true，避免内部结构因深度排序异常而变暗
+            material.side = THREE.DoubleSide;
+          });
+        }
+      }
+    });
     return root;
   }
 

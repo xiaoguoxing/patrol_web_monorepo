@@ -11,11 +11,6 @@ import {
 } from '../shared/constants';
 import { addSceneLights, addSceneEnvironment } from '../shared/environment';
 import { round2, isVisible, disposeObject } from '../shared/utils';
-import {
-  applyWaterPlantAesthetics,
-  setObjectSelectedEmissive,
-  disposeWaterPlantAesthetics,
-} from '../shared/waterPlantAesthetics';
 
 /** 视角坐标数据（与巡检场景坐标系一致） */
 export interface ViewpointPos {
@@ -95,11 +90,9 @@ export class ViewpointPicker {
     this.camera = new THREE.PerspectiveCamera(46, 1, SCENE_CONFIG.cameraNear, SCENE_CONFIG.cameraFar);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.25;
+    this.renderer.toneMapping = THREE.ReinhardToneMapping;
+    this.renderer.toneMappingExposure = 1.8;
     this.renderer.domElement.className = 'vp-picker__canvas';
     container.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -162,26 +155,13 @@ export class ViewpointPicker {
         facade.visible = false;
       } else {
         facade.visible = true;
-        const isTransparent = mode === 'transparent';
-        const opacity = isTransparent ? 0.38 : 1.0;
+        const opacity = mode === 'show' ? 1 : 0.45;
         facade.traverse((object) => {
           if (object instanceof THREE.Mesh) {
             const materials = Array.isArray(object.material) ? object.material : [object.material];
             materials.forEach((material) => {
               material.transparent = opacity < 1;
               material.opacity = opacity;
-              if (material instanceof THREE.MeshStandardMaterial) {
-                if (isTransparent) {
-                  material.color.setHex(0x7dd3fc);
-                  material.roughness = 0.15;
-                  material.metalness = 0.12;
-                  material.depthWrite = true;
-                  material.side = THREE.DoubleSide;
-                } else {
-                  material.roughness = 0.45;
-                  material.metalness = 0.05;
-                }
-              }
             });
           }
         });
@@ -262,10 +242,9 @@ export class ViewpointPicker {
       console.warn('[ViewpointPicker] 事件监听器移除失败:', error);
     }
 
-    // 清理高亮与材质资源
+    // 清理高亮
     try {
       this.clearHighlight();
-      disposeWaterPlantAesthetics();
     } catch (error) {
       console.warn('[ViewpointPicker] 高亮清理失败:', error);
     }
@@ -342,9 +321,23 @@ export class ViewpointPicker {
     );
   }
 
-  /** 模型预处理：设置阴影并赋予专业水厂 PBR 工业美术材质；外立面统一微透，不做缩放/平移 */
+  /** 模型预处理：设置阴影；外立面统一半透明（与巡检场景 normalizeModel 一致），不做缩放/平移 */
   private normalizeModel(root: THREE.Object3D, isFacade: boolean): THREE.Object3D {
-    applyWaterPlantAesthetics(root, isFacade);
+    root.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+        if (isFacade) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach((material) => {
+            material.transparent = true;
+            material.opacity = 0.45;
+            // depthWrite 保持默认 true，避免内部结构因深度排序异常而变暗
+            material.side = THREE.DoubleSide;
+          });
+        }
+      }
+    });
     return root;
   }
 
@@ -467,17 +460,15 @@ export class ViewpointPicker {
     this.onSelect?.(target?.name ?? null);
   }
 
-  // ---------------- 高亮（BoxHelper + 材质自发光微光辅助） ----------------
+  // ---------------- 高亮（BoxHelper，不修改材质） ----------------
 
   private applyHighlight(target: THREE.Object3D) {
     this.clearHighlight();
-    this.highlightBox = new THREE.BoxHelper(target, 0x00e5ff);
+    this.highlightBox = new THREE.BoxHelper(target, 0x00d4ff);
     this.scene.add(this.highlightBox);
-    setObjectSelectedEmissive(target);
   }
 
   private clearHighlight() {
-    setObjectSelectedEmissive(null);
     if (this.highlightBox) {
       this.scene.remove(this.highlightBox);
       // BoxHelper 内部使用 LineSegments，dispose 几何体和材质
