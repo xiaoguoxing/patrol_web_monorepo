@@ -256,7 +256,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
   },
   {
     name: '6#水阀',
-    modelId: '3R1EPrY2P9EfP9TdHJ1Yjh',
+    modelId: '3R1EPrY2P9EfP9TdHJ1Yje',
     position: [110.69, 917.61, -14.38],
     target: [118.35, 906.45, -46.71],
     fov: 46,
@@ -264,7 +264,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
   },
   {
     name: '7#水阀',
-    modelId: '3R1EPrY2P9EfP9TdHJ1ZyO',
+    modelId: '3R1EPrY2P9EfP9TdHJ1Yjh',
     position: [114.32, 913.82, -46.93],
     target: [84.61, 906.45, -60.03],
     fov: 46,
@@ -272,7 +272,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
   },
   {
     name: '8#水阀',
-    modelId: '3R1EPrY2P9EfP9TdHJ1Yje',
+    modelId: '3R1EPrY2P9EfP9TdHJ1ZyO',
     position: [95.26, 915.03, -98.33],
     target: [59.56, 906.45, -120.77],
     fov: 46,
