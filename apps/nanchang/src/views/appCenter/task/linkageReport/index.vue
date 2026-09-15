@@ -20,7 +20,7 @@
         selectId="code"
         titleBorder
         :outBorder="false"
-        :showMicrophone="true"
+        :showMicrophone="false"
         :showReset="true"
         :colSetAble="false"
         :operationBtn="false"
@@ -61,7 +61,7 @@ import {
   getReportListApi,
   PageTypeTitle,
   getReportExportApi,
-} from '@/api/modules/appCenter/task/report';
+} from '@/api/modules/appCenter/task/linkageReport';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import { useRoute, useRouter } from 'vue-router';
 import { taskTypeSelectApi } from '@/api/modules/optCenter/aiPatrolManage/task';
@@ -98,12 +98,12 @@ onMounted(() => {
 });
 
 const proTable = ref();
-const initParam = reactive<Partial<ReportListParams>>({ selectProp: 'taskName' });
+const initParam = reactive<Partial<ReportListParams>>({ selectProp: 'linkageSignalCode' });
 const columns: tableProps<ReportListRows>[] = [
   { type: 'index', label: '序号', width: 70 },
   {
-    prop: 'inspectionTaskName',
-    label: '任务名称',
+    prop: 'linkageSignalCode',
+    label: '联动信号编码',
     isShowInputLabel: false,
     width: 250,
     search: {
@@ -117,10 +117,8 @@ const columns: tableProps<ReportListRows>[] = [
               prepend: () => {
                 return (
                   <el-select class={'input-prepend-select'} v-model={initParam.selectProp} style={'width: 140px'}>
-                    <el-option label="巡检任务名称" value={'taskName'} />
-                    <el-option label="所属组织" value={'orgName'} />
-                    <el-option label="巡检区域" value={'areaName'} />
-                    <el-option label="巡检对象" value={'objectName'} />
+                    <el-option label="联动信号编码" value={'linkageSignalCode'} />
+                    <el-option label="联动信号名称" value={'linkageSignalName'} />
                   </el-select>
                 );
               },
@@ -131,6 +129,10 @@ const columns: tableProps<ReportListRows>[] = [
     },
   },
   {
+    prop: 'linkageSignalName',
+    label: '联动信号名称',
+  },
+  /* {
     prop: 'orgName',
     label: '所属组织',
   },
@@ -153,7 +155,7 @@ const columns: tableProps<ReportListRows>[] = [
   {
     prop: 'objectName',
     label: '巡检对象名称',
-  },
+  },*/
   {
     prop: 'itemNum',
     label: '巡检项数量',
@@ -161,10 +163,6 @@ const columns: tableProps<ReportListRows>[] = [
   {
     prop: 'abnormalNum',
     label: '告警项数量',
-  },
-  {
-    prop: 'noDoneNum',
-    label: '异常项数量',
   },
   /*{
     prop: 'abnormalInspectionNum',

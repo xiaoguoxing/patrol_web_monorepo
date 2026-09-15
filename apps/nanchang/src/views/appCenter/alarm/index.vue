@@ -5,6 +5,10 @@
         <el-icon @click="toDetailPage('list', {})" v-if="pageType === 'detail'" class="mr8 page-back"><Back /></el-icon>
         <span class="title kr-font-medium">{{ cardTitle }}</span>
       </div>
+      <div v-if="id" :title="`${globalIndex + 1}/${proTable.pageable.total}`">
+        <el-button :disabled="isFirstItem" link type="primary" @click="prev">上一项</el-button>
+        <el-button :disabled="isLastItem" link type="primary" @click="next">下一项</el-button>
+      </div>
     </template>
     <kr-filter-tree
       v-show="pageType === 'list'"
@@ -100,6 +104,7 @@ import { useHandleData } from '@patrol/shared/hooks/useHandleData';
 import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue';
 import selectHeaderSearch from '@/views/appCenter/alarm/selectHeaderSearch.vue';
 import { getTodayRange } from '@/utils/util';
+import { useDebounceFn } from '@vueuse/core';
 let alarm_level: Dict = [];
 let alarm_type: Dict = [];
 let alarm_status: Dict = [];
@@ -372,6 +377,14 @@ const getTableList = async (params: any) => {
 
 // 弹框
 const id = ref<id | undefined>('');
+const ids = computed(() => proTable.value.tableData.map((i: AlarmListRows) => i.id));
+const localIndex = computed(() => ids.value.indexOf(id.value));
+const globalIndex = computed(() => {
+  if (localIndex.value === -1) return 0;
+  return (proTable.value.pageable.pageNum - 1) * proTable.value.pageable.pageSize + localIndex.value;
+});
+const isFirstItem = computed(() => globalIndex.value === 0);
+const isLastItem = computed(() => globalIndex.value === proTable.value.pageable.total - 1);
 function toDetailPage(page: PageType, row?: AlarmListRows) {
   pageType.value = page;
   id.value = row?.id || undefined;
@@ -383,6 +396,28 @@ function toDetailPage(page: PageType, row?: AlarmListRows) {
     });
   }
 }
+const prev = useDebounceFn(() => {
+  if (isFirstItem.value) return;
+  if (localIndex.value > 0) {
+    id.value = ids.value[localIndex.value - 1];
+  } else {
+    proTable.value.pageable.pageNum = proTable.value.pageable.pageNum - 1;
+    proTable.value.getTableList().then(() => {
+      id.value = ids.value.at(-1);
+    });
+  }
+}, 500);
+const next = useDebounceFn(() => {
+  if (isLastItem.value) return;
+  if (localIndex.value < ids.value.length - 1) {
+    id.value = ids.value[localIndex.value + 1];
+  } else {
+    proTable.value.pageable.pageNum = proTable.value.pageable.pageNum + 1;
+    proTable.value.getTableList().then(() => {
+      id.value = ids.value.at(0);
+    });
+  }
+}, 500);
 
 async function openUploadDialog(row: AlarmListRows) {
   try {
