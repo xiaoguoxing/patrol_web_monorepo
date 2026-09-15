@@ -11,6 +11,7 @@
       <Fullscreen id="fullscreen" /> -->
     <!-- <ThemeSetting id="themeSetting" /> -->
     <!-- </div> -->
+    <div class="header-link" @click="handleNotice">播放</div>
     <MessageAlarm id="MessageAlarm" />
     <Help class="mr32" />
     <Avatar />
@@ -51,6 +52,25 @@ const url =
   // 'water_02' +
   '&currOrg=' +
   currOrg;
+import { speak } from '@/utils/util';
+
+async function handleNotice() {
+  const success = await speak('第一阶段任务已执行完毕', {
+    onStart: () => {
+      console.log('开始播报');
+    },
+    onEnd: () => {
+      console.log('播报完毕');
+    },
+    onError: (err) => {
+      console.error('播报出错:', err);
+    },
+  });
+
+  if (success) {
+    console.log('语音播放完成');
+  }
+}
 </script>
 
 <style scoped lang="scss">

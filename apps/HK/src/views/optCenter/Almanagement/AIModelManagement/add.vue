@@ -111,7 +111,7 @@ defineExpose({ openDialog });
   >
     <el-form
       ref="ruleFormRef"
-      :label-width="locale === 'en' ? '180px' : '120px'"
+      :label-width="'auto'"
       label-suffix=" :"
       :rules="formRule"
       :disabled="pageType === 'detail'"

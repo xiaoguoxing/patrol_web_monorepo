@@ -509,3 +509,6 @@ export function getTodayRange() {
     endRaw: end,
   };
 }
+
+// 语音播报方法及相关工具函数
+export * from './speech';
