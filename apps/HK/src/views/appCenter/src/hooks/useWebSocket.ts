@@ -3,6 +3,8 @@ import { AuthStore } from '@/stores/modules/auth';
 import { ResultEnum } from '@/enums/httpEnum';
 import { ElMessage } from 'element-plus';
 import { ResultData } from '@/api/interface';
+import { useI18n } from 'vue-i18n';
+
 /**
  * @description websocket请求
  * */
@@ -11,10 +13,11 @@ export const useWebSocket = (apiUrl: string, callback: (e: any) => void) => {
   const authStore = AuthStore();
   const account: string = authStore.userInfo.account;
   const currDs: string = authStore.userInfo.currDs;
+  const { locale } = useI18n();
   const url =
     //@ts-ignore
     import.meta.env.VITE_ONLINE_URL.replace('https://', 'wss://').replace('http://', 'ws://') +
-    `${apiUrl}/${currDs}/${account}`;
+    `${apiUrl}/${currDs}/${account}/${locale.value}`;
   const websock = ref();
   const initWebSocket = () => {
     websock.value = new WebSocket(url);
