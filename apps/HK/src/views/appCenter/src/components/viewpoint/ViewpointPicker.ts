@@ -299,7 +299,8 @@ export class ViewpointPicker {
   private loadModel(model: ModelSource) {
     // 项目使用 hash 路由且 vite base 为 './'，基于当前地址解析即可兼容开发与部署子路径
     const url = new URL(`GLB/${model.file}`, window.location.href).href;
-    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
+    // .setMeshoptDecoder(MeshoptDecoder)
+    new GLTFLoader().load(
       url,
       (gltf) => {
         if (this.disposed) return;
