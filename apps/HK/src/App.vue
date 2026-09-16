@@ -8,6 +8,7 @@
 import { reactive, computed } from 'vue';
 import { GlobalStore } from '@/stores';
 import { useTheme } from '@/hooks/useTheme';
+import i18n from '@/languages';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import en from 'element-plus/es/locale/lang/en';
 import zhHK from 'element-plus/es/locale/lang/zh-hk';
@@ -32,19 +33,34 @@ const extendLocale = (locale: Language, patrol: TranslatePair): Language => ({
   },
 });
 
-const elementLocales: Record<string, Language> = {
-  'zh-CN': extendLocale(zhCn, appZh.ui),
-  'en-US': extendLocale(en, appEn.ui),
-  'zh-HK': extendLocale(zhHK, appZhHK.ui),
+const baseLocales: Record<string, Language> = {
+  'zh-CN': zhCn,
+  'en-US': en,
+  'zh-HK': zhHK,
 };
 
-// Element Plus 及共享 UI 语言与应用默认语言保持一致
+const defaultUis: Record<string, TranslatePair> = {
+  'zh-CN': appZh.ui,
+  'en-US': appEn.ui,
+  'zh-HK': appZhHK.ui,
+};
+
+// Element Plus 及共享 UI 语言与应用默认语言保持一致，并动态获取服务端覆盖的 UI 词条
 const i18nLocale = computed(() => {
   const language = globalStore.language;
-  if (elementLocales[language]) return elementLocales[language];
-  if (language.toLowerCase().startsWith('en')) return elementLocales.en;
-  if (/^zh[-_](hk|tw)/i.test(language)) return elementLocales['zh-HK'];
-  return elementLocales.zh;
+  const langKey = baseLocales[language]
+    ? language
+    : language.toLowerCase().startsWith('en')
+    ? 'en-US'
+    : /^zh[-_](hk|tw)/i.test(language)
+    ? 'zh-HK'
+    : 'zh-CN';
+
+  const baseLocale = baseLocales[langKey] || zhCn;
+  const activeMessages = (i18n.global.messages.value as Record<string, any>)?.[langKey] || {};
+  const currentUi = (activeMessages.ui as TranslatePair) || defaultUis[langKey] || appZh.ui;
+
+  return extendLocale(baseLocale, currentUi);
 });
 
 // 配置全局组件大小 (small/default(medium)/large)
