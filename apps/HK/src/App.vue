@@ -33,34 +33,36 @@ const extendLocale = (locale: Language, patrol: TranslatePair): Language => ({
   },
 });
 
-const baseLocales: Record<string, Language> = {
-  'zh-CN': zhCn,
-  'en-US': en,
-  'zh-HK': zhHK,
+interface ElementLocaleConfig {
+  locale: Language;
+  ui: TranslatePair;
+}
+
+const elementLocaleConfigs: Record<string, ElementLocaleConfig> = {
+  'zh-CN': { locale: zhCn, ui: appZh.ui },
+  'en-US': { locale: en, ui: appEn.ui },
+  'zh-HK': { locale: zhHK, ui: appZhHK.ui },
 };
 
-const defaultUis: Record<string, TranslatePair> = {
-  'zh-CN': appZh.ui,
-  'en-US': appEn.ui,
-  'zh-HK': appZhHK.ui,
+const resolveElementLocale = (language: string): ElementLocaleConfig => {
+  if (elementLocaleConfigs[language]) return elementLocaleConfigs[language];
+  if (language.toLowerCase().startsWith('en')) return elementLocaleConfigs['en-US'];
+  if (/^zh[-_](hk|tw)/i.test(language)) return elementLocaleConfigs['zh-HK'];
+  return elementLocaleConfigs['zh-CN'];
 };
 
 // Element Plus 及共享 UI 语言与应用默认语言保持一致，并动态获取服务端覆盖的 UI 词条
 const i18nLocale = computed(() => {
   const language = globalStore.language;
-  const langKey = baseLocales[language]
-    ? language
-    : language.toLowerCase().startsWith('en')
-    ? 'en-US'
-    : /^zh[-_](hk|tw)/i.test(language)
-    ? 'zh-HK'
-    : 'zh-CN';
+  const elementConfig = resolveElementLocale(language);
+  // Element Plus 没有对应内置语言时只回退其组件文案；业务 UI 仍读取当前语言的服务端词条。
+  const activeMessages = (i18n.global.messages.value as Record<string, { ui?: TranslatePair }>)[language];
+  const currentUi: TranslatePair = {
+    ...elementConfig.ui,
+    ...(activeMessages?.ui ?? {}),
+  };
 
-  const baseLocale = baseLocales[langKey] || zhCn;
-  const activeMessages = (i18n.global.messages.value as Record<string, any>)?.[langKey] || {};
-  const currentUi = (activeMessages.ui as TranslatePair) || defaultUis[langKey] || appZh.ui;
-
-  return extendLocale(baseLocale, currentUi);
+  return extendLocale(elementConfig.locale, currentUi);
 });
 
 // 配置全局组件大小 (small/default(medium)/large)
