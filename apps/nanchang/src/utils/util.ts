@@ -512,3 +512,6 @@ export function getTodayRange() {
 
 // 语音播报方法及相关工具函数
 export * from './speech';
+
+// 屏幕闪烁告警工具函数
+export * from './screenFlash';

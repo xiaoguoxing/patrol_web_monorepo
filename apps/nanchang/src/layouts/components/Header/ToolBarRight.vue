@@ -52,11 +52,17 @@ const url =
   // 'water_02' +
   '&currOrg=' +
   currOrg;
-import { speak } from '@/utils/util';
+import { speak, flashScreen } from '@/utils/util';
 
 async function handleNotice() {
   const success = await speak('第一阶段任务已执行完毕', {
     onStart: () => {
+      flashScreen({
+        duration: 3000,
+        mode: 'fullscreen',
+        color: 'danger', // 橙黄警告
+        maxOpacity: 0.85, // 最大半透明度
+      });
       console.log('开始播报');
     },
     onEnd: () => {
