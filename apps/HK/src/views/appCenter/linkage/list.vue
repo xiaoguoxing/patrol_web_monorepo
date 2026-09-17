@@ -66,6 +66,8 @@ import { getPercentNum } from '@/utils/util';
 import { useWebSocket } from '@appCenter/hooks/useWebSocket';
 import PicRes from '@appCenter/components/picRes.vue';
 
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 //信号列表数据
 const dataSource = ref<AILinkageTask.ResList[]>([]);
 const activeItem = ref({} as { [key: string]: any });
@@ -128,6 +130,8 @@ const onChange = (taskId: string) => {
     getActiveItem();
   }
 };
+
+const detail_T = computed(() => `"${t('buttonName.detail')}"`);
 </script>
 <style scoped lang="scss">
 .list-title {
@@ -158,7 +162,7 @@ const onChange = (taskId: string) => {
     &::before {
       font-size: var(--el-font-size-base);
       font-style: normal;
-      content: '详情';
+      content: v-bind('detail_T');
     }
 
     width: auto;

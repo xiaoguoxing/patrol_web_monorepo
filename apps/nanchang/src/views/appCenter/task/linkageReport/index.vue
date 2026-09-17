@@ -164,6 +164,10 @@ const columns: tableProps<ReportListRows>[] = [
     prop: 'abnormalNum',
     label: '告警项数量',
   },
+  {
+    prop: 'noDoneNum',
+    label: '异常项数量',
+  },
   /*{
     prop: 'abnormalInspectionNum',
     label: '异常巡检项数量',

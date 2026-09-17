@@ -75,7 +75,8 @@ import { useDateFormat } from '@vueuse/core';
 import PicRes from '@appCenter/components/picRes.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { KeepAliveStore } from '@/stores/modules/keepAlive';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const keepAliveStore = KeepAliveStore();
@@ -150,6 +151,8 @@ const goBIM = (taskId: string) => {
   keepAliveStore.addKeepLiveName('aiInspection');
   router.push(`${route.path}/aiInspectionDetailBIM?id=${taskId}`);
 };
+
+const detail_T = computed(() => `"${t('buttonName.detail')}"`);
 </script>
 <style scoped lang="scss">
 .list-title {
@@ -180,7 +183,7 @@ const goBIM = (taskId: string) => {
     &::before {
       font-size: var(--el-font-size-base);
       font-style: normal;
-      content: '详情';
+      content: v-bind('detail_T');
     }
 
     width: auto;
