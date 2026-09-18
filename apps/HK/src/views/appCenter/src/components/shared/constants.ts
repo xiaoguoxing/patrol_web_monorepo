@@ -532,8 +532,10 @@ export const UI_CONFIG = {
   RESULT_CARD_WIDTH: 520,
   /** 大图卡片的估算高度（用于在目标上方/下方选择不出屏的展开方向） */
   RESULT_CARD_HEIGHT_ESTIMATE: 390,
-  /** 卡片箭头与目标锚点的间距（CSS 像素） */
-  CARD_POINTER_OFFSET: 14,
+  /** 卡片与目标的水平间距（CSS 像素） */
+  CARD_TARGET_GAP_X: 36,
+  /** 卡片与目标的垂直间距（CSS 像素） */
+  CARD_TARGET_GAP_Y: 14,
   /** 任务面板宽度（含左边距，CSS 像素） */
   TASK_PANEL_WIDTH_WITH_MARGIN: 276,
   /** 卡片边界保护：上下留白（CSS 像素） */

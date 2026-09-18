@@ -351,20 +351,22 @@ onMounted(() => {
       const panelLeft = UI_CONFIG.TASK_PANEL_WIDTH_WITH_MARGIN;
       const [paddingTop, paddingBottom] = UI_CONFIG.CARD_BOUNDARY_PADDING_Y;
       const cardHeight = UI_CONFIG.RESULT_CARD_HEIGHT_ESTIMATE;
-      const pointerOffset = UI_CONFIG.CARD_POINTER_OFFSET;
+      const verticalGap = UI_CONFIG.CARD_TARGET_GAP_Y;
       // 上方空间不够时让卡片往下展开，避免截图中顶部被裁切；
       // 靠近底部则保持向上展开，优先保证整张卡片留在视口内。
-      const canPlaceAbove = screen.y >= cardHeight + pointerOffset + paddingTop;
-      const canPlaceBelow = screen.y <= height - cardHeight - pointerOffset - paddingBottom;
+      const canPlaceAbove = screen.y >= cardHeight + verticalGap + paddingTop;
+      const canPlaceBelow = screen.y <= height - cardHeight - verticalGap - paddingBottom;
       cardPlacement.value = !canPlaceAbove && canPlaceBelow ? 'below' : 'above';
       const minY =
-        cardPlacement.value === 'above' ? cardHeight + pointerOffset + paddingTop : paddingTop + pointerOffset;
+        cardPlacement.value === 'above' ? cardHeight + verticalGap + paddingTop : paddingTop + verticalGap;
       const maxY =
         cardPlacement.value === 'above'
-          ? height - paddingBottom - pointerOffset
-          : height - cardHeight - pointerOffset - paddingBottom;
+          ? height - paddingBottom - verticalGap
+          : height - cardHeight - verticalGap - paddingBottom;
+      // 设备固定处于场景中部时，卡片优先放到目标右侧，避免遮住巡检主体。
+      const desiredX = screen.x + cardHalf + UI_CONFIG.CARD_TARGET_GAP_X;
       cardPos.value = {
-        x: Math.min(Math.max(screen.x, panelLeft + cardHalf), Math.max(width - cardHalf, panelLeft + cardHalf)),
+        x: Math.min(Math.max(desiredX, panelLeft + cardHalf), Math.max(width - cardHalf, panelLeft + cardHalf)),
         y: Math.min(Math.max(screen.y, minY), Math.max(maxY, minY)),
       };
     },
@@ -492,18 +494,6 @@ onBeforeUnmount(() => {
   // 使用 GPU 加速
   will-change: transform;
   backdrop-filter: blur(4px);
-  &::after {
-    position: absolute;
-    bottom: -7px;
-    left: 50%;
-    width: 12px;
-    height: 12px;
-    content: '';
-    background: rgb(6 18 42 / 94%);
-    border-right: 1px solid rgb(0 212 255 / 55%);
-    border-bottom: 1px solid rgb(0 212 255 / 55%);
-    transform: translateX(-50%) rotate(45deg);
-  }
   &.patrol-result-card--idle {
     .patrol-result-card__conclusion,
     .patrol-result-card__time {
@@ -512,15 +502,6 @@ onBeforeUnmount(() => {
   }
   &.patrol-result-card--below {
     transform: translate(calc(var(--card-x) - 50%), calc(var(--card-y) + 14px));
-
-    &::after {
-      top: -7px;
-      bottom: auto;
-      border-top: 1px solid rgb(0 212 255 / 55%);
-      border-right: 0;
-      border-bottom: 0;
-      border-left: 1px solid rgb(0 212 255 / 55%);
-    }
   }
 }
 .patrol-result-card__header {
