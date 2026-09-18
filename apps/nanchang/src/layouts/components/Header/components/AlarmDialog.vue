@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { getAlarmListApi, Row } from '@/api/modules/alarmDialog';
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { alarmWebSocketUrl, getAlarmListApi, Row } from '@/api/modules/alarmDialog';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { tableProps } from '@/api/modules/optCenter/aiPatrolManage/inspection';
-import { useElementSize, useParentElement, useTimeoutFn, useToNumber, useTransition } from '@vueuse/core';
+import { useElementSize, useParentElement, useToNumber, useTransition, useWebSocket } from '@vueuse/core';
 import { useRouter } from 'vue-router';
 import { Dict } from '@/api/modules/appCenter/alarm';
 import { getDict, getDictForColumnFilters } from '@/utils/serviceDict';
 import { getNeedBusinessApi } from '@/api/modules/common';
+import { AuthStore } from '@/stores/modules/auth';
+import { alarmNotify } from '@/utils/screenFlash';
+
+const ALARM_ANNOUNCEMENT = '您有新的告警信息，请及时处理';
 
 let alarm_level: Dict = (await getDict('alarm_level')) as unknown as Dict;
 const proTable = ref();
@@ -105,47 +109,72 @@ let open = ref(false);
 let contRef = useParentElement(alarmDialogContentRef);
 let { height: tableH } = useElementSize(contRef);
 let tableHeight = computed(() => tableH.value - 36 - 20);
+
+const authStore = AuthStore();
+const dataSource = computed(() => authStore.userInfo.currDs);
+const account = computed(() => authStore.userInfo.account);
+const socketUrl = computed(() => {
+  const baseUrl = import.meta.env.VITE_ONLINE_URL.replace('https://', 'wss://')
+    .replace('http://', 'ws://')
+    .replace(/\/$/, '');
+
+  return `${baseUrl}${alarmWebSocketUrl}/${encodeURIComponent(dataSource.value)}/${encodeURIComponent(account.value)}`;
+});
+
+async function handleAlarmMessage() {
+  s.value = 0;
+  input3.value = '';
+  select.value = 'alarmAreaName';
+  open.value = true;
+
+  void alarmNotify(ALARM_ANNOUNCEMENT, {
+    duration: 3000,
+    mode: 'fullscreen',
+    color: 'danger',
+    maxOpacity: 0.85,
+  });
+
+  await nextTick();
+  await proTable.value?.getTableList();
+}
+
+const { open: openAlarmSocket } = useWebSocket(socketUrl, {
+  immediate: false,
+  autoConnect: false,
+  autoReconnect: {
+    retries: -1,
+    delay: 5000,
+  },
+  onMessage: () => {
+    void handleAlarmMessage();
+  },
+});
+
+watch(
+  [dataSource, account],
+  ([currentDataSource, currentAccount]) => {
+    if (currentDataSource && currentAccount) {
+      openAlarmSocket();
+    }
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
   getNeedBusinessApi({ classifyCode: 'inspection', code: 'alarm_config' }).then((res) => {
     t.value = useToNumber(res.data.configDetailList[0].value).value;
-    start();
   });
 });
 let time = computed(() => 60000 * t.value);
 let hours = computed(() => (time.value / 60000 / 60).toFixed(2));
 let t = ref(0);
-let { start, stop } = useTimeoutFn(
-  () => {
-    s.value = 0;
-    input3.value = '';
-    select.value = 'alarmAreaName';
-    getTableList().then((res) => {
-      let { data } = res as { data: { count: number } };
-      if (data.count !== 0) {
-        if (proTable.value) {
-          proTable.value.getTableList().then(() => {
-            open.value = true;
-          });
-        } else {
-          open.value = true;
-        }
-      }
-    });
-  },
-  time,
-  { immediate: false }
-);
 function close() {
   open.value = false;
-  start();
 }
 
 let s = ref(0);
 let os = useTransition(s, {
   duration: 1000,
-});
-onUnmounted(() => {
-  stop();
 });
 </script>
 <template>
