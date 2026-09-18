@@ -11,7 +11,7 @@
       <Fullscreen id="fullscreen" /> -->
     <!-- <ThemeSetting id="themeSetting" /> -->
     <!-- </div> -->
-    <div class="header-link" @click="handleNotice">播放</div>
+    <div class="header-link" @click="handleNotice" v-show="false">播放</div>
     <MessageAlarm id="MessageAlarm" />
     <Help class="mr32" />
     <Avatar />
