@@ -5,7 +5,7 @@
  *
  * 【后续接入后端】只需替换 requestPatrolResult 的实现，调用方（threeRectangle.vue）不感知：
  *   - 建立 WebSocket 连接，按 taskId 订阅识别结果
- *   - 服务端推送 { taskId, image, title, detail, confidence } 时 resolve
+ *   - 服务端推送 { taskId, image, title, detail, confidence, dcsData, healthScore } 时 resolve
  *   - 收到新 id（见 BIMdetail.vue 的 query id）可作为 taskId 来源
  */
 
@@ -22,6 +22,10 @@ export interface PatrolResultPayload {
   detail: string;
   /** 置信度 0~1 */
   confidence: number;
+  /** DCS 实时数据摘要 */
+  dcsData: string;
+  /** 设备健康度评分（0 ~ 100） */
+  healthScore: number;
 }
 
 interface ResultTemplate {
@@ -55,6 +59,9 @@ export function requestPatrolResult(
       const hash = [...taskId].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
       const template = RESULT_TEMPLATES[hash % RESULT_TEMPLATES.length];
       const url = new URL(`/demoImg/demo${Math.random() < 0.5 ? 1 : 2}.jpg`, window.location.href).href;
+      const pressure = (0.38 + (hash % 13) * 0.01).toFixed(2);
+      const flow = 280 + (hash % 90);
+      const temperature = (32 + (hash % 42) * 0.2).toFixed(1);
       resolve({
         taskId,
         status: 'success',
@@ -62,6 +69,8 @@ export function requestPatrolResult(
         title: template.title,
         detail: template.detail,
         confidence: template.confidence,
+        dcsData: `压力 ${pressure} MPa · 流量 ${flow} m³/h · 温度 ${temperature} ℃`,
+        healthScore: 86 + (hash % 13),
       });
     }, delay);
     signal?.addEventListener('abort', () => {

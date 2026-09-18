@@ -81,6 +81,14 @@
             </div>
           </div>
           <div class="patrol-result-card__row">
+            <span class="patrol-result-card__label">DCS数据</span>
+            <span class="patrol-result-card__dcs">{{ dcsDataText }}</span>
+          </div>
+          <div class="patrol-result-card__row">
+            <span class="patrol-result-card__label">设备健康度</span>
+            <span class="patrol-result-card__health" :class="healthClass">{{ healthText }}</span>
+          </div>
+          <div class="patrol-result-card__row">
             <span class="patrol-result-card__label">巡检时间</span>
             <span class="patrol-result-card__time">{{ resultCard.time || '--' }}</span>
           </div>
@@ -134,6 +142,10 @@ interface PatrolResultCardState {
   title?: string;
   detail?: string;
   confidence?: number;
+  /** DCS 实时数据摘要，例如压力、流量、温度 */
+  dcsData?: string;
+  /** 设备健康度评分（0 ~ 100） */
+  healthScore?: number;
   /** 识别完成时间（yyyy-MM-dd HH:mm:ss），loading 时为空 */
   time?: string;
 }
@@ -187,6 +199,20 @@ const resultText = computed(() => {
   /*const confidence =
     resultCard.value.confidence != null ? `（置信度 ${Math.round(resultCard.value.confidence * 100)}%）` : '';*/
   return `${resultCard.value.detail || '--'}`;
+});
+/** DCS 数据在识别完成后展示；请求中或失败时明确显示暂无数据。 */
+const dcsDataText = computed(() =>
+  resultCard.value.status === 'success' ? resultCard.value.dcsData || '--' : '暂无数据'
+);
+const healthText = computed(() => {
+  const score = resultCard.value.healthScore;
+  if (resultCard.value.status !== 'success' || score == null) return '--';
+  return `${score}%（${score >= 90 ? '良好' : score >= 75 ? '关注' : '预警'}）`;
+});
+const healthClass = computed(() => {
+  const score = resultCard.value.healthScore;
+  if (resultCard.value.status !== 'success' || score == null) return '';
+  return score >= 90 ? 'is-good' : score >= 75 ? 'is-warn' : 'is-risk';
 });
 /** 格式化巡检时间（yyyy-MM-dd HH:mm:ss） */
 const formatTime = (date: Date) => {
@@ -276,6 +302,8 @@ const showResultCard = (taskId: string, taskName: string) => {
         title: payload.title,
         detail: payload.detail,
         confidence: payload.confidence,
+        dcsData: payload.dcsData,
+        healthScore: payload.healthScore,
         time: formatTime(new Date()),
       };
     })
@@ -315,7 +343,7 @@ onMounted(() => {
       }
       const width = containerRef.value?.clientWidth ?? 0;
       const height = containerRef.value?.clientHeight ?? 0;
-      // 卡片较宽（420px，translateX(-50%) 居中），左右留半宽边界；
+      // 卡片较宽（520px，translateX(-50%) 居中），左右留半宽边界；
       // 左侧还需避开任务面板（约 260px），卡片中心点整体右移
       const cardHalf = UI_CONFIG.RESULT_CARD_WIDTH / 2;
       const panelLeft = UI_CONFIG.TASK_PANEL_WIDTH_WITH_MARGIN;
@@ -433,8 +461,8 @@ onBeforeUnmount(() => {
   top: 0;
   left: 0;
   z-index: 5;
-  width: 420px;
-  font-size: 11px;
+  width: 520px;
+  font-size: 14px;
   color: #9fd8ff;
   pointer-events: none;
   background: rgb(6 18 42 / 94%);
@@ -472,8 +500,8 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 6px 10px;
-  font-size: 11px;
+  padding: 9px 14px;
+  font-size: 14px;
   color: #00d4ff;
   letter-spacing: 1px;
   background: rgb(0 212 255 / 10%);
@@ -482,7 +510,7 @@ onBeforeUnmount(() => {
 }
 .patrol-result-card__target {
   overflow: hidden;
-  font-size: 10px;
+  font-size: 12px;
   color: #7aa7c4;
   text-overflow: ellipsis;
   letter-spacing: 0;
@@ -491,18 +519,18 @@ onBeforeUnmount(() => {
 .patrol-result-card__body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
+  gap: 7px;
+  padding: 12px 14px;
 }
 .patrol-result-card__row {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   align-items: flex-start;
   line-height: 1.6;
 }
 .patrol-result-card__label {
   flex: none;
-  width: 56px;
+  width: 70px;
   color: #7aa7c4;
 }
 .patrol-result-card__conclusion {
@@ -518,15 +546,15 @@ onBeforeUnmount(() => {
 }
 .patrol-result-card__result {
   display: flex;
-  gap: 10px;
+  gap: 14px;
   align-items: flex-start;
   min-width: 0;
 }
 .patrol-result-card__thumb {
   flex: none;
   order: 2;
-  width: 140px;
-  height: 79px;
+  width: 200px;
+  height: 113px;
   object-fit: cover;
   background: #071a33;
   border: 1px solid rgb(0 212 255 / 35%);
@@ -544,6 +572,20 @@ onBeforeUnmount(() => {
 }
 .patrol-result-card__time {
   color: #9fd8ff;
+}
+.patrol-result-card__dcs {
+  color: #9fd8ff;
+}
+.patrol-result-card__health {
+  &.is-good {
+    color: #2ee6a8;
+  }
+  &.is-warn {
+    color: #ffb84d;
+  }
+  &.is-risk {
+    color: #ff4d5e;
+  }
 }
 
 // 左侧任务列表面板（巡检点位 = 任务，可显隐；仅展示巡检状态，不支持点击跳转）
@@ -820,11 +862,12 @@ onBeforeUnmount(() => {
     width: 200px;
   }
   .patrol-result-card {
-    width: 300px;
+    width: 360px;
+    font-size: 12px;
   }
   .patrol-result-card__thumb {
-    width: 90px;
-    height: 51px;
+    width: 130px;
+    height: 73px;
   }
   .patrol-result-card__text {
     -webkit-line-clamp: 3;

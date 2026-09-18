@@ -529,7 +529,7 @@ export const UI_CONFIG = {
   /** 智能巡检结果卡片显示时长（毫秒） */
   RESULT_CARD_DURATION: 15000,
   /** 结果卡片宽度（CSS 像素） */
-  RESULT_CARD_WIDTH: 420,
+  RESULT_CARD_WIDTH: 520,
   /** 任务面板宽度（含左边距，CSS 像素） */
   TASK_PANEL_WIDTH_WITH_MARGIN: 276,
   /** 卡片边界保护：上下留白（CSS 像素） */
