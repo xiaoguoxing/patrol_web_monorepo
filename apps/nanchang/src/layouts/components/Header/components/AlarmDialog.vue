@@ -198,7 +198,7 @@ let os = useTransition(s, {
     <div ref="alarmDialogContentRef" class="alarmDialogContent">
       <div class="alarmDialogInfo">
         <div class="infoLeft">
-          近{{ hours }}小时告警数：<span class="red">{{ parseInt(os) }}</span>
+          <!--          近{{ hours }}小时告警数：<span class="red">{{ parseInt(os) }}</span>-->
         </div>
         <div class="infoRight">
           <el-input
