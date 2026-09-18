@@ -70,7 +70,8 @@ export function requestPatrolResult(
         detail: template.detail,
         confidence: template.confidence,
         dcsData: `压力 ${pressure} MPa · 流量 ${flow} m³/h · 温度 ${temperature} ℃`,
-        healthScore: 86 + (hash % 13),
+        // 模拟健康度：每次识别返回 90 ~ 100 的随机评分。
+        healthScore: 90 + Math.floor(Math.random() * 11),
       });
     }, delay);
     signal?.addEventListener('abort', () => {

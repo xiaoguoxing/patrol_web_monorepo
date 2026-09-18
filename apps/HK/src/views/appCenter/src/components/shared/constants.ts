@@ -530,12 +530,16 @@ export const UI_CONFIG = {
   RESULT_CARD_DURATION: 15000,
   /** 结果卡片宽度（CSS 像素） */
   RESULT_CARD_WIDTH: 520,
+  /** 大图卡片的估算高度（用于在目标上方/下方选择不出屏的展开方向） */
+  RESULT_CARD_HEIGHT_ESTIMATE: 390,
+  /** 卡片箭头与目标锚点的间距（CSS 像素） */
+  CARD_POINTER_OFFSET: 14,
   /** 任务面板宽度（含左边距，CSS 像素） */
   TASK_PANEL_WIDTH_WITH_MARGIN: 276,
   /** 卡片边界保护：上下留白（CSS 像素） */
-  CARD_BOUNDARY_PADDING_Y: [150, 60] as const,
-  /** 卡片锚点高度系数（相对设备包围球半径，让卡片覆盖部分模型） */
-  CARD_ANCHOR_HEIGHT_FACTOR: 0.35,
+  CARD_BOUNDARY_PADDING_Y: [16, 24] as const,
+  /** 卡片锚点高度系数（相对设备包围球半径，定位到设备顶部上方） */
+  CARD_ANCHOR_HEIGHT_FACTOR: 1.15,
 } as const;
 
 /** 配置视角选择器配置 */

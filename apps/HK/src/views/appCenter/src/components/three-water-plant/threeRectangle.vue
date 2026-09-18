@@ -49,7 +49,10 @@
       <div
         v-if="resultCard.visible && cardPos"
         class="patrol-result-card"
-        :class="{ 'patrol-result-card--idle': resultCard.taskId === '' }"
+        :class="{
+          'patrol-result-card--idle': resultCard.taskId === '',
+          'patrol-result-card--below': cardPlacement === 'below',
+        }"
         :style="{
           '--card-x': `${cardPos.x}px`,
           '--card-y': `${cardPos.y}px`,
@@ -62,31 +65,27 @@
           }}</span>
         </header>
         <div class="patrol-result-card__body">
-          <div class="patrol-result-card__row">
-            <span class="patrol-result-card__label">巡检结论</span>
-            <span class="patrol-result-card__conclusion" :class="conclusionClass">{{ conclusionText }}</span>
+          <figure v-if="resultCard.status === 'success' && resultCard.image" class="patrol-result-card__media">
+            <img :src="resultCard.image" :alt="resultCard.taskName || resultCard.taskId" />
+            <figcaption>AI 识别快照</figcaption>
+          </figure>
+          <div class="patrol-result-card__summary">
+            <div class="patrol-result-card__row">
+              <span class="patrol-result-card__label">巡检结论</span>
+              <span class="patrol-result-card__conclusion" :class="conclusionClass">{{ conclusionText }}</span>
+            </div>
+            <div class="patrol-result-card__row">
+              <span class="patrol-result-card__label">设备健康度</span>
+              <span class="patrol-result-card__health" :class="healthClass">{{ healthText }}</span>
+            </div>
           </div>
           <div class="patrol-result-card__row">
             <span class="patrol-result-card__label">识别结果</span>
-            <div class="patrol-result-card__result">
-              <img
-                v-if="resultCard.status === 'success' && resultCard.image"
-                class="patrol-result-card__thumb"
-                :src="resultCard.image"
-                :alt="resultCard.taskName || resultCard.taskId"
-              />
-              <span class="patrol-result-card__text">
-                {{ resultText }}
-              </span>
-            </div>
+            <span class="patrol-result-card__text">{{ resultText }}</span>
           </div>
           <div class="patrol-result-card__row">
             <span class="patrol-result-card__label">DCS数据</span>
             <span class="patrol-result-card__dcs">{{ dcsDataText }}</span>
-          </div>
-          <div class="patrol-result-card__row">
-            <span class="patrol-result-card__label">设备健康度</span>
-            <span class="patrol-result-card__health" :class="healthClass">{{ healthText }}</span>
           </div>
           <div class="patrol-result-card__row">
             <span class="patrol-result-card__label">巡检时间</span>
@@ -168,6 +167,8 @@ const patrolTasks = ref<PatrolTaskItem[]>([]);
 /** 巡检结果卡片（跟随设备屏幕投影） */
 const resultCard = ref<PatrolResultCardState>({ visible: false, taskId: '', taskName: '', status: 'loading' });
 const cardPos = ref<TargetScreenPos | null>(null);
+/** 卡片优先在目标上方展开；上方空间不足时改为向下展开。 */
+const cardPlacement = ref<'above' | 'below'>('above');
 let waterPlantScene: WaterPlantScene | undefined;
 let resizeObserver: ResizeObserver | undefined;
 /** 结果请求的取消控制器（切换任务时中止上一次请求） */
@@ -339,6 +340,7 @@ onMounted(() => {
     onTargetScreenPosition: (screen) => {
       if (!screen) {
         cardPos.value = null;
+        cardPlacement.value = 'above';
         return;
       }
       const width = containerRef.value?.clientWidth ?? 0;
@@ -348,9 +350,22 @@ onMounted(() => {
       const cardHalf = UI_CONFIG.RESULT_CARD_WIDTH / 2;
       const panelLeft = UI_CONFIG.TASK_PANEL_WIDTH_WITH_MARGIN;
       const [paddingTop, paddingBottom] = UI_CONFIG.CARD_BOUNDARY_PADDING_Y;
+      const cardHeight = UI_CONFIG.RESULT_CARD_HEIGHT_ESTIMATE;
+      const pointerOffset = UI_CONFIG.CARD_POINTER_OFFSET;
+      // 上方空间不够时让卡片往下展开，避免截图中顶部被裁切；
+      // 靠近底部则保持向上展开，优先保证整张卡片留在视口内。
+      const canPlaceAbove = screen.y >= cardHeight + pointerOffset + paddingTop;
+      const canPlaceBelow = screen.y <= height - cardHeight - pointerOffset - paddingBottom;
+      cardPlacement.value = !canPlaceAbove && canPlaceBelow ? 'below' : 'above';
+      const minY =
+        cardPlacement.value === 'above' ? cardHeight + pointerOffset + paddingTop : paddingTop + pointerOffset;
+      const maxY =
+        cardPlacement.value === 'above'
+          ? height - paddingBottom - pointerOffset
+          : height - cardHeight - pointerOffset - paddingBottom;
       cardPos.value = {
         x: Math.min(Math.max(screen.x, panelLeft + cardHalf), Math.max(width - cardHalf, panelLeft + cardHalf)),
-        y: Math.min(Math.max(screen.y, paddingTop), Math.max(height - paddingBottom, paddingTop)),
+        y: Math.min(Math.max(screen.y, minY), Math.max(maxY, minY)),
       };
     },
     onModelLoadProgress: ({ percent, label }) => {
@@ -495,6 +510,18 @@ onBeforeUnmount(() => {
       color: #7aa7c4;
     }
   }
+  &.patrol-result-card--below {
+    transform: translate(calc(var(--card-x) - 50%), calc(var(--card-y) + 14px));
+
+    &::after {
+      top: -7px;
+      bottom: auto;
+      border-top: 1px solid rgb(0 212 255 / 55%);
+      border-right: 0;
+      border-bottom: 0;
+      border-left: 1px solid rgb(0 212 255 / 55%);
+    }
+  }
 }
 .patrol-result-card__header {
   display: flex;
@@ -522,6 +549,38 @@ onBeforeUnmount(() => {
   gap: 7px;
   padding: 12px 14px;
 }
+.patrol-result-card__media {
+  position: relative;
+  height: 220px;
+  margin: 0;
+  overflow: hidden;
+  background: #071a33;
+  border: 1px solid rgb(0 212 255 / 35%);
+  border-radius: 4px;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  figcaption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 5px 8px;
+    font-size: 12px;
+    color: #d8f3ff;
+    background: linear-gradient(transparent, rgb(3 13 31 / 92%));
+  }
+}
+.patrol-result-card__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
 .patrol-result-card__row {
   display: flex;
   gap: 14px;
@@ -544,26 +603,9 @@ onBeforeUnmount(() => {
     color: #ff4d5e;
   }
 }
-.patrol-result-card__result {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  min-width: 0;
-}
-.patrol-result-card__thumb {
-  flex: none;
-  order: 2;
-  width: 200px;
-  height: 113px;
-  object-fit: cover;
-  background: #071a33;
-  border: 1px solid rgb(0 212 255 / 35%);
-  border-radius: 4px;
-}
 .patrol-result-card__text {
   display: -webkit-box;
-  flex: 1;
-  order: 1;
+  min-width: 0;
   overflow: hidden;
   color: #9fd8ff;
   text-overflow: ellipsis;
@@ -865,9 +907,12 @@ onBeforeUnmount(() => {
     width: 360px;
     font-size: 12px;
   }
-  .patrol-result-card__thumb {
-    width: 130px;
-    height: 73px;
+  .patrol-result-card__media {
+    height: 135px;
+  }
+  .patrol-result-card__summary {
+    grid-template-columns: 1fr;
+    gap: 7px;
   }
   .patrol-result-card__text {
     -webkit-line-clamp: 3;
