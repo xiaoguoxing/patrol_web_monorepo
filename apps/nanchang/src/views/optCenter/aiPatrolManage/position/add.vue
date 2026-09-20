@@ -246,6 +246,10 @@ function orgConfirm(ids: string[], arr: { id: string; objectName: string }) {
   formData.value.orgCode = arr.id;
   formData.value.orgName = arr.objectName;
 }
+
+function toPosition() {
+  if (formData.value.presetPositionInfo) videoControlsRef.value.rotate(formData.value.presetPositionInfo);
+}
 defineExpose({
   openDialog,
 });
@@ -318,7 +322,7 @@ defineExpose({
               />
               <div class="img-main">
                 <div class="img-content">
-                  <div class="img-title">技能参考图</div>
+                  <div class="img-title" @click="toPosition">技能参考图</div>
                   <div class="img">
                     <el-image
                       style="width: 100%; height: 100%"
