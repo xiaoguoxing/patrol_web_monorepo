@@ -13,6 +13,7 @@ import { alarmNotify } from '@/utils/screenFlash';
 const ALARM_ANNOUNCEMENT = '您有新的告警信息，请及时处理';
 
 let alarm_level: Dict = (await getDict('alarm_level')) as unknown as Dict;
+let alarm_status: Dict = (await getDict('alarm_status')) as unknown as Dict;
 const proTable = ref();
 const initParam = reactive({});
 const columns: tableProps<Row>[] = [
@@ -51,6 +52,12 @@ const columns: tableProps<Row>[] = [
     label: '告警等级',
     filters: getDictForColumnFilters(alarm_level!),
     enum: alarm_level,
+  },
+  {
+    prop: 'alarmStatus',
+    label: '告警状态',
+    filters: getDictForColumnFilters(alarm_status!),
+    enum: alarm_status,
   },
 ];
 let input3 = ref('');

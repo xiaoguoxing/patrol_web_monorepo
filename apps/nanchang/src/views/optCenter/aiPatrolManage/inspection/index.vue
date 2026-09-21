@@ -84,6 +84,7 @@ import {
   getInspectionListApi,
   getTreeApi,
   turnApi,
+  pageTypeTitle,
 } from '@/api/modules/optCenter/aiPatrolManage/inspection';
 import type {
   Tree,
@@ -98,10 +99,9 @@ import { treeFirst } from '@/api/modules/optCenter/aiPatrolManage/position';
 import alarmDrawer from './alarmDrawer.vue';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
-import { PageTypeTitle } from '@/api/modules/optCenter/aiPatrolManage/task';
 const route = useRoute();
 const router = useRouter();
-let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : PageTypeTitle[pageType.value]));
+let cardTitle = computed(() => (pageType.value === 'list' ? route.meta?.title! : pageTypeTitle[pageType.value]));
 // 树操作
 const dataSource = ref<Tree[]>([]);
 const currentTreeNode = ref<Tree>();

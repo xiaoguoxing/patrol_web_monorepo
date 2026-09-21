@@ -9,9 +9,9 @@ export interface Tree {
 }
 export enum pageTypeTitle {
   list = '',
-  add = '新建',
-  edit = '编辑',
-  detail = '查看',
+  add = '新建巡检项',
+  edit = '编辑巡检项',
+  detail = '巡检项详情',
 }
 export type Id = string;
 export type PageType = keyof typeof pageTypeTitle;
