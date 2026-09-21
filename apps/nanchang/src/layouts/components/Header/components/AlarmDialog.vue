@@ -17,6 +17,11 @@ const proTable = ref();
 const initParam = reactive({});
 const columns: tableProps<Row>[] = [
   {
+    prop: 'isNew',
+    label: '',
+    width: 60,
+  },
+  {
     prop: 'alarmTime',
     label: '告警时间',
     sortable: true,
@@ -181,7 +186,7 @@ let os = useTransition(s, {
   <KrPublicDialog
     title="新告警信息"
     v-model="open"
-    width="60%"
+    width="65%"
     ref="RulesFormDialogRef"
     @doClose="close"
     appendTobody
@@ -234,6 +239,9 @@ let os = useTransition(s, {
           :border="false"
           :operationBtn="false"
         >
+          <template #isNew="{ row }">
+            <i style="color: red">{{ row.isNew ? '新!!!' : '' }}</i>
+          </template>
           <template #alarmGrade="{ row }">
             <div class="alarm-tab-main" v-if="row.alarmGrade">
               <span class="alarm-tag" :style="resAlarmGradeStyle(row.alarmGrade)">
