@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#21425b" stroke-width="1" opacity=".38"/></pattern>
+    <pattern id="hatch" width="10" height="10" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><path d="M0 0V10" stroke="#32647e" stroke-width="2" opacity=".28"/></pattern>
+    <linearGradient id="floor" x2="1" y2="1"><stop stop-color="#16334b"/><stop offset="1" stop-color="#0d263c"/></linearGradient>
+    <linearGradient id="water" x2="0" y2="1"><stop stop-color="#1c7898" stop-opacity=".42"/><stop offset="1" stop-color="#0e536e" stop-opacity=".28"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="#0d2336"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <rect x="73" y="78" width="1454" height="744" rx="8" fill="url(#floor)" stroke="#6aa9bf" stroke-width="5"/>
+  <rect x="100" y="104" width="1400" height="692" rx="3" fill="none" stroke="#39687f" stroke-width="2" stroke-dasharray="15 9"/>
+  <path d="M125 420H1475M125 475H1475" stroke="#325a6e" stroke-width="2" stroke-dasharray="10 8"/>
+  <rect x="124" y="123" width="395" height="267" fill="#15394e" stroke="#69a7bc" stroke-width="3"/>
+  <rect x="124" y="123" width="395" height="267" fill="url(#hatch)"/>
+  <text x="146" y="157" fill="#b7d9e3" font-family="Arial,sans-serif" font-size="25" letter-spacing="3">进水区</text>
+  <rect x="155" y="194" width="140" height="140" rx="18" fill="url(#water)" stroke="#57adc4" stroke-width="4"/>
+  <rect x="346" y="194" width="140" height="140" rx="18" fill="url(#water)" stroke="#57adc4" stroke-width="4"/>
+  <path d="M225 264H416" stroke="#7cc6d9" stroke-width="12" opacity=".6"/>
+  <circle cx="225" cy="264" r="34" fill="#123e57" stroke="#91cfda" stroke-width="4"/>
+  <circle cx="416" cy="264" r="34" fill="#123e57" stroke="#91cfda" stroke-width="4"/>
+  <text x="181" y="365" fill="#7ea9b9" font-family="Arial,sans-serif" font-size="17">INLET TANK 01</text>
+  <rect x="549" y="123" width="524" height="267" fill="#14374b" stroke="#69a7bc" stroke-width="3"/>
+  <text x="570" y="157" fill="#b7d9e3" font-family="Arial,sans-serif" font-size="25" letter-spacing="3">主泵房</text>
+  <path d="M614 218H1008M614 321H1008" stroke="#4b7f91" stroke-width="12" stroke-linecap="round"/>
+  <g fill="#1e536b" stroke="#86c9d7" stroke-width="4">
+    <rect x="604" y="204" width="118" height="125" rx="13"/><rect x="776" y="204" width="118" height="125" rx="13"/><rect x="948" y="204" width="80" height="125" rx="13"/>
+  </g>
+  <g fill="none" stroke="#8ccbd7" stroke-width="3"><circle cx="663" cy="266" r="36"/><circle cx="835" cy="266" r="36"/><circle cx="988" cy="266" r="27"/></g>
+  <g fill="#9bcad4" font-family="Arial,sans-serif" font-size="16"><text x="628" y="364">PUMP-01</text><text x="798" y="364">PUMP-02</text><text x="948" y="364">PUMP-03</text></g>
+  <rect x="1103" y="123" width="373" height="267" fill="#15394e" stroke="#69a7bc" stroke-width="3"/>
+  <text x="1126" y="157" fill="#b7d9e3" font-family="Arial,sans-serif" font-size="25" letter-spacing="3">配电间</text>
+  <g fill="#1d4a60" stroke="#73adbf" stroke-width="3"><rect x="1140" y="202" width="85" height="130" rx="5"/><rect x="1250" y="202" width="85" height="130" rx="5"/><rect x="1360" y="202" width="85" height="130" rx="5"/></g>
+  <g fill="#7bdabf"><circle cx="1182" cy="228" r="5"/><circle cx="1292" cy="228" r="5"/><circle cx="1402" cy="228" r="5"/></g>
+  <rect x="124" y="504" width="420" height="270" fill="#14384c" stroke="#69a7bc" stroke-width="3"/>
+  <text x="146" y="541" fill="#b7d9e3" font-family="Arial,sans-serif" font-size="25" letter-spacing="3">加药间</text>
+  <g fill="url(#water)" stroke="#69b2c5" stroke-width="4"><circle cx="249" cy="650" r="65"/><circle cx="422" cy="650" r="65"/></g>
+  <g fill="#a0cbd4" font-family="Arial,sans-serif" font-size="18"><text x="211" y="657">TANK A</text><text x="385" y="657">TANK B</text></g>
+  <rect x="574" y="504" width="450" height="270" fill="#15394e" stroke="#69a7bc" stroke-width="3"/>
+  <text x="598" y="541" fill="#b7d9e3" font-family="Arial,sans-serif" font-size="25" letter-spacing="3">阀门廊道</text>
+  <path d="M623 649H974" stroke="#5b9db0" stroke-width="23"/>
+  <g fill="#1f5870" stroke="#9dd3dc" stroke-width="4"><circle cx="680" cy="649" r="45"/><circle cx="809" cy="649" r="45"/><circle cx="937" cy="649" r="45"/></g>
+  <g stroke="#abd6dd" stroke-width="4"><path d="M650 649h60m-30-30v60M779 649h60m-30-30v60M907 649h60m-30-30v60"/></g>
+  <rect x="1054" y="504" width="422" height="270" fill="#15394e" stroke="#69a7bc" stroke-width="3"/>
+  <text x="1076" y="541" fill="#b7d9e3" font-family="Arial,sans-serif" font-size="25" letter-spacing="3">出水监测区</text>
+  <path d="M1110 648H1420" stroke="#60a5bb" stroke-width="23" stroke-linecap="round"/>
+  <g fill="#225b70" stroke="#b7dbe0" stroke-width="4"><rect x="1139" y="595" width="96" height="105" rx="9"/><rect x="1298" y="595" width="96" height="105" rx="9"/></g>
+  <g fill="#7bdabf"><rect x="1159" y="617" width="57" height="27" rx="3"/><rect x="1318" y="617" width="57" height="27" rx="3"/></g>
+  <path d="M519 263h30m524 0h30M335 390v114m464-114v114m477-114v114" stroke="#6aa9bf" stroke-width="12" opacity=".7"/>
+  <text x="1450" y="850" fill="#5d879a" font-family="Arial,sans-serif" font-size="17" text-anchor="end" letter-spacing="3">WATER PLANT / FLOOR 01</text>
+</svg>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>图片巡检 · 巡检展示</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./data.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <main class="patrol-page" id="app">
+      <div class="scene map-scene" id="scene" aria-label="图片巡检地图">
+        <div class="scene-grid" aria-hidden="true"></div>
+        <div class="image-layer" id="imageLayer">
+          <img id="mapImage" src="./floor-plan.svg" alt="巡检底图" draggable="false" />
+          <svg class="route-layer" id="routeLayer" aria-hidden="true">
+            <defs>
+              <linearGradient id="routeGradient"><stop offset="0%" stop-color="#2499c0" /><stop offset="55%" stop-color="#50e6cf" /><stop offset="100%" stop-color="#b6fff1" /></linearGradient>
+            </defs>
+            <path id="routeGlow" class="route-glow" />
+            <path id="routeBase" class="route-base" />
+            <path id="routeProgressGlow" class="route-progress-glow" />
+            <path id="routeProgress" class="route-progress" />
+            <path id="routeActiveGlow" class="route-active-glow" />
+            <path id="routeActive" class="route-active" />
+            <path id="routeStreak" class="route-streak" />
+          </svg>
+          <div id="markersLayer"></div>
+        </div>
+        <div class="map-vignette" aria-hidden="true"></div>
+        <div class="map-coordinates" id="coordinateHint">X: — &nbsp; Y: —</div>
+        <div class="map-note">示意平面图及识别结果仅用于交互演示</div>
+
+        <header class="map-topbar">
+          <div class="brand"><div class="brand-icon" aria-hidden="true">⌖</div><div><span class="eyebrow">AI PATROL / IMAGE MAP</span><h1>图片巡检</h1></div><span class="demo-tag">巡检展示</span></div>
+          <div class="map-top-actions"><span class="live-dot"></span><span id="topStatus">巡检准备就绪</span><a class="toolbar-button" href="./config.html">点位配置</a><button class="toolbar-button" id="fullscreenButton" type="button">全屏</button></div>
+        </header>
+
+        <aside class="floating-tasks" id="taskPanel">
+          <div class="floating-tasks-head"><div><span class="section-kicker">PATROL TASKS</span><h2>巡检任务 <span id="taskCount">0</span></h2></div><button id="toggleTasksButton" type="button" aria-expanded="true" aria-controls="taskPanelBody">收起 ‹</button></div>
+          <div class="floating-tasks-body" id="taskPanelBody">
+            <div class="progress-panel"><div class="progress-text"><span>本轮进度</span><strong id="progressLabel">0 / 0</strong></div><div class="progress-track"><div id="progressFill"></div></div><p id="roundLabel">第 1 轮巡检</p></div>
+            <ol class="task-list" id="taskList" aria-label="巡检点位列表"></ol>
+          </div>
+        </aside>
+
+        <div class="map-tools"><div class="map-title"><strong id="imageTitle">泵房平面图</strong><small id="imageSize">1600 × 900 px</small></div><div class="zoom-tools"><button type="button" id="zoomInButton" title="放大" aria-label="放大">＋</button><button type="button" id="zoomOutButton" title="缩小" aria-label="缩小">－</button><button type="button" id="fitButton">全图</button></div></div>
+
+        <article class="result-card" id="resultCard" aria-live="polite" hidden>
+          <div class="result-top"><div><span class="section-kicker">AI INSPECTION RESULT</span><h3>智能巡检结果</h3></div><span class="result-state" id="resultState">识别中</span></div>
+          <div class="result-device"><span id="resultCode">P-01</span><strong id="resultName">巡检点位</strong></div>
+          <div class="result-snapshot"><img src="../demoImg/demo1.jpg" alt="AI 识别模拟快照" id="snapshotImage" /><div class="snapshot-label">AI 识别快照 · 演示数据</div></div>
+          <dl class="result-details"><div><dt>巡检结论</dt><dd class="conclusion" id="resultConclusion">AI 识别中…</dd></div><div><dt>设备健康度</dt><dd id="resultHealth">--</dd></div><div><dt>识别结果</dt><dd id="resultDetail">正在获取识别结果…</dd></div><div><dt>DCS 数据</dt><dd id="resultDcs">暂无数据</dd></div><div><dt>巡检时间</dt><dd id="resultTime">--</dd></div></dl>
+        </article>
+
+        <div class="floating-controls"><div class="current-summary"><div class="summary-icon">◎</div><div><small>CURRENT TARGET</small><strong id="currentTarget">等待开始</strong></div><span id="currentCoordinate">X: — / Y: —</span></div><div class="playback-controls"><button class="primary-button" id="playButton" type="button">开始巡检</button><button class="control-button" id="nextButton" type="button">下一个点位 →</button><button class="control-button" id="resetButton" type="button">重置进度</button></div></div>
+      </div>
+    </main>
+  </body>
+</html>

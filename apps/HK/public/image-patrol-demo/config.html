@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>图片巡检 · 点位配置</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./data.js" defer></script>
+    <script src="./config.js" defer></script>
+  </head>
+  <body>
+    <main class="app config-page" id="app">
+      <header class="topbar"><div class="brand"><div class="brand-icon" aria-hidden="true">⌖</div><div><span class="eyebrow">AI PATROL / CONFIGURATION</span><h1>图片巡检 · 点位配置</h1></div></div><div class="top-actions"><span id="saveStatus">配置已加载</span><a class="primary-button" href="./index.html" id="patrolLink">进入巡检 →</a></div></header>
+      <section class="workspace" aria-label="点位配置工作区">
+        <aside class="sidebar"><div class="side-heading"><span class="section-kicker">WAYPOINTS</span><h2>巡检点位 <span id="taskCount">0</span></h2><p>按列表顺序巡检。点击点位可定位。</p></div><div class="list-heading"><span>点位列表</span><button type="button" id="addPointButton">＋ 添加点位</button></div><ol class="task-list" id="taskList"></ol><div class="sidebar-footer">在图片上单击添加点位 · 拖动平移图片</div></aside>
+        <div class="main-area"><div class="scene-toolbar"><div class="scene-title"><span class="scene-symbol">▤</span><span id="imageTitle">泵房平面图</span><small id="imageSize">1600 × 900 px</small></div><div class="toolbar-actions"><label class="toolbar-button upload-button" for="imageInput">更换图片</label><input id="imageInput" type="file" accept="image/*" hidden /><button class="toolbar-button" id="resetButton" type="button">恢复示例</button></div></div>
+          <div class="scene config-scene" id="scene"><div class="scene-grid" aria-hidden="true"></div><div class="image-layer" id="imageLayer"><img id="mapImage" src="./floor-plan.svg" alt="巡检底图" draggable="false" /><svg class="route-layer" id="routeLayer" aria-hidden="true"></svg><div id="markersLayer"></div></div><div class="scene-corner top-left"><span class="corner-line"></span> IMAGE COORDINATE SYSTEM <span class="coord-hint" id="coordinateHint">X: — &nbsp; Y: —</span></div><div class="map-zoom-controls"><button id="zoomInButton" type="button" aria-label="放大">＋</button><button id="zoomOutButton" type="button" aria-label="缩小">－</button><button id="fitButton" type="button">适应画面</button><span id="zoomLabel">100%</span></div></div>
+          <footer class="control-bar"><div class="config-hint">滚轮缩放 · 拖动平移 · 单击图片添加点位</div><button class="primary-button" type="button" id="saveAllButton">保存配置</button></footer>
+        </div>
+        <aside class="inspector"><div class="side-heading"><span class="section-kicker">POINT DETAILS</span><h2>点位编辑</h2><p>坐标基于图片原始尺寸，单位 px。</p></div><label class="field-label" for="pointSelect">当前点位</label><select id="pointSelect"></select><label class="field-label" for="pointName">点位名称</label><input id="pointName" type="text" maxlength="30" /><div class="coordinate-fields"><div><label class="field-label" for="pointX">X 坐标</label><input id="pointX" type="number" min="0" step="1" /></div><div><label class="field-label" for="pointY">Y 坐标</label><input id="pointY" type="number" min="0" step="1" /></div></div><button class="save-button" id="savePointButton" type="button">保存点位</button><button class="delete-button" id="deletePointButton" type="button">删除当前点位</button><div class="config-divider"></div><div class="help-card"><div class="help-icon">i</div><div><strong>坐标说明</strong><p>左上角为 (0, 0)。更换图片时，点位按原相对位置缩放；保存后巡检页会读取同一套点位。</p></div></div></aside>
+      </section>
+    </main>
+  </body>
+</html>
