@@ -42,7 +42,7 @@ const resColumns = computed(() => [
   },
   {
     prop: 'objectName',
-    label: t('aiInspection.objectName'),
+    label: t('export.abnormal.objectName'),
   },
   {
     prop: 'objectName1',

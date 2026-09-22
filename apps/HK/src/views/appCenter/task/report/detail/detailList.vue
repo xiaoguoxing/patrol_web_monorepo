@@ -51,7 +51,7 @@ const resColumns = computed(() => [
   },
   {
     prop: 'itemName',
-    label: t('task.itemName'),
+    label: t('export.abnormal.itemName'),
     width: 220,
   },
   {
