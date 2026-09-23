@@ -12,9 +12,35 @@
     { id: 'P-06', name: '阀门廊道检查', x: 809, y: 649 },
     { id: 'P-07', name: '出水水质监测', x: 1345, y: 649 },
   ];
+  // 示例摄像头：仅包含编号与图片原始像素坐标，不参与巡检路线。
+  const DEFAULT_CAMERAS = [
+    { id: 'CAM-01', x: 173, y: 151 },
+    { id: 'CAM-02', x: 746, y: 176 },
+    { id: 'CAM-03', x: 1412, y: 354 },
+    { id: 'CAM-04', x: 1018, y: 721 },
+    { id: 'CAM-05', x: 421, y: 746 },
+  ];
 
   function defaults() {
-    return { imageWidth: 1600, imageHeight: 900, imageName: '泵房平面图', imageBlob: null, points: DEFAULT_POINTS.map((point) => ({ ...point })) };
+    return {
+      imageWidth: 1600,
+      imageHeight: 900,
+      imageName: '泵房平面图',
+      imageBlob: null,
+      points: DEFAULT_POINTS.map((point) => ({ ...point })),
+      cameras: DEFAULT_CAMERAS.map((camera) => ({ ...camera })),
+    };
+  }
+
+  function normalize(config) {
+    const fallback = defaults();
+    return {
+      ...fallback,
+      ...config,
+      points: Array.isArray(config?.points) ? config.points : fallback.points,
+      // 兼容此前已经保存但没有 cameras 字段的配置。
+      cameras: Array.isArray(config?.cameras) ? config.cameras : fallback.cameras,
+    };
   }
 
   // 所有页面共用同一段三次贝塞尔曲线，保证配置预览与巡检流光严格重合。
@@ -66,7 +92,7 @@
       return await new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE, 'readonly');
         const request = transaction.objectStore(STORE).get(KEY);
-        request.onsuccess = () => resolve(request.result || defaults());
+        request.onsuccess = () => resolve(normalize(request.result));
         request.onerror = () => reject(request.error || new Error('读取配置失败'));
       });
     } finally {
@@ -89,5 +115,5 @@
     }
   }
 
-  window.PatrolData = { defaults, load, save, curveSegment, routePath };
+  window.PatrolData = { defaults, normalize, load, save, curveSegment, routePath };
 })();

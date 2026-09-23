@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const el = {
   app: $('app'), scene: $('scene'), layer: $('imageLayer'), image: $('mapImage'),
-  markers: $('markersLayer'), tasks: $('taskList'), card: $('resultCard'),
+  markers: $('markersLayer'), cameras: $('camerasLayer'), tasks: $('taskList'), card: $('resultCard'),
   play: $('playButton'), next: $('nextButton'), panel: $('taskPanel'),
 };
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -178,6 +178,26 @@ function renderMarkers() {
   });
 }
 
+function renderCameras() {
+  el.cameras.replaceChildren();
+  state.config.cameras.forEach((camera) => {
+    const marker = document.createElement('div');
+    marker.className = 'camera-marker is-display';
+    marker.style.left = `${camera.x}px`;
+    marker.style.top = `${camera.y}px`;
+    marker.title = `${camera.id} (X: ${camera.x}, Y: ${camera.y})`;
+    marker.setAttribute('aria-label', marker.title);
+    const symbol = document.createElement('span');
+    symbol.className = 'camera-symbol';
+    symbol.append(document.createElement('i'));
+    const label = document.createElement('span');
+    label.className = 'camera-label';
+    label.textContent = camera.id;
+    marker.append(symbol, label);
+    el.cameras.append(marker);
+  });
+}
+
 function renderTasks() {
   el.tasks.replaceChildren();
   state.config.points.forEach((point, index) => {
@@ -230,6 +250,7 @@ function render() {
   el.next.disabled = points.length === 0;
   renderRoute();
   renderMarkers();
+  renderCameras();
   renderTasks();
   updateCardPosition();
 }
@@ -376,7 +397,7 @@ el.scene.addEventListener('wheel', (event) => {
   zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1.13 : 1 / 1.13);
 }, { passive: false });
 el.scene.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || event.target.closest('.marker, .map-topbar, .floating-tasks, .map-tools, .floating-controls, .result-card')) return;
+  if (event.button !== 0 || event.target.closest('.marker, .camera-marker, .map-topbar, .floating-tasks, .map-tools, .floating-controls, .result-card')) return;
   state.pointer = { x: event.clientX, y: event.clientY, tx: state.tx, ty: state.ty };
   el.scene.setPointerCapture(event.pointerId);
   el.layer.style.transitionDuration = '0s';
