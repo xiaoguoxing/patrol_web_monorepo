@@ -15,7 +15,7 @@
           <div class="back-today" :class="{ disable: isToToday }" @click="isToToday ? null : backToday()">
             {{ $t('buttonName.back') }}{{ $t('common.month1') }}
           </div>
-          <div class="back-today" @click="goSys()">{{ $t('header.goFrom') }}{{ sysName }}</div>
+          <!--          <div class="back-today" @click="goSys()">{{ $t('header.goFrom') }}{{ sysName }}</div>-->
         </div>
       </div>
       <div class="header-right">

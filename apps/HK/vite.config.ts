@@ -48,7 +48,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       // 跨域代理配置
       proxy: {
         '/api': {
-          target: 'http://10.11.3.123:30001', //测试环境
+          target: 'http://10.11.3.123:30007', //测试环境
           // target: "https://www.fastmock.site/mock/f81e8333c1a9276214bcdbc170d9e0a0", // fastmock
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),

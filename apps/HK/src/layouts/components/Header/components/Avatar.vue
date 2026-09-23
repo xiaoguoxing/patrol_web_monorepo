@@ -13,11 +13,11 @@
       </div>
     </template>
     <div class="user-info__content">
-      <div class="user-info__item" @click="goSys()">
-        <!-- openDialog('infoRef') -->
+      <!--      <div class="user-info__item" @click="goSys()">
+        &lt;!&ndash; openDialog('infoRef') &ndash;&gt;
         <el-icon class="icon"><Position /></el-icon>
         <div class="text">{{ $t('header.goFrom') }}{{ sysName }}</div>
-      </div>
+      </div>-->
       <div class="user-info__item" @click="gotoUser()">
         <!-- openDialog('infoRef') -->
         <el-icon class="icon"><User /></el-icon>

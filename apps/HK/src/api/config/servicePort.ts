@@ -2,20 +2,20 @@
 /**
  * 智能巡检的服务前缀
  */
-export const PORT_INSPECT = '/eam-service-inspection';
+export const PORT_INSPECT = '/seis-service-inspection';
 /**
  * 系统管理的服务前缀
  */
-export const PORT_SYSTEM = '/eam-service-system';
+export const PORT_SYSTEM = '/seis-service-system';
 /**
  * 工具的服务前缀（如数据字典请求，当前登录人的组织人员请求等）
  */
-export const PORT_TOOL = '/eam-service-tool';
+export const PORT_TOOL = '/seis-service-tool';
 /**
  * 摄像头服务前缀
  */
-export const PORT_HIKVISION = '/eam-service-hikvision';
+export const PORT_HIKVISION = '/seis-service-hikvision';
 /**
  * 公共服务前缀
  */
-export const PORT_COMMON = '/eam-common-web';
+export const PORT_COMMON = '/seis-common-web';
