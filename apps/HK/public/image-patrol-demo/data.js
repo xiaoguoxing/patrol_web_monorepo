@@ -3,56 +3,86 @@
   const DATABASE = 'image-patrol-demo';
   const STORE = 'config';
   const KEY = 'current';
-  // 摄像头就是巡检对象，按数组顺序自动生成巡检路线。
-  const DEFAULT_POINTS = [
+  // 摄像头只负责提供地图坐标；巡检任务通过 cameraId 关联摄像头。
+  const DEFAULT_CAMERAS = [
     { id: 'CAM-01', name: '北侧入口摄像头', x: 173, y: 151 },
     { id: 'CAM-02', name: '主泵房摄像头', x: 746, y: 176 },
     { id: 'CAM-03', name: '配电间摄像头', x: 1412, y: 354 },
     { id: 'CAM-04', name: '出水区摄像头', x: 1018, y: 721 },
     { id: 'CAM-05', name: '加药间摄像头', x: 421, y: 746 },
   ];
+  const DEFAULT_TASKS = [
+    { id: 'TASK-01', name: '北侧入口环境巡检', cameraId: 'CAM-01' },
+    { id: 'TASK-02', name: '一号主泵运行巡检', cameraId: 'CAM-02' },
+    { id: 'TASK-03', name: '二号主泵运行巡检', cameraId: 'CAM-02' },
+    { id: 'TASK-04', name: '配电柜温度巡检', cameraId: 'CAM-03' },
+    { id: 'TASK-05', name: '出水水质仪表巡检', cameraId: 'CAM-04' },
+    { id: 'TASK-06', name: '加药罐液位巡检', cameraId: 'CAM-05' },
+    { id: 'TASK-07', name: '加药间泄漏巡检', cameraId: 'CAM-05' },
+  ];
 
   function defaults() {
     return {
-      schemaVersion: 2,
+      schemaVersion: 3,
       imageWidth: 1600,
       imageHeight: 900,
       imageName: '泵房平面图',
       imageBlob: null,
-      points: DEFAULT_POINTS.map((point) => ({ ...point })),
+      cameras: DEFAULT_CAMERAS.map((camera) => ({ ...camera })),
+      tasks: DEFAULT_TASKS.map((task) => ({ ...task })),
     };
   }
 
   function normalize(config) {
     const fallback = defaults();
     const source = config || {};
-    let points;
+    if (source.schemaVersion === 3 && Array.isArray(source.cameras) && Array.isArray(source.tasks)) {
+      return { ...fallback, ...source, schemaVersion: 3, cameras: source.cameras, tasks: source.tasks };
+    }
+
+    // v2 曾把摄像头与巡检任务合为一组 points；迁移成一对一关联。
     if (source.schemaVersion === 2 && Array.isArray(source.points)) {
-      points = source.points;
-    } else if (Array.isArray(source.cameras) && source.cameras.length) {
-      // 把上一版独立摄像头坐标迁移成摄像头巡检任务。
-      points = source.cameras.map((camera, index) => ({
+      const cameras = source.points.map((point, index) => ({
+        id: point.id?.startsWith('CAM-') ? point.id : `CAM-${String(index + 1).padStart(2, '0')}`,
+        name: point.name?.includes('摄像头') ? point.name : `摄像头 ${String(index + 1).padStart(2, '0')}`,
+        x: point.x,
+        y: point.y,
+      }));
+      const tasks = source.points.map((point, index) => ({
+        id: `TASK-${String(index + 1).padStart(2, '0')}`,
+        name: point.name || `巡检任务 ${String(index + 1).padStart(2, '0')}`,
+        cameraId: cameras[index].id,
+      }));
+      const rest = { ...source };
+      delete rest.points;
+      return { ...fallback, ...rest, schemaVersion: 3, cameras, tasks };
+    }
+
+    // v1 有独立摄像头和旧巡检点，任务自动关联最近的摄像头。
+    if (Array.isArray(source.cameras) && source.cameras.length) {
+      const cameras = source.cameras.map((camera, index) => ({
+        ...camera,
         id: camera.id || `CAM-${String(index + 1).padStart(2, '0')}`,
         name: camera.name || `摄像头 ${String(index + 1).padStart(2, '0')}`,
-        x: camera.x,
-        y: camera.y,
       }));
-    } else if (Array.isArray(source.points)) {
-      points = source.points.map((point, index) => ({
-        ...point,
-        id: `CAM-${String(index + 1).padStart(2, '0')}`,
-        name: point.name?.includes('摄像头') ? point.name : `摄像头 ${String(index + 1).padStart(2, '0')}`,
-      }));
-    } else {
-      points = fallback.points;
+      const tasks = (source.points || []).map((point, index) => {
+        const camera = cameras.reduce((nearest, candidate) => {
+          const distance = (candidate.x - point.x) ** 2 + (candidate.y - point.y) ** 2;
+          return !nearest || distance < nearest.distance ? { camera: candidate, distance } : nearest;
+        }, null)?.camera || cameras[0];
+        return { id: `TASK-${String(index + 1).padStart(2, '0')}`, name: point.name || `巡检任务 ${index + 1}`, cameraId: camera.id };
+      });
+      const rest = { ...source };
+      delete rest.points;
+      return { ...fallback, ...rest, schemaVersion: 3, cameras, tasks: tasks.length ? tasks : fallback.tasks };
     }
-    const rest = { ...source };
-    delete rest.cameras;
+
     return {
       ...fallback,
-      ...rest,
-      schemaVersion: 2,
-      points,
+      ...source,
+      schemaVersion: 3,
+      cameras: fallback.cameras,
+      tasks: fallback.tasks,
     };
   }
 

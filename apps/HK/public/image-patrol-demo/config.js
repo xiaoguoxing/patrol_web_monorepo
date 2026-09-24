@@ -4,7 +4,8 @@ const layer = $('imageLayer');
 const image = $('mapImage');
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 let config = PatrolData.defaults();
-let selectedIndex = 0;
+let selectedTaskIndex = 0;
+let selectedCameraIndex = 0;
 let scale = 1;
 let tx = 0;
 let ty = 0;
@@ -13,13 +14,28 @@ let imageUrl = null;
 let saveQueue = Promise.resolve();
 let pointer = null;
 
+function cameraById(id) {
+  return config.cameras.find((camera) => camera.id === id);
+}
+
+function taskTargets() {
+  return config.tasks.map((task) => {
+    const camera = cameraById(task.cameraId);
+    return camera ? { ...task, x: camera.x, y: camera.y, cameraName: camera.name } : null;
+  }).filter(Boolean);
+}
+
 function setStatus(message, error = false) {
   $('saveStatus').textContent = message;
   $('saveStatus').classList.toggle('is-error', error);
 }
 
 function snapshot() {
-  return { ...config, points: config.points.map((point) => ({ ...point })) };
+  return {
+    ...config,
+    cameras: config.cameras.map((camera) => ({ ...camera })),
+    tasks: config.tasks.map((task) => ({ ...task })),
+  };
 }
 
 function persist() {
@@ -54,6 +70,14 @@ function fitImage(animate = true) {
   applyTransform(animate);
 }
 
+function focusCamera(camera) {
+  if (!camera) return;
+  scale = Math.max(scale, fitScale * 1.35);
+  tx = scene.clientWidth / 2 - camera.x * scale;
+  ty = scene.clientHeight / 2 - camera.y * scale;
+  applyTransform();
+}
+
 function zoomAt(clientX, clientY, multiplier) {
   const rect = scene.getBoundingClientRect();
   const px = clientX - rect.left;
@@ -66,15 +90,7 @@ function zoomAt(clientX, clientY, multiplier) {
   applyTransform();
 }
 
-function focusPoint(point) {
-  scale = Math.max(scale, fitScale * 1.35);
-  tx = scene.clientWidth / 2 - point.x * scale;
-  ty = scene.clientHeight / 2 - point.y * scale;
-  applyTransform();
-}
-
 function imageCoordinates(clientX, clientY) {
-  // getBoundingClientRect 采用动画中的实际尺寸，放大缩小时仍能准确取点。
   const rect = layer.getBoundingClientRect();
   return {
     x: (clientX - rect.left) * config.imageWidth / rect.width,
@@ -84,27 +100,27 @@ function imageCoordinates(clientX, clientY) {
 
 function renderRoute() {
   const svg = $('routeLayer');
+  const targets = taskTargets();
   svg.setAttribute('viewBox', `0 0 ${config.imageWidth} ${config.imageHeight}`);
   svg.replaceChildren();
-  if (config.points.length < 2) return;
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  line.setAttribute('d', PatrolData.routePath(config.points, config.imageWidth, config.imageHeight, true));
-  line.setAttribute('class', 'route-line');
-  svg.append(line);
+  if (targets.length < 2) return;
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', PatrolData.routePath(targets, config.imageWidth, config.imageHeight, true));
+  path.setAttribute('class', 'route-line');
+  svg.append(path);
 }
 
-function renderMarkers() {
+function renderCameras() {
   const container = $('markersLayer');
   container.replaceChildren();
-  config.points.forEach((point, index) => {
+  config.cameras.forEach((camera, index) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `marker ${index === selectedIndex ? 'is-current' : ''}`;
-    button.style.left = `${point.x}px`;
-    button.style.top = `${point.y}px`;
-    button.title = `${point.name} (${point.x}, ${point.y})`;
+    button.className = `marker camera-patrol-marker ${index === selectedCameraIndex ? 'is-current' : ''}`;
+    button.style.left = `${camera.x}px`;
+    button.style.top = `${camera.y}px`;
+    button.title = `${camera.name} (${camera.x}, ${camera.y})`;
     button.setAttribute('aria-label', button.title);
-    button.classList.add('camera-patrol-marker');
     const symbol = document.createElement('span');
     symbol.className = 'camera-symbol';
     symbol.append(document.createElement('i'));
@@ -113,12 +129,12 @@ function renderMarkers() {
     sequence.textContent = String(index + 1).padStart(2, '0');
     const label = document.createElement('span');
     label.className = 'marker-label';
-    label.textContent = point.name;
+    label.textContent = camera.name;
     button.append(symbol, sequence, label);
     button.addEventListener('pointerdown', (event) => event.stopPropagation());
     button.addEventListener('click', (event) => {
       event.stopPropagation();
-      selectPoint(index);
+      selectCamera(index);
     });
     container.append(button);
   });
@@ -127,47 +143,76 @@ function renderMarkers() {
 function renderTasks() {
   const list = $('taskList');
   list.replaceChildren();
-  config.points.forEach((point, index) => {
+  config.tasks.forEach((task, index) => {
+    const camera = cameraById(task.cameraId);
     const li = document.createElement('li');
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `task-item ${index === selectedIndex ? 'is-current' : ''}`;
+    button.className = `task-item ${index === selectedTaskIndex ? 'is-current' : ''}`;
     const number = document.createElement('span');
     number.className = 'task-number';
     number.textContent = String(index + 1).padStart(2, '0');
     const copy = document.createElement('span');
     copy.className = 'task-copy';
     const name = document.createElement('strong');
-    name.textContent = point.name;
-    const coordinate = document.createElement('small');
-    coordinate.textContent = `X: ${point.x} / Y: ${point.y}`;
-    copy.append(name, coordinate);
+    name.textContent = task.name;
+    const association = document.createElement('small');
+    association.textContent = camera ? `${camera.id} · ${camera.name}` : '未关联摄像头';
+    copy.append(name, association);
     button.append(number, copy);
-    button.addEventListener('click', () => selectPoint(index));
+    button.addEventListener('click', () => selectTask(index));
     li.append(button);
     list.append(li);
   });
 }
 
-function renderEditor() {
-  const select = $('pointSelect');
+function renderTaskEditor() {
+  const select = $('taskSelect');
   select.replaceChildren();
-  config.points.forEach((point, index) => {
+  config.tasks.forEach((task, index) => {
     const option = document.createElement('option');
     option.value = String(index);
-    option.textContent = `${point.id} · ${point.name}`;
+    option.textContent = `${task.id} · ${task.name}`;
     select.append(option);
   });
-  const point = config.points[selectedIndex];
-  select.disabled = !point;
-  $('savePointButton').disabled = !point;
-  $('deletePointButton').disabled = !point;
-  select.value = point ? String(selectedIndex) : '';
-  $('pointName').value = point?.name || '';
-  $('pointX').value = point?.x ?? '';
-  $('pointY').value = point?.y ?? '';
-  $('pointX').max = String(config.imageWidth);
-  $('pointY').max = String(config.imageHeight);
+  const cameraSelect = $('taskCameraSelect');
+  cameraSelect.replaceChildren();
+  config.cameras.forEach((camera) => {
+    const option = document.createElement('option');
+    option.value = camera.id;
+    option.textContent = `${camera.id} · ${camera.name}`;
+    cameraSelect.append(option);
+  });
+  const task = config.tasks[selectedTaskIndex];
+  select.disabled = !task;
+  $('saveTaskButton').disabled = !task;
+  $('deleteTaskButton').disabled = !task;
+  cameraSelect.disabled = !task || !config.cameras.length;
+  select.value = task ? String(selectedTaskIndex) : '';
+  $('taskName').value = task?.name || '';
+  cameraSelect.value = task?.cameraId || '';
+}
+
+function renderCameraEditor() {
+  const select = $('cameraSelect');
+  select.replaceChildren();
+  config.cameras.forEach((camera, index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = `${camera.id} · ${camera.name}`;
+    select.append(option);
+  });
+  const camera = config.cameras[selectedCameraIndex];
+  $('cameraCount').textContent = String(config.cameras.length);
+  select.disabled = !camera;
+  $('saveCameraButton').disabled = !camera;
+  $('deleteCameraButton').disabled = !camera;
+  select.value = camera ? String(selectedCameraIndex) : '';
+  $('cameraName').value = camera?.name || '';
+  $('cameraX').value = camera?.x ?? '';
+  $('cameraY').value = camera?.y ?? '';
+  $('cameraX').max = String(config.imageWidth);
+  $('cameraY').max = String(config.imageHeight);
 }
 
 function render() {
@@ -175,73 +220,127 @@ function render() {
   layer.style.height = `${config.imageHeight}px`;
   $('imageTitle').textContent = config.imageName;
   $('imageSize').textContent = `${config.imageWidth} × ${config.imageHeight} px`;
-  $('taskCount').textContent = String(config.points.length);
+  $('taskCount').textContent = String(config.tasks.length);
   renderRoute();
-  renderMarkers();
+  renderCameras();
   renderTasks();
-  renderEditor();
+  renderTaskEditor();
+  renderCameraEditor();
 }
 
-function selectPoint(index) {
-  if (!config.points[index]) return;
-  selectedIndex = index;
+function selectTask(index) {
+  const task = config.tasks[index];
+  if (!task) return;
+  selectedTaskIndex = index;
+  const cameraIndex = config.cameras.findIndex((camera) => camera.id === task.cameraId);
+  if (cameraIndex >= 0) selectedCameraIndex = cameraIndex;
   render();
-  focusPoint(config.points[index]);
+  focusCamera(cameraById(task.cameraId));
 }
 
-function addPoint(x, y) {
-  const nextId = Math.max(0, ...config.points.map((point) => Number(point.id.slice(4)) || 0)) + 1;
-  const point = { id: `CAM-${String(nextId).padStart(2, '0')}`, name: `摄像头 ${String(nextId).padStart(2, '0')}`, x: Math.round(x), y: Math.round(y) };
-  config.points.push(point);
-  selectedIndex = config.points.length - 1;
+function selectCamera(index) {
+  const camera = config.cameras[index];
+  if (!camera) return;
+  selectedCameraIndex = index;
+  renderCameras();
+  renderCameraEditor();
+  focusCamera(camera);
+}
+
+function addTask() {
+  if (!config.cameras.length) {
+    window.alert('请先在图片上添加一个摄像头定点');
+    return;
+  }
+  const nextId = Math.max(0, ...config.tasks.map((task) => Number(task.id.slice(5)) || 0)) + 1;
+  const camera = config.cameras[selectedCameraIndex] || config.cameras[0];
+  config.tasks.push({ id: `TASK-${String(nextId).padStart(2, '0')}`, name: `巡检任务 ${String(nextId).padStart(2, '0')}`, cameraId: camera.id });
+  selectedTaskIndex = config.tasks.length - 1;
   render();
   persist().catch(() => {});
-  $('pointName').focus();
-  $('pointName').select();
+  $('taskName').focus();
+  $('taskName').select();
 }
 
-function commitEditor() {
-  const point = config.points[selectedIndex];
-  if (!point) return true;
-  const x = Number($('pointX').value);
-  const y = Number($('pointY').value);
-  if ($('pointX').value === '' || $('pointY').value === '' || !Number.isFinite(x) || !Number.isFinite(y)) {
-    window.alert('请输入有效的 X、Y 坐标');
+function addCamera(x, y) {
+  const nextId = Math.max(0, ...config.cameras.map((camera) => Number(camera.id.slice(4)) || 0)) + 1;
+  const camera = { id: `CAM-${String(nextId).padStart(2, '0')}`, name: `摄像头 ${String(nextId).padStart(2, '0')}`, x: Math.round(x), y: Math.round(y) };
+  config.cameras.push(camera);
+  selectedCameraIndex = config.cameras.length - 1;
+  render();
+  focusCamera(camera);
+  persist().catch(() => {});
+  $('cameraName').focus();
+  $('cameraName').select();
+}
+
+function commitTaskEditor() {
+  const task = config.tasks[selectedTaskIndex];
+  if (!task) return true;
+  if (!$('taskCameraSelect').value) {
+    window.alert('请选择任务关联的摄像头');
     return false;
   }
-  point.name = $('pointName').value.trim() || point.id;
-  point.x = Math.round(clamp(x, 0, config.imageWidth));
-  point.y = Math.round(clamp(y, 0, config.imageHeight));
-  renderRoute();
-  renderMarkers();
-  renderTasks();
-  renderEditor();
-  focusPoint(point);
+  task.name = $('taskName').value.trim() || task.id;
+  task.cameraId = $('taskCameraSelect').value;
   return true;
 }
 
-$('pointSelect').addEventListener('change', (event) => selectPoint(Number(event.target.value)));
-$('addPointButton').addEventListener('click', () => {
-  const x = clamp((scene.clientWidth / 2 - tx) / scale, 0, config.imageWidth);
-  const y = clamp((scene.clientHeight / 2 - ty) / scale, 0, config.imageHeight);
-  addPoint(x, y);
+function commitCameraEditor() {
+  const camera = config.cameras[selectedCameraIndex];
+  if (!camera) return true;
+  const x = Number($('cameraX').value);
+  const y = Number($('cameraY').value);
+  if ($('cameraX').value === '' || $('cameraY').value === '' || !Number.isFinite(x) || !Number.isFinite(y)) {
+    window.alert('请输入有效的摄像头 X、Y 坐标');
+    return false;
+  }
+  camera.name = $('cameraName').value.trim() || camera.id;
+  camera.x = Math.round(clamp(x, 0, config.imageWidth));
+  camera.y = Math.round(clamp(y, 0, config.imageHeight));
+  return true;
+}
+
+function commitAndRender() {
+  if (!commitTaskEditor() || !commitCameraEditor()) return false;
+  render();
+  return true;
+}
+
+$('taskSelect').addEventListener('change', (event) => selectTask(Number(event.target.value)));
+$('cameraSelect').addEventListener('change', (event) => selectCamera(Number(event.target.value)));
+$('addTaskButton').addEventListener('click', addTask);
+$('addCameraButton').addEventListener('click', () => {
+  addCamera(clamp((scene.clientWidth / 2 - tx) / scale, 0, config.imageWidth), clamp((scene.clientHeight / 2 - ty) / scale, 0, config.imageHeight));
 });
-$('savePointButton').addEventListener('click', () => {
-  if (commitEditor()) persist().catch(() => {});
-});
-$('deletePointButton').addEventListener('click', () => {
-  if (!config.points[selectedIndex]) return;
-  config.points.splice(selectedIndex, 1);
-  selectedIndex = clamp(selectedIndex, 0, Math.max(0, config.points.length - 1));
+$('saveTaskButton').addEventListener('click', () => { if (commitAndRender()) persist().catch(() => {}); });
+$('saveCameraButton').addEventListener('click', () => { if (commitAndRender()) persist().catch(() => {}); });
+$('deleteTaskButton').addEventListener('click', () => {
+  if (!config.tasks[selectedTaskIndex]) return;
+  config.tasks.splice(selectedTaskIndex, 1);
+  selectedTaskIndex = clamp(selectedTaskIndex, 0, Math.max(0, config.tasks.length - 1));
   render();
   persist().catch(() => {});
 });
-$('saveAllButton').addEventListener('click', () => {
-  if (commitEditor()) persist().catch(() => {});
+$('deleteCameraButton').addEventListener('click', () => {
+  const camera = config.cameras[selectedCameraIndex];
+  if (!camera) return;
+  const linkedTasks = config.tasks.filter((task) => task.cameraId === camera.id);
+  if (linkedTasks.length && config.cameras.length === 1) {
+    window.alert('该摄像头仍有关联任务，请先新增其他摄像头或删除相关任务');
+    return;
+  }
+  config.cameras.splice(selectedCameraIndex, 1);
+  const replacement = config.cameras[0];
+  linkedTasks.forEach((task) => { task.cameraId = replacement?.id || ''; });
+  selectedCameraIndex = clamp(selectedCameraIndex, 0, Math.max(0, config.cameras.length - 1));
+  render();
+  persist().catch(() => {});
 });
+$('saveAllButton').addEventListener('click', () => { if (commitAndRender()) persist().catch(() => {}); });
 $('patrolLink').addEventListener('click', async (event) => {
   event.preventDefault();
-  if (!commitEditor()) return;
+  if (!commitAndRender()) return;
   try {
     await persist();
     window.location.href = './index.html';
@@ -251,7 +350,8 @@ $('patrolLink').addEventListener('click', async (event) => {
 });
 $('resetButton').addEventListener('click', () => {
   config = PatrolData.defaults();
-  selectedIndex = 0;
+  selectedTaskIndex = 0;
+  selectedCameraIndex = 0;
   setImageSource();
   render();
   fitImage();
@@ -295,7 +395,7 @@ scene.addEventListener('pointerup', (event) => {
   pointer = null;
   if (!moved) {
     const coordinates = imageCoordinates(event.clientX, event.clientY);
-    if (coordinates.x >= 0 && coordinates.x <= config.imageWidth && coordinates.y >= 0 && coordinates.y <= config.imageHeight) addPoint(coordinates.x, coordinates.y);
+    if (coordinates.x >= 0 && coordinates.x <= config.imageWidth && coordinates.y >= 0 && coordinates.y <= config.imageHeight) addCamera(coordinates.x, coordinates.y);
   }
 });
 scene.addEventListener('pointercancel', () => { pointer = null; });
@@ -314,9 +414,9 @@ $('imageInput').addEventListener('change', () => {
       window.alert('无法读取图片尺寸');
       return;
     }
-    config.points.forEach((point) => {
-      point.x = Math.round(point.x * probe.naturalWidth / config.imageWidth);
-      point.y = Math.round(point.y * probe.naturalHeight / config.imageHeight);
+    config.cameras.forEach((camera) => {
+      camera.x = Math.round(camera.x * probe.naturalWidth / config.imageWidth);
+      camera.y = Math.round(camera.y * probe.naturalHeight / config.imageHeight);
     });
     config.imageWidth = probe.naturalWidth;
     config.imageHeight = probe.naturalHeight;
@@ -337,7 +437,8 @@ new ResizeObserver(() => fitImage(false)).observe(scene);
 window.addEventListener('beforeunload', () => { if (imageUrl) URL.revokeObjectURL(imageUrl); });
 PatrolData.load().then((saved) => {
   config = saved;
-  selectedIndex = 0;
+  selectedTaskIndex = 0;
+  selectedCameraIndex = 0;
   setImageSource();
   render();
   fitImage(false);

@@ -13,6 +13,17 @@ const state = {
   scale: 1, tx: 0, ty: 0, focused: false, imageUrl: null, pointer: null,
 };
 
+function cameraById(cameraId) {
+  return state.config.cameras.find((camera) => camera.id === cameraId);
+}
+
+function patrolTargets() {
+  return state.config.tasks.map((task) => {
+    const camera = cameraById(task.cameraId);
+    return camera ? { ...task, x: camera.x, y: camera.y, cameraName: camera.name } : null;
+  }).filter(Boolean);
+}
+
 function cancelTimers() {
   state.generation += 1;
   state.timers.forEach(window.clearTimeout);
@@ -87,7 +98,7 @@ function zoomAt(clientX, clientY, multiplier) {
 
 function updateCardPosition() {
   if (el.card.hidden || state.currentIndex < 0) return;
-  const point = state.config.points[state.currentIndex];
+  const point = patrolTargets()[state.currentIndex];
   if (!point) return;
   const width = el.scene.clientWidth;
   const height = el.scene.clientHeight;
@@ -110,8 +121,16 @@ function pointStatus(index) {
   return 'pending';
 }
 
+function cameraStatus(cameraId) {
+  const targets = patrolTargets();
+  if (targets[state.currentIndex]?.cameraId === cameraId && !state.completed.has(state.currentIndex)) return 'current';
+  const taskIndexes = targets.flatMap((target, index) => target.cameraId === cameraId ? [index] : []);
+  if (taskIndexes.length && taskIndexes.every((index) => state.completed.has(index))) return 'done';
+  return 'pending';
+}
+
 function renderRoute() {
-  const points = state.config.points;
+  const points = patrolTargets();
   const { imageWidth, imageHeight } = state.config;
   $('routeLayer').setAttribute('viewBox', `0 0 ${imageWidth} ${imageHeight}`);
   const full = PatrolData.routePath(points, imageWidth, imageHeight, true);
@@ -123,8 +142,9 @@ function renderRoute() {
 }
 
 function activeCurve(fromIndex, toIndex) {
-  const start = state.config.points[fromIndex];
-  const end = state.config.points[toIndex];
+  const points = patrolTargets();
+  const start = points[fromIndex];
+  const end = points[toIndex];
   if (!start || !end || fromIndex === toIndex) return null;
   const curve = PatrolData.curveSegment(start, end, fromIndex, state.config.imageWidth, state.config.imageHeight);
   const path = `M ${start.x} ${start.y} ${curve.command}`;
@@ -157,34 +177,39 @@ function animateLight(curve, generation, duration, repeat = false) {
 
 function renderMarkers() {
   el.markers.replaceChildren();
-  state.config.points.forEach((point, index) => {
+  const targets = patrolTargets();
+  state.config.cameras.forEach((camera, index) => {
+    const status = cameraStatus(camera.id);
+    const linkedTaskIndex = targets.findIndex((target) => target.cameraId === camera.id);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = `marker is-${pointStatus(index)} ${!state.running && index === state.selectedIndex ? 'is-selected' : ''}`;
-    button.style.left = `${point.x}px`;
-    button.style.top = `${point.y}px`;
-    button.title = `${point.name} (${point.x}, ${point.y})`;
+    button.className = `marker camera-patrol-marker is-${status} ${!state.running && targets[state.selectedIndex]?.cameraId === camera.id ? 'is-selected' : ''}`;
+    button.style.left = `${camera.x}px`;
+    button.style.top = `${camera.y}px`;
+    button.title = `${camera.name} (${camera.x}, ${camera.y})`;
     button.setAttribute('aria-label', button.title);
-    button.classList.add('camera-patrol-marker');
     const symbol = document.createElement('span');
     symbol.className = 'camera-symbol';
     symbol.append(document.createElement('i'));
     const sequence = document.createElement('span');
     sequence.className = 'camera-sequence';
-    sequence.textContent = pointStatus(index) === 'done' ? '✓' : String(index + 1).padStart(2, '0');
+    sequence.textContent = status === 'done' ? '✓' : String(index + 1).padStart(2, '0');
     const label = document.createElement('span');
     label.className = 'marker-label';
-    label.textContent = point.name;
+    label.textContent = camera.name;
     button.append(symbol, sequence, label);
     button.addEventListener('pointerdown', (event) => event.stopPropagation());
-    button.addEventListener('click', (event) => { event.stopPropagation(); selectPoint(index); });
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (linkedTaskIndex >= 0) selectPoint(linkedTaskIndex);
+    });
     el.markers.append(button);
   });
 }
 
 function renderTasks() {
   el.tasks.replaceChildren();
-  state.config.points.forEach((point, index) => {
+  patrolTargets().forEach((point, index) => {
     const li = document.createElement('li');
     const button = document.createElement('button');
     button.type = 'button';
@@ -197,7 +222,7 @@ function renderTasks() {
     const name = document.createElement('strong');
     name.textContent = point.name;
     const coordinate = document.createElement('small');
-    coordinate.textContent = `X: ${point.x} / Y: ${point.y}`;
+    coordinate.textContent = `${point.cameraId} · ${point.cameraName} · X: ${point.x} / Y: ${point.y}`;
     copy.append(name, coordinate);
     const badge = document.createElement('span');
     badge.className = 'task-badge';
@@ -211,7 +236,8 @@ function renderTasks() {
 }
 
 function render() {
-  const { imageWidth, imageHeight, imageName, points } = state.config;
+  const { imageWidth, imageHeight, imageName } = state.config;
+  const points = patrolTargets();
   el.layer.style.width = `${imageWidth}px`;
   el.layer.style.height = `${imageHeight}px`;
   $('imageTitle').textContent = imageName;
@@ -224,7 +250,7 @@ function render() {
   $('currentTarget').textContent = point?.name || '等待开始';
   $('currentCoordinate').textContent = point ? `X: ${point.x} / Y: ${point.y}` : 'X: — / Y: —';
   const phaseText = {
-    transit: '正在前往下一个摄像头',
+    transit: '正在前往下一个巡检任务',
     recognizing: '正在获取识别结果',
     result: `正在巡检 · 第 ${state.round} 轮`,
   };
@@ -239,13 +265,14 @@ function render() {
 }
 
 function selectPoint(index) {
-  if (!state.config.points[index]) return;
+  const points = patrolTargets();
+  if (!points[index]) return;
   state.selectedIndex = index;
   if (state.running) runAt(index);
   else {
     el.card.hidden = true;
     render();
-    focusPoint(state.config.points[index]);
+    focusPoint(points[index]);
   }
 }
 
@@ -285,7 +312,7 @@ function showResult(point, index) {
 }
 
 function runAt(index) {
-  const points = state.config.points;
+  const points = patrolTargets();
   if (!points[index]) return;
   const previous = state.currentIndex;
   cancelTimers();
@@ -340,8 +367,10 @@ function pause() {
 
 el.play.addEventListener('click', () => { if (state.running) pause(); else runAt(state.selectedIndex); });
 el.next.addEventListener('click', () => {
+  const points = patrolTargets();
+  if (!points.length) return;
   if (state.currentIndex >= 0) state.completed.add(state.currentIndex);
-  runAt((state.currentIndex + 1) % state.config.points.length);
+  runAt((state.currentIndex + 1) % points.length);
 });
 $('resetButton').addEventListener('click', () => {
   pause();
@@ -400,7 +429,7 @@ el.scene.addEventListener('pointerup', () => { state.pointer = null; });
 el.scene.addEventListener('pointercancel', () => { state.pointer = null; });
 
 new ResizeObserver(() => {
-  const focus = state.config.points[state.currentIndex >= 0 ? state.currentIndex : state.selectedIndex];
+  const focus = patrolTargets()[state.currentIndex >= 0 ? state.currentIndex : state.selectedIndex];
   if (state.focused && focus) focusPoint(focus, false);
   else coverImage(false);
 }).observe(el.scene);
