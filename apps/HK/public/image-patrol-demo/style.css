@@ -1020,7 +1020,7 @@ button:disabled {
   position: absolute;
   z-index: 5;
   left: 22px;
-  top: 96px;
+  top: 22px;
   width: 286px;
   max-height: calc(100% - 204px);
   display: flex;
@@ -1043,12 +1043,15 @@ button:disabled {
 .floating-tasks .progress-panel { flex: none; margin: 0 12px 10px; }
 .floating-tasks .task-list { padding: 0 9px 13px; }
 .floating-tasks .task-item.is-selected { background: #14384c; border-color: #2a8590; }
+.floating-tasks .task-item { cursor: default; }
+.floating-tasks .task-item:hover { background: transparent; }
+.floating-tasks .task-item.is-current:hover { background: #123d4f; }
 .marker.is-selected .marker-ring { border-color: #57ded7; box-shadow: 0 0 15px #4ad6cf88; }
 .map-tools {
   position: absolute;
   z-index: 4;
   right: 22px;
-  top: 95px;
+  top: 22px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1058,9 +1061,11 @@ button:disabled {
 .map-title strong { max-width: 230px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
 .map-title small { color: #83adbb; font-size: 10px; }
 .zoom-tools, .map-zoom-controls { display: flex; gap: 2px; border: 1px solid #3b7285; border-radius: 7px; padding: 4px; background: #092536e8; backdrop-filter: blur(10px); }
-.zoom-tools button, .map-zoom-controls button { min-width: 31px; height: 29px; border: 0; border-radius: 4px; background: transparent; color: #d6f5f1; }
-.zoom-tools button:hover, .map-zoom-controls button:hover { background: #1c6676; }
+.zoom-tools button, .zoom-tools a, .map-zoom-controls button { min-width: 31px; height: 29px; border: 0; border-radius: 4px; background: transparent; color: #d6f5f1; }
+.zoom-tools a { display: inline-flex; align-items: center; justify-content: center; padding: 0 9px; font-size: 11px; text-decoration: none; white-space: nowrap; }
+.zoom-tools button:hover, .zoom-tools a:hover, .map-zoom-controls button:hover { background: #1c6676; }
 .zoom-tools button:last-child, .map-zoom-controls button:nth-child(3) { padding: 0 8px; font-size: 11px; }
+.zoom-tools .tool-divider { width: 1px; height: 19px; margin: 5px 3px; background: #3b7285; }
 .floating-controls {
   position: absolute;
   z-index: 5;

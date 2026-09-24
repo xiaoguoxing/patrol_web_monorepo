@@ -2,7 +2,7 @@ const $ = (id) => document.getElementById(id);
 const el = {
   app: $('app'), scene: $('scene'), layer: $('imageLayer'), image: $('mapImage'),
   markers: $('markersLayer'), tasks: $('taskList'), card: $('resultCard'),
-  play: $('playButton'), next: $('nextButton'), panel: $('taskPanel'),
+  panel: $('taskPanel'),
 };
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const TRANSIT_MS = 1600;
@@ -177,17 +177,13 @@ function animateLight(curve, generation, duration, repeat = false) {
 
 function renderMarkers() {
   el.markers.replaceChildren();
-  const targets = patrolTargets();
   state.config.cameras.forEach((camera, index) => {
     const status = cameraStatus(camera.id);
-    const linkedTaskIndex = targets.findIndex((target) => target.cameraId === camera.id);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `marker camera-patrol-marker is-${status} ${!state.running && targets[state.selectedIndex]?.cameraId === camera.id ? 'is-selected' : ''}`;
-    button.style.left = `${camera.x}px`;
-    button.style.top = `${camera.y}px`;
-    button.title = `${camera.name} (${camera.x}, ${camera.y})`;
-    button.setAttribute('aria-label', button.title);
+    const marker = document.createElement('div');
+    marker.className = `marker camera-patrol-marker is-${status}`;
+    marker.style.left = `${camera.x}px`;
+    marker.style.top = `${camera.y}px`;
+    marker.title = `${camera.name} (${camera.x}, ${camera.y})`;
     const symbol = document.createElement('span');
     symbol.className = 'camera-symbol';
     symbol.append(document.createElement('i'));
@@ -197,13 +193,8 @@ function renderMarkers() {
     const label = document.createElement('span');
     label.className = 'marker-label';
     label.textContent = camera.name;
-    button.append(symbol, sequence, label);
-    button.addEventListener('pointerdown', (event) => event.stopPropagation());
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (linkedTaskIndex >= 0) selectPoint(linkedTaskIndex);
-    });
-    el.markers.append(button);
+    marker.append(symbol, sequence, label);
+    el.markers.append(marker);
   });
 }
 
@@ -211,9 +202,8 @@ function renderTasks() {
   el.tasks.replaceChildren();
   patrolTargets().forEach((point, index) => {
     const li = document.createElement('li');
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `task-item is-${pointStatus(index)} ${!state.running && index === state.selectedIndex ? 'is-selected' : ''}`;
+    const item = document.createElement('div');
+    item.className = `task-item is-${pointStatus(index)}`;
     const number = document.createElement('span');
     number.className = 'task-number';
     number.textContent = pointStatus(index) === 'done' ? '✓' : String(index + 1).padStart(2, '0');
@@ -226,54 +216,31 @@ function renderTasks() {
     copy.append(name, coordinate);
     const badge = document.createElement('span');
     badge.className = 'task-badge';
-    badge.textContent = { done: '已巡检', current: '巡检中', pending: '待巡检' }[pointStatus(index)];
-    button.append(number, copy, badge);
-    button.addEventListener('click', () => selectPoint(index));
-    li.append(button);
+    badge.textContent = pointStatus(index) === 'done'
+      ? '已巡检'
+      : pointStatus(index) === 'current'
+        ? (state.phase === 'transit' ? '前往中' : 'AI巡检中')
+        : '待巡检';
+    item.append(number, copy, badge);
+    li.append(item);
     el.tasks.append(li);
   });
   el.tasks.querySelector('.is-current')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function render() {
-  const { imageWidth, imageHeight, imageName } = state.config;
+  const { imageWidth, imageHeight } = state.config;
   const points = patrolTargets();
   el.layer.style.width = `${imageWidth}px`;
   el.layer.style.height = `${imageHeight}px`;
-  $('imageTitle').textContent = imageName;
-  $('imageSize').textContent = `${imageWidth} × ${imageHeight} px`;
   $('taskCount').textContent = String(points.length);
   $('progressLabel').textContent = `${state.completed.size} / ${points.length}`;
   $('progressFill').style.width = `${points.length ? state.completed.size / points.length * 100 : 0}%`;
   $('roundLabel').textContent = `第 ${state.round} 轮巡检`;
-  const point = points[state.currentIndex];
-  $('currentTarget').textContent = point?.name || '等待开始';
-  $('currentCoordinate').textContent = point ? `X: ${point.x} / Y: ${point.y}` : 'X: — / Y: —';
-  const phaseText = {
-    transit: '正在前往下一个巡检任务',
-    recognizing: '正在获取识别结果',
-    result: `正在巡检 · 第 ${state.round} 轮`,
-  };
-  $('topStatus').textContent = state.running ? phaseText[state.phase] : state.currentIndex >= 0 ? '巡检已暂停' : '巡检准备就绪';
-  el.play.textContent = state.running ? '暂停巡检' : state.currentIndex >= 0 ? '继续巡检' : '开始巡检';
-  el.play.disabled = points.length === 0;
-  el.next.disabled = points.length === 0;
   renderRoute();
   renderMarkers();
   renderTasks();
   updateCardPosition();
-}
-
-function selectPoint(index) {
-  const points = patrolTargets();
-  if (!points[index]) return;
-  state.selectedIndex = index;
-  if (state.running) runAt(index);
-  else {
-    el.card.hidden = true;
-    render();
-    focusPoint(points[index]);
-  }
 }
 
 function formatTime() {
@@ -357,32 +324,6 @@ function runAt(index) {
   }, TRANSIT_MS);
 }
 
-function pause() {
-  cancelTimers();
-  state.running = false;
-  state.phase = 'paused';
-  if ($('resultState').classList.contains('is-loading')) el.card.hidden = true;
-  render();
-}
-
-el.play.addEventListener('click', () => { if (state.running) pause(); else runAt(state.selectedIndex); });
-el.next.addEventListener('click', () => {
-  const points = patrolTargets();
-  if (!points.length) return;
-  if (state.currentIndex >= 0) state.completed.add(state.currentIndex);
-  runAt((state.currentIndex + 1) % points.length);
-});
-$('resetButton').addEventListener('click', () => {
-  pause();
-  state.currentIndex = -1;
-  state.phase = 'idle';
-  state.selectedIndex = 0;
-  state.completed.clear();
-  state.round = 1;
-  el.card.hidden = true;
-  render();
-  coverImage();
-});
 $('toggleTasksButton').addEventListener('click', () => {
   const collapsed = el.panel.classList.toggle('is-collapsed');
   $('toggleTasksButton').textContent = collapsed ? '展开 ›' : '收起 ‹';
@@ -404,21 +345,17 @@ $('fullscreenButton').addEventListener('click', async () => {
 });
 document.addEventListener('fullscreenchange', () => { $('fullscreenButton').textContent = document.fullscreenElement ? '退出全屏' : '全屏'; });
 el.scene.addEventListener('wheel', (event) => {
-  if (event.target.closest('.map-topbar, .map-tools, .floating-tasks, .result-card, .floating-controls')) return;
+  if (event.target.closest('.map-topbar, .map-tools, .floating-tasks, .result-card')) return;
   event.preventDefault();
   zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1.13 : 1 / 1.13);
 }, { passive: false });
 el.scene.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || event.target.closest('.marker, .map-topbar, .floating-tasks, .map-tools, .floating-controls, .result-card')) return;
+  if (event.button !== 0 || event.target.closest('.marker, .map-topbar, .floating-tasks, .map-tools, .result-card')) return;
   state.pointer = { x: event.clientX, y: event.clientY, tx: state.tx, ty: state.ty };
   el.scene.setPointerCapture(event.pointerId);
   el.layer.style.transitionDuration = '0s';
 });
 el.scene.addEventListener('pointermove', (event) => {
-  const rect = el.layer.getBoundingClientRect();
-  const x = Math.round((event.clientX - rect.left) * state.config.imageWidth / rect.width);
-  const y = Math.round((event.clientY - rect.top) * state.config.imageHeight / rect.height);
-  $('coordinateHint').textContent = x >= 0 && x <= state.config.imageWidth && y >= 0 && y <= state.config.imageHeight ? `X: ${x}   Y: ${y}` : 'X: —   Y: —';
   if (!state.pointer) return;
   state.tx = state.pointer.tx + event.clientX - state.pointer.x;
   state.ty = state.pointer.ty + event.clientY - state.pointer.y;
@@ -441,9 +378,10 @@ PatrolData.load().then((config) => {
   el.image.src = state.imageUrl || './floor-plan.svg';
   render();
   coverImage(false);
+  if (patrolTargets().length) runAt(0);
 }).catch((error) => {
   console.error('[图片巡检] 读取配置失败', error);
   render();
   coverImage(false);
-  $('topStatus').textContent = '使用示例配置 · 浏览器存储不可用';
+  if (patrolTargets().length) runAt(0);
 });
