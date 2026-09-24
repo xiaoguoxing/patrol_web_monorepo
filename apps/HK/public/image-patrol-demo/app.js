@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const el = {
   app: $('app'), scene: $('scene'), layer: $('imageLayer'), image: $('mapImage'),
-  markers: $('markersLayer'), cameras: $('camerasLayer'), tasks: $('taskList'), card: $('resultCard'),
+  markers: $('markersLayer'), tasks: $('taskList'), card: $('resultCard'),
   play: $('playButton'), next: $('nextButton'), panel: $('taskPanel'),
 };
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -165,36 +165,20 @@ function renderMarkers() {
     button.style.top = `${point.y}px`;
     button.title = `${point.name} (${point.x}, ${point.y})`;
     button.setAttribute('aria-label', button.title);
-    const ring = document.createElement('span');
-    ring.className = 'marker-ring';
-    ring.textContent = pointStatus(index) === 'done' ? '✓' : String(index + 1).padStart(2, '0');
-    const label = document.createElement('span');
-    label.className = 'marker-label';
-    label.textContent = point.name;
-    button.append(ring, label);
-    button.addEventListener('pointerdown', (event) => event.stopPropagation());
-    button.addEventListener('click', (event) => { event.stopPropagation(); selectPoint(index); });
-    el.markers.append(button);
-  });
-}
-
-function renderCameras() {
-  el.cameras.replaceChildren();
-  state.config.cameras.forEach((camera) => {
-    const marker = document.createElement('div');
-    marker.className = 'camera-marker is-display';
-    marker.style.left = `${camera.x}px`;
-    marker.style.top = `${camera.y}px`;
-    marker.title = `${camera.id} (X: ${camera.x}, Y: ${camera.y})`;
-    marker.setAttribute('aria-label', marker.title);
+    button.classList.add('camera-patrol-marker');
     const symbol = document.createElement('span');
     symbol.className = 'camera-symbol';
     symbol.append(document.createElement('i'));
+    const sequence = document.createElement('span');
+    sequence.className = 'camera-sequence';
+    sequence.textContent = pointStatus(index) === 'done' ? '✓' : String(index + 1).padStart(2, '0');
     const label = document.createElement('span');
-    label.className = 'camera-label';
-    label.textContent = camera.id;
-    marker.append(symbol, label);
-    el.cameras.append(marker);
+    label.className = 'marker-label';
+    label.textContent = point.name;
+    button.append(symbol, sequence, label);
+    button.addEventListener('pointerdown', (event) => event.stopPropagation());
+    button.addEventListener('click', (event) => { event.stopPropagation(); selectPoint(index); });
+    el.markers.append(button);
   });
 }
 
@@ -240,7 +224,7 @@ function render() {
   $('currentTarget').textContent = point?.name || '等待开始';
   $('currentCoordinate').textContent = point ? `X: ${point.x} / Y: ${point.y}` : 'X: — / Y: —';
   const phaseText = {
-    transit: '正在前往下一个点位',
+    transit: '正在前往下一个摄像头',
     recognizing: '正在获取识别结果',
     result: `正在巡检 · 第 ${state.round} 轮`,
   };
@@ -250,7 +234,6 @@ function render() {
   el.next.disabled = points.length === 0;
   renderRoute();
   renderMarkers();
-  renderCameras();
   renderTasks();
   updateCardPosition();
 }
@@ -397,7 +380,7 @@ el.scene.addEventListener('wheel', (event) => {
   zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1.13 : 1 / 1.13);
 }, { passive: false });
 el.scene.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || event.target.closest('.marker, .camera-marker, .map-topbar, .floating-tasks, .map-tools, .floating-controls, .result-card')) return;
+  if (event.button !== 0 || event.target.closest('.marker, .map-topbar, .floating-tasks, .map-tools, .floating-controls, .result-card')) return;
   state.pointer = { x: event.clientX, y: event.clientY, tx: state.tx, ty: state.ty };
   el.scene.setPointerCapture(event.pointerId);
   el.layer.style.transitionDuration = '0s';

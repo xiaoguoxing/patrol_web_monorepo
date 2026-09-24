@@ -5,7 +5,6 @@ const image = $('mapImage');
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 let config = PatrolData.defaults();
 let selectedIndex = 0;
-let selectedCameraIndex = 0;
 let scale = 1;
 let tx = 0;
 let ty = 0;
@@ -20,11 +19,7 @@ function setStatus(message, error = false) {
 }
 
 function snapshot() {
-  return {
-    ...config,
-    points: config.points.map((point) => ({ ...point })),
-    cameras: config.cameras.map((camera) => ({ ...camera })),
-  };
+  return { ...config, points: config.points.map((point) => ({ ...point })) };
 }
 
 function persist() {
@@ -109,38 +104,21 @@ function renderMarkers() {
     button.style.top = `${point.y}px`;
     button.title = `${point.name} (${point.x}, ${point.y})`;
     button.setAttribute('aria-label', button.title);
-    const ring = document.createElement('span');
-    ring.className = 'marker-ring';
-    ring.textContent = String(index + 1).padStart(2, '0');
+    button.classList.add('camera-patrol-marker');
+    const symbol = document.createElement('span');
+    symbol.className = 'camera-symbol';
+    symbol.append(document.createElement('i'));
+    const sequence = document.createElement('span');
+    sequence.className = 'camera-sequence';
+    sequence.textContent = String(index + 1).padStart(2, '0');
     const label = document.createElement('span');
     label.className = 'marker-label';
     label.textContent = point.name;
-    button.append(ring, label);
+    button.append(symbol, sequence, label);
     button.addEventListener('pointerdown', (event) => event.stopPropagation());
     button.addEventListener('click', (event) => {
       event.stopPropagation();
       selectPoint(index);
-    });
-    container.append(button);
-  });
-}
-
-function renderCameras() {
-  const container = $('camerasLayer');
-  container.replaceChildren();
-  config.cameras.forEach((camera, index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `camera-marker ${index === selectedCameraIndex ? 'is-selected' : ''}`;
-    button.style.left = `${camera.x}px`;
-    button.style.top = `${camera.y}px`;
-    button.title = `${camera.id} (X: ${camera.x}, Y: ${camera.y})`;
-    button.setAttribute('aria-label', button.title);
-    button.innerHTML = '<span class="camera-symbol"><i></i></span>';
-    button.addEventListener('pointerdown', (event) => event.stopPropagation());
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      selectCamera(index);
     });
     container.append(button);
   });
@@ -192,27 +170,6 @@ function renderEditor() {
   $('pointY').max = String(config.imageHeight);
 }
 
-function renderCameraEditor() {
-  const select = $('cameraSelect');
-  select.replaceChildren();
-  config.cameras.forEach((camera, index) => {
-    const option = document.createElement('option');
-    option.value = String(index);
-    option.textContent = `${camera.id} · X ${camera.x} / Y ${camera.y}`;
-    select.append(option);
-  });
-  const camera = config.cameras[selectedCameraIndex];
-  $('cameraCount').textContent = String(config.cameras.length);
-  select.disabled = !camera;
-  $('saveCameraButton').disabled = !camera;
-  $('deleteCameraButton').disabled = !camera;
-  select.value = camera ? String(selectedCameraIndex) : '';
-  $('cameraX').value = camera?.x ?? '';
-  $('cameraY').value = camera?.y ?? '';
-  $('cameraX').max = String(config.imageWidth);
-  $('cameraY').max = String(config.imageHeight);
-}
-
 function render() {
   layer.style.width = `${config.imageWidth}px`;
   layer.style.height = `${config.imageHeight}px`;
@@ -221,10 +178,8 @@ function render() {
   $('taskCount').textContent = String(config.points.length);
   renderRoute();
   renderMarkers();
-  renderCameras();
   renderTasks();
   renderEditor();
-  renderCameraEditor();
 }
 
 function selectPoint(index) {
@@ -234,17 +189,9 @@ function selectPoint(index) {
   focusPoint(config.points[index]);
 }
 
-function selectCamera(index) {
-  if (!config.cameras[index]) return;
-  selectedCameraIndex = index;
-  renderCameras();
-  renderCameraEditor();
-  focusPoint(config.cameras[index]);
-}
-
 function addPoint(x, y) {
-  const nextId = Math.max(0, ...config.points.map((point) => Number(point.id.slice(2)) || 0)) + 1;
-  const point = { id: `P-${String(nextId).padStart(2, '0')}`, name: `新巡检点位 ${nextId}`, x: Math.round(x), y: Math.round(y) };
+  const nextId = Math.max(0, ...config.points.map((point) => Number(point.id.slice(4)) || 0)) + 1;
+  const point = { id: `CAM-${String(nextId).padStart(2, '0')}`, name: `摄像头 ${String(nextId).padStart(2, '0')}`, x: Math.round(x), y: Math.round(y) };
   config.points.push(point);
   selectedIndex = config.points.length - 1;
   render();
@@ -273,25 +220,7 @@ function commitEditor() {
   return true;
 }
 
-function commitCameraEditor() {
-  const camera = config.cameras[selectedCameraIndex];
-  if (!camera) return true;
-  const x = Number($('cameraX').value);
-  const y = Number($('cameraY').value);
-  if ($('cameraX').value === '' || $('cameraY').value === '' || !Number.isFinite(x) || !Number.isFinite(y)) {
-    window.alert('请输入有效的摄像头 X、Y 坐标');
-    return false;
-  }
-  camera.x = Math.round(clamp(x, 0, config.imageWidth));
-  camera.y = Math.round(clamp(y, 0, config.imageHeight));
-  renderCameras();
-  renderCameraEditor();
-  focusPoint(camera);
-  return true;
-}
-
 $('pointSelect').addEventListener('change', (event) => selectPoint(Number(event.target.value)));
-$('cameraSelect').addEventListener('change', (event) => selectCamera(Number(event.target.value)));
 $('addPointButton').addEventListener('click', () => {
   const x = clamp((scene.clientWidth / 2 - tx) / scale, 0, config.imageWidth);
   const y = clamp((scene.clientHeight / 2 - ty) / scale, 0, config.imageHeight);
@@ -307,35 +236,12 @@ $('deletePointButton').addEventListener('click', () => {
   render();
   persist().catch(() => {});
 });
-$('addCameraButton').addEventListener('click', () => {
-  const nextId = Math.max(0, ...config.cameras.map((camera) => Number(camera.id.slice(4)) || 0)) + 1;
-  const camera = {
-    id: `CAM-${String(nextId).padStart(2, '0')}`,
-    x: Math.round(clamp((scene.clientWidth / 2 - tx) / scale, 0, config.imageWidth)),
-    y: Math.round(clamp((scene.clientHeight / 2 - ty) / scale, 0, config.imageHeight)),
-  };
-  config.cameras.push(camera);
-  selectedCameraIndex = config.cameras.length - 1;
-  render();
-  focusPoint(camera);
-  persist().catch(() => {});
-});
-$('saveCameraButton').addEventListener('click', () => {
-  if (commitCameraEditor()) persist().catch(() => {});
-});
-$('deleteCameraButton').addEventListener('click', () => {
-  if (!config.cameras[selectedCameraIndex]) return;
-  config.cameras.splice(selectedCameraIndex, 1);
-  selectedCameraIndex = clamp(selectedCameraIndex, 0, Math.max(0, config.cameras.length - 1));
-  render();
-  persist().catch(() => {});
-});
 $('saveAllButton').addEventListener('click', () => {
-  if (commitEditor() && commitCameraEditor()) persist().catch(() => {});
+  if (commitEditor()) persist().catch(() => {});
 });
 $('patrolLink').addEventListener('click', async (event) => {
   event.preventDefault();
-  if (!commitEditor() || !commitCameraEditor()) return;
+  if (!commitEditor()) return;
   try {
     await persist();
     window.location.href = './index.html';
@@ -346,7 +252,6 @@ $('patrolLink').addEventListener('click', async (event) => {
 $('resetButton').addEventListener('click', () => {
   config = PatrolData.defaults();
   selectedIndex = 0;
-  selectedCameraIndex = 0;
   setImageSource();
   render();
   fitImage();
@@ -366,7 +271,7 @@ scene.addEventListener('wheel', (event) => {
   zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1.13 : 1 / 1.13);
 }, { passive: false });
 scene.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || event.target.closest('.marker, .camera-marker, .map-zoom-controls, .scene-corner')) return;
+  if (event.button !== 0 || event.target.closest('.marker, .map-zoom-controls, .scene-corner')) return;
   pointer = { x: event.clientX, y: event.clientY, tx, ty, moved: false };
   scene.setPointerCapture(event.pointerId);
   layer.style.transitionDuration = '0s';
@@ -413,10 +318,6 @@ $('imageInput').addEventListener('change', () => {
       point.x = Math.round(point.x * probe.naturalWidth / config.imageWidth);
       point.y = Math.round(point.y * probe.naturalHeight / config.imageHeight);
     });
-    config.cameras.forEach((camera) => {
-      camera.x = Math.round(camera.x * probe.naturalWidth / config.imageWidth);
-      camera.y = Math.round(camera.y * probe.naturalHeight / config.imageHeight);
-    });
     config.imageWidth = probe.naturalWidth;
     config.imageHeight = probe.naturalHeight;
     config.imageName = file.name;
@@ -437,7 +338,6 @@ window.addEventListener('beforeunload', () => { if (imageUrl) URL.revokeObjectUR
 PatrolData.load().then((saved) => {
   config = saved;
   selectedIndex = 0;
-  selectedCameraIndex = 0;
   setImageSource();
   render();
   fitImage(false);

@@ -3,43 +3,56 @@
   const DATABASE = 'image-patrol-demo';
   const STORE = 'config';
   const KEY = 'current';
+  // 摄像头就是巡检对象，按数组顺序自动生成巡检路线。
   const DEFAULT_POINTS = [
-    { id: 'P-01', name: '进水池液位检测', x: 225, y: 264 },
-    { id: 'P-02', name: '一号主泵运行检查', x: 663, y: 266 },
-    { id: 'P-03', name: '二号主泵运行检查', x: 835, y: 266 },
-    { id: 'P-04', name: '高压配电柜检查', x: 1292, y: 265 },
-    { id: 'P-05', name: '加药罐液位检查', x: 249, y: 650 },
-    { id: 'P-06', name: '阀门廊道检查', x: 809, y: 649 },
-    { id: 'P-07', name: '出水水质监测', x: 1345, y: 649 },
-  ];
-  // 示例摄像头：仅包含编号与图片原始像素坐标，不参与巡检路线。
-  const DEFAULT_CAMERAS = [
-    { id: 'CAM-01', x: 173, y: 151 },
-    { id: 'CAM-02', x: 746, y: 176 },
-    { id: 'CAM-03', x: 1412, y: 354 },
-    { id: 'CAM-04', x: 1018, y: 721 },
-    { id: 'CAM-05', x: 421, y: 746 },
+    { id: 'CAM-01', name: '北侧入口摄像头', x: 173, y: 151 },
+    { id: 'CAM-02', name: '主泵房摄像头', x: 746, y: 176 },
+    { id: 'CAM-03', name: '配电间摄像头', x: 1412, y: 354 },
+    { id: 'CAM-04', name: '出水区摄像头', x: 1018, y: 721 },
+    { id: 'CAM-05', name: '加药间摄像头', x: 421, y: 746 },
   ];
 
   function defaults() {
     return {
+      schemaVersion: 2,
       imageWidth: 1600,
       imageHeight: 900,
       imageName: '泵房平面图',
       imageBlob: null,
       points: DEFAULT_POINTS.map((point) => ({ ...point })),
-      cameras: DEFAULT_CAMERAS.map((camera) => ({ ...camera })),
     };
   }
 
   function normalize(config) {
     const fallback = defaults();
+    const source = config || {};
+    let points;
+    if (source.schemaVersion === 2 && Array.isArray(source.points)) {
+      points = source.points;
+    } else if (Array.isArray(source.cameras) && source.cameras.length) {
+      // 把上一版独立摄像头坐标迁移成摄像头巡检任务。
+      points = source.cameras.map((camera, index) => ({
+        id: camera.id || `CAM-${String(index + 1).padStart(2, '0')}`,
+        name: camera.name || `摄像头 ${String(index + 1).padStart(2, '0')}`,
+        x: camera.x,
+        y: camera.y,
+      }));
+    } else if (Array.isArray(source.points)) {
+      points = source.points.map((point, index) => ({
+        ...point,
+        id: `CAM-${String(index + 1).padStart(2, '0')}`,
+        name: point.name?.includes('摄像头') ? point.name : `摄像头 ${String(index + 1).padStart(2, '0')}`,
+      }));
+    } else {
+      points = fallback.points;
+    }
+    const rest = { ...source };
+    delete rest.cameras;
     return {
       ...fallback,
-      ...config,
-      points: Array.isArray(config?.points) ? config.points : fallback.points,
-      // 兼容此前已经保存但没有 cameras 字段的配置。
-      cameras: Array.isArray(config?.cameras) ? config.cameras : fallback.cameras,
+      ...rest,
+      schemaVersion: 2,
+      points,
     };
   }
 

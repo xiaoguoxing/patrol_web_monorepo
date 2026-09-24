@@ -454,21 +454,6 @@ button:disabled {
   color:#d6f5f5;
   text-shadow:0 2px 6px #001924,0 0 6px #001924
 }
-.camera-marker {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 2;
-  width: 46px;
-  height: 46px;
-  padding: 0;
-  transform: translate(-50%,-50%);
-  border: 0;
-  background: transparent;
-  color: #87e9ff;
-  cursor: pointer;
-}
-.camera-marker.is-display { pointer-events: none; }
 .camera-symbol {
   position: absolute;
   left: 8px;
@@ -512,24 +497,46 @@ button:disabled {
   background: #62d9ec;
   clip-path: polygon(100% 0,100% 100%,0 76%,0 24%);
 }
-.camera-marker.is-selected .camera-symbol {
-  color: white;
-  border-color: #fff5ac;
-  box-shadow: 0 0 20px #ffe76bbb;
+.marker.camera-patrol-marker .camera-symbol {
+  left: 15px;
+  top: 10px;
 }
-.camera-label {
+.camera-sequence {
   position: absolute;
-  left: 50%;
-  top: 35px;
-  transform: translateX(-50%);
-  padding: 2px 5px;
-  border: 1px solid #34889d;
-  border-radius: 3px;
-  background: #072b3ac9;
-  color: #b9f5ff;
+  right: 1px;
+  top: 1px;
+  z-index: 2;
+  min-width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  border: 1px solid #87e9ff;
+  border-radius: 10px;
+  background: #0a3446;
+  color: #d9fbff;
   font-size: 9px;
-  white-space: nowrap;
-  text-shadow: 0 1px 3px #00131c;
+  font-weight: 700;
+  box-shadow: 0 0 9px #2bd1ea80;
+}
+.marker.camera-patrol-marker.is-current .camera-symbol {
+  border-color: #ecffb3;
+  box-shadow: 0 0 22px #69ffe0;
+  animation: cameraPatrolPulse 1.45s ease-in-out infinite;
+}
+.marker.camera-patrol-marker.is-current .camera-sequence {
+  border-color: #75f4de;
+  background: #087c7c;
+  color: white;
+}
+.marker.camera-patrol-marker.is-done .camera-symbol {
+  border-color: #67e2a9;
+  box-shadow: 0 0 13px #3bcf8b88;
+}
+.marker.camera-patrol-marker.is-done .camera-sequence {
+  border-color: #50ce94;
+  background: #155844;
+  color: #a5f4ce;
 }
 .scene-corner {
   position:absolute;
@@ -874,6 +881,12 @@ button:disabled {
   }
   
 }
+@keyframes cameraPatrolPulse {
+  50% {
+    box-shadow:0 0 30px #70ffe8;
+    transform:rotate(-10deg) scale(1.14)
+  }
+}
 @keyframes ringPulse {
   0% {
     opacity:.9;
@@ -1088,11 +1101,6 @@ button:disabled {
 .config-page .side-heading p { color: #7d9dae; font-size: 11px; line-height: 1.6; }
 .config-page .top-actions .primary-button { text-decoration: none; padding: 9px 14px; }
 .config-page .top-actions #saveStatus.is-error { color: #ffb7a9; }
-.camera-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.camera-editor-head h2 { margin: 5px 0 0; font-size: 15px; }
-.camera-editor-head h2 span { color: #81e8fa; font-size: 11px; margin-left: 4px; }
-.camera-editor-head button { border: 1px solid #2d7d91; border-radius: 4px; background: #123b4d; color: #8debf4; padding: 6px 8px; font-size: 11px; }
-.camera-editor-head button:hover { border-color: #62dcea; color: white; }
 .config-scene { cursor: grab; }
 .config-scene .image-layer { cursor: grab; }
 .config-scene .route-line { stroke: #60d8d0; stroke-width: 5; stroke-dasharray: none; opacity: .85; filter: drop-shadow(0 0 8px #46e9df); }
