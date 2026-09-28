@@ -270,7 +270,7 @@ function showResult(point, index) {
   $('resultState').classList.remove('is-loading');
   $('resultConclusion').textContent = warning ? '温度略偏高' : '设备运行正常';
   $('resultConclusion').classList.toggle('is-warn', warning);
-  $('resultHealth').textContent = warning ? '86%（关注）' : `${94 + (index % 6)}%（良好）`;
+  $('resultHealth').textContent = warning ? '2（关注）' : `${1}（良好）`;
   $('resultDetail').textContent = warning ? '柜体表面温度高于同类设备均值，建议现场复核。' : '运行参数符合预设范围，未发现明显异常。';
   $('resultDcs').textContent = `压力 ${(0.38 + index * .02).toFixed(2)} MPa · 流量 ${280 + index * 13} m³/h`;
   $('resultTime').textContent = formatTime();
