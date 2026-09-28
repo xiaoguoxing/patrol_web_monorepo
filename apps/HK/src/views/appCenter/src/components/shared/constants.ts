@@ -13,7 +13,7 @@ export const WATER_PLANT_GLB_FILES = {
   /** 外立面 */
   FACADE: 'TWFWPS_9_14_8_WLM.glb',
   /** 内部结构（巡检对象所在） */
-  INTERIOR: 'v4/pump-house.glb',
+  INTERIOR: 'TWFWPS_SNSB_3.glb',
 } as const;
 
 /** 模型标识：facade 外立面 / interior 内部结构 */
@@ -30,7 +30,7 @@ export interface WaterPlantModelSource {
 
 /** 水厂模型源列表（外立面 + 内部结构） */
 export const WATER_PLANT_MODELS: WaterPlantModelSource[] = [
-  // { key: 'facade', label: '外立面', file: WATER_PLANT_GLB_FILES.FACADE, facade: true },
+  { key: 'facade', label: '外立面', file: WATER_PLANT_GLB_FILES.FACADE, facade: true },
   { key: 'interior', label: '内部结构', file: WATER_PLANT_GLB_FILES.INTERIOR, facade: false },
 ];
 
@@ -278,7 +278,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     fov: 46,
     distance: 43.03,
   },*/
-  /*{
+  {
     name: '1#水泵',
     modelId: 'Mesh081',
     position: [467.98, 114.45, 91.48],
@@ -445,8 +445,8 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     target: [383.86, 175.92, -60.36],
     fov: 46,
     distance: 39.34,
-  } */
-  {
+  },
+  /*  {
     name: '1#水阀',
     modelId: 'mesh_357',
     position: [2.92, 266.79, 211.22],
@@ -477,7 +477,7 @@ export const PATROL_IDS: PatrolViewpoint[] = [
     target: [208.45, 225.95, 213.05],
     fov: 46,
     distance: 90.81,
-  },
+  },*/
 ];
 
 /** 场景公共参数（相机裁剪 / 视野 / 雾 / 地面） */
