@@ -50,8 +50,8 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 96px;
   height: 36px;
+  padding-inline: 5px;
   font-size: 14px;
   cursor: pointer;
   background: var(--el-color-white);

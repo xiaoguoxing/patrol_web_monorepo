@@ -149,6 +149,7 @@ async function goRealVideo() {
           v-else-if="tabValue === '2'"
           ref="videoRef"
           @success="videoLoad"
+          :play-type="7"
           :camera-id="rows.cameraId!"
         ></videoControls>
         <videoControls

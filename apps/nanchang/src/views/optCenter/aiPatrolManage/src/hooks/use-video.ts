@@ -45,7 +45,7 @@ function useMouseDelayCloud(
       return Promise.resolve();
     }
     try {
-      await useIsTask(option.cameraId);
+      await useIsTask(option.cameraId!);
       inTask.value = false;
       return Promise.resolve();
     } catch (e) {

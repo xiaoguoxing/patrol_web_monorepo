@@ -65,6 +65,11 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/rtspToWebrtcMediaServer/, ''),
         },
+        '/ISAPI': {
+          target: 'http://127.0.0.1/ISAPI', //测试环境
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ISAPI/, ''),
+        },
       },
     },
     plugins: [

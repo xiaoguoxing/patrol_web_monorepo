@@ -27,13 +27,11 @@
           ref="videoRef"
           :is-canvas="false"
           :show-controls="false"
-          v-if="defaultData.id"
-          :key="defaultData.id"
           :cameraId="defaultData.id"
           @err="errPlay"
           @success="playLine"
           :start-time="playbackStartTime"
-          :play-type="2"
+          :play-type="8"
         ></videoControls>
         <el-icon v-if="defaultData.id" class="del-icon" size="24" :color="delColor" @click="del">
           <CircleClose />
@@ -63,7 +61,8 @@ await getTreeList();
 function changeTreeFilter(val: string, data: Tree) {
   if (data.nodeType === 3) {
     playbackStartTime.value = new Date(new Date().toLocaleDateString()).getTime();
-    defaultData.value = data;
+    // defaultData.value = data;
+    videoRef.value.currentComponentName.setCamera(data.id);
   }
 }
 //伸缩
@@ -85,7 +84,7 @@ function setVideoDelColor(color: string = '#fff') {
   delColor.value = color;
 }
 function del() {
-  defaultData.value = {} as Tree;
+  videoRef.value.currentComponentName.close();
 }
 </script>
 <style scoped lang="scss">
@@ -105,20 +104,6 @@ function del() {
     }
     .watching-container-video {
       height: calc(100%);
-    }
-  }
-  .custom-tree-node {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 10px;
-    user-select: none;
-    &.move {
-      cursor: grab;
-      &:active {
-        cursor: grabbing;
-      }
     }
   }
 }

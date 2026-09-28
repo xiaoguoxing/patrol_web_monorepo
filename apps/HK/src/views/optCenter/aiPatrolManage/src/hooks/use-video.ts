@@ -3,13 +3,16 @@ import { btnStr, btnStr2, cameraInfoApi } from '@/api/modules/camera';
 import { trackDetail } from '@/api/modules/optCenter/deviceManage/track';
 import { ElMessage } from 'element-plus';
 import { useElementSize } from '@vueuse/core';
-import { useI18n } from 'vue-i18n';
+import I18n from '@/languages/index';
+const t = function (str: string) {
+  return I18n.global.t(str);
+};
 
 function useMouseDelayCloud(
   callBack: (a: any, b: boolean) => any,
   option: { timeOut?: number; cameraId?: string; isCancelTask?: boolean }
 ) {
-  const { cameraId = '', isCancelTask = true } = option;
+  const { isCancelTask = true } = option;
   type btn = btnStr | btnStr2;
   let inTask = ref(true);
   let isTrueSent = false; // true是否成功发送并响应
@@ -27,6 +30,7 @@ function useMouseDelayCloud(
     } catch (e) {
       isTrueSent = false;
       pendingFalse = false;
+      console.log(e);
       ElMessage.warning(e as string);
     }
   }
@@ -46,7 +50,7 @@ function useMouseDelayCloud(
       return Promise.resolve();
     }
     try {
-      await useIsTask(cameraId);
+      await useIsTask(option.cameraId!);
       inTask.value = false;
       return Promise.resolve();
     } catch (e) {
@@ -63,7 +67,6 @@ function useMouseDelayCloud(
 }
 
 async function useIsTask(cameraId: string) {
-  const { t } = useI18n();
   let { data } = await cameraInfoApi({ id: cameraId });
   return data.inTask ? Promise.reject(t('position.msg3')) : Promise.resolve();
 }
@@ -100,7 +103,7 @@ function useVideoRect(videoRef: Ref<HTMLVideoElement | undefined>) {
 
 export function videoNodeType() {
   let nodeType = ref([3, 4]);
-  let nodeTypeLabel = ref({ 3: 1, 4: 4 });
+  let nodeTypeLabel = ref({ 3: 7, 4: 4 });
   return {
     nodeType,
     nodeTypeLabel,

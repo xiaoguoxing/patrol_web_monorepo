@@ -15,7 +15,7 @@
       <VideoControls
         v-if="activeItem.itemStatus == 'finished'"
         :cameraId="activeItem.cameraId"
-        :play-type="2"
+        :play-type="7"
         :start-time="activeItem.playbackStartTime"
         :end-time="activeItem.playbackEndTime"
         :show-controls="false"

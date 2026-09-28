@@ -3,6 +3,8 @@ import RealtimeVideo from '@optCenter/playType/realtime/RealtimeVideo.vue';
 import PlaybackVideo from '@optCenter/playType/realtime/PlaybackVideo.vue';
 import AlarmVideo from '@optCenter/playType/realtime/AlarmVideo.vue';
 import RobotVideo from '@optCenter/playType/robot/RobotVideo.vue';
+import HKSDKVideo from '@optCenter/playType/HKSDK/hkVideo.vue';
+import HKSDKPlayback from '@optCenter/playType/HKSDK/hkPlayback.vue';
 
 import { computed, DefineComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { PlayType, Quality } from './videoType';
@@ -28,6 +30,9 @@ const props = withDefaults(defineProps<Props>(), {
   isCanvas: false,
   quality: '原画',
   startTime: new Date(new Date().toLocaleDateString()).getTime(),
+  buttonType: 1,
+  playMode: 0,
+  recordLocation: '0',
 });
 //组件相关
 const componentMap: { [key in PlayKey]?: DefineComponent<{}, {}, any> } = {
@@ -35,6 +40,8 @@ const componentMap: { [key in PlayKey]?: DefineComponent<{}, {}, any> } = {
   playback: PlaybackVideo,
   alarm: AlarmVideo,
   robot: RobotVideo,
+  HKSDKVideo: HKSDKVideo,
+  HKSDKPlayback: HKSDKPlayback,
 };
 const currentComponent = computed(() => componentMap[PlayType[props.playType] as PlayKey]);
 const passThroughProps = computed(() => ({ ...props }));
@@ -102,6 +109,15 @@ defineExpose({
   },
   videoRef() {
     return currentComponentName.value?.videoRef;
+  },
+  runPlay(cameraId: string) {
+    return currentComponentName.value?.runPlay(cameraId);
+  },
+  get currentCamera() {
+    return currentComponentName.value?.currentCamera;
+  },
+  get currentComponentName() {
+    return currentComponentName.value;
   },
 });
 </script>
