@@ -44,8 +44,7 @@ const currDs: string = globalStore.currDs;
 const currOrg: string = globalStore.currOrg;
 const system = authStore.allAuthMenuList.find((item) => item.name == 'systemManagement');
 const url =
-  // system?.meta.isLink +
-  'http://127.0.0.1:8080' +
+  system?.meta.isLink +
   '/#/systemManagement?token=' +
   token +
   // 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MDk1NDkyOTEsImFjY291bnQiOiJnYW95dWFuIn0.fc46JHm9gVS8Di78Q-6TFBCX7bvZfg3yEQWkXSSs0WU' +
