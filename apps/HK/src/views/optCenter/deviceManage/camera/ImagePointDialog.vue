@@ -1,12 +1,15 @@
 <template>
-  <el-dialog
+  <kr-public-dialog
     v-model="visible"
     title="巡检图坐标配置"
     width="min(900px, calc(100vw - 32px))"
-    append-to-body
-    destroy-on-close
-    @opened="handleOpened"
+    appendTobody
+    destroyOnClose
+    :btnText="['取消', '保存坐标']"
+    @doSubmit="confirmPoint"
+    @doClose="closeDialog"
   >
+    <template #dialog-title>巡检图坐标配置</template>
     <div class="point-dialog-toolbar">
       <div>
         <strong>选择摄像头位置</strong>
@@ -48,16 +51,11 @@
       <strong v-if="draftPoint">X：{{ draftPoint.pointX }}&nbsp;&nbsp; Y：{{ draftPoint.pointY }}</strong>
       <strong v-else>尚未选择坐标</strong>
     </div>
-
-    <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="confirmPoint">保存坐标</el-button>
-    </template>
-  </el-dialog>
+  </kr-public-dialog>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import patrolFloorPlanUrl from '@/assets/images/patrol-floor-plan.svg';
 
@@ -110,11 +108,6 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 function openDialog(point?: ImagePoint) {
   draftPoint.value = point ? { pointX: Number(point.pointX), pointY: Number(point.pointY) } : undefined;
   visible.value = true;
-}
-
-async function handleOpened() {
-  await nextTick();
-  fitImage();
 }
 
 function handleImageLoad() {
@@ -204,6 +197,11 @@ function clearPointer() {
   pointer.value = undefined;
 }
 
+function closeDialog() {
+  visible.value = false;
+  clearPointer();
+}
+
 function confirmPoint() {
   if (!draftPoint.value) {
     ElMessage.warning('请先在巡检图上选择摄像头位置');
@@ -212,6 +210,13 @@ function confirmPoint() {
   emit('confirm', { ...draftPoint.value });
   visible.value = false;
 }
+
+watch(visible, (value) => {
+  if (!value) return;
+  nextTick(() => {
+    requestAnimationFrame(() => requestAnimationFrame(fitImage));
+  });
+});
 
 defineExpose({ openDialog });
 </script>
