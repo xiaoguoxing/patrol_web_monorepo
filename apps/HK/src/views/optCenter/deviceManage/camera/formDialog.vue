@@ -94,18 +94,27 @@
           <el-radio :value="false">{{ $t('common.f') }}</el-radio>
         </el-radio-group>
       </el-form-item>
+      <el-form-item label="巡检图坐标" prop="imagePoint">
+        <el-input :model-value="imagePointText" placeholder="暂未配置" readonly>
+          <template #append>
+            <el-button :disabled="paramprops.isView" @click="openImagePointDialog">配置位置</el-button>
+          </template>
+        </el-input>
+      </el-form-item>
     </el-form>
   </kr-public-dialog>
+  <ImagePointDialog ref="imagePointDialogRef" @confirm="handleImagePointConfirm" />
 </template>
 <script setup lang="ts">
 defineOptions({
   name: 'SignalDialog',
 });
-import { ref, reactive, onMounted } from 'vue';
+import { computed, ref, reactive, onMounted } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { getAllListApi, VideoStorage } from '@/api/modules/optCenter/deviceManage/videoStorage';
 import { encryptPassword } from '@/views/optCenter/deviceManage/camera/usePWA';
 import { useI18n } from 'vue-i18n';
+import ImagePointDialog from './ImagePointDialog.vue';
 const { t } = useI18n();
 const rules = reactive({
   cameraName: [
@@ -178,26 +187,70 @@ const paramprops = ref<ParamProps>({
   title: '',
 });
 let cvrList = ref<VideoStorage.ResList[]>([]);
+interface ImagePoint {
+  pointX: number;
+  pointY: number;
+}
+
+const ruleFormRef = ref<FormInstance>();
+const imagePointDialogRef = ref<InstanceType<typeof ImagePointDialog>>();
+const imagePointText = computed(() => {
+  const point = normalizeImagePoint(paramprops.value.rowData?.imagePoint);
+  return point ? `X: ${point.pointX}，Y: ${point.pointY}` : '';
+});
+
+function normalizeImagePoint(value: unknown): ImagePoint | undefined {
+  let source = value;
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      return undefined;
+    }
+  }
+  if (!source || typeof source !== 'object') return undefined;
+  const pointX = Number((source as Partial<ImagePoint>).pointX);
+  const pointY = Number((source as Partial<ImagePoint>).pointY);
+  if (!Number.isFinite(pointX) || !Number.isFinite(pointY)) return undefined;
+  return { pointX, pointY };
+}
+
+function openImagePointDialog() {
+  imagePointDialogRef.value?.openDialog(normalizeImagePoint(paramprops.value.rowData?.imagePoint));
+}
+
+function handleImagePointConfirm(point: ImagePoint) {
+  if (!paramprops.value.rowData) paramprops.value.rowData = {};
+  paramprops.value.rowData.imagePoint = point;
+  ruleFormRef.value?.clearValidate('imagePoint');
+}
+
 // 接收父组件传过来的参数
 const acceptParams = (params: ParamProps): void => {
+  if (!params.rowData) params.rowData = {};
+  const imagePoint = normalizeImagePoint(params.rowData.imagePoint);
+  if (imagePoint) params.rowData.imagePoint = imagePoint;
   paramprops.value = params;
   show.value = true;
 };
 
 // 提交数据（新增/编辑）
-const ruleFormRef = ref<FormInstance>();
 const handleSubmit = () => {
   ruleFormRef.value!.validate(async (valid) => {
     if (!valid) return;
     try {
       if (paramprops.value.title !== t('buttonName.edit'))
         paramprops.value.rowData.areaId = paramprops.value.areaData.id;
-      await paramprops.value.api!({
+      const imagePoint = normalizeImagePoint(paramprops.value.rowData.imagePoint);
+      const requestData: Record<string, any> = {
         ...paramprops.value.rowData,
         cameraPassword: await encryptPassword(paramprops.value.rowData.cameraPassword),
         cameraHost: await encryptPassword(paramprops.value.rowData.cameraHost),
         cameraAccount: await encryptPassword(paramprops.value.rowData.cameraAccount),
-      });
+      };
+      if (imagePoint) requestData.imagePoint = imagePoint;
+      else delete requestData.imagePoint;
+      await paramprops.value.api!(requestData);
       ElMessage.success({ message: `${paramprops.value.title}${t('device.camera')}${t('buttonName.success')}！` });
       paramprops.value.getTableList!();
       show.value = false;

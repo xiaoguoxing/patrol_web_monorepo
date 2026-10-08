@@ -6,6 +6,10 @@ import http from '@/api';
  * @name 摄像头
  */
 export namespace Camera {
+  export interface ImagePoint {
+    pointX: number;
+    pointY: number;
+  }
   export interface ReqGetParams extends ReqPage {
     areaId?: string; //区域Id
     cameraName?: string; //摄像头名称
@@ -24,6 +28,7 @@ export namespace Camera {
     cameraType: string;
     relatedSkills: string;
     storageId: string;
+    imagePoint?: ImagePoint;
     id?: string;
   }
   export interface ResList {
@@ -38,6 +43,7 @@ export namespace Camera {
     relatedSkills: string;
     id: string;
     storageId: string;
+    imagePoint?: ImagePoint;
     [key: string]: any;
   }
 }

@@ -30,6 +30,10 @@ export interface UserApi2 {
   dwChannel: number;
   cameraType: string;
   inTask: boolean;
+  imagePoint?: {
+    pointX: number;
+    pointY: number;
+  };
 }
 export enum btnType {
   '上' = 21,
