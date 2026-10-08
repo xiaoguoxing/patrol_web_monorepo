@@ -2,7 +2,7 @@
   <kr-public-dialog
     v-model="visible"
     title="巡检图坐标配置"
-    width="min(900px, calc(100vw - 32px))"
+    width="min(1100px, calc(100vw - 32px))"
     appendTobody
     destroyOnClose
     :btnText="['取消', '保存坐标']"
@@ -32,13 +32,7 @@
       @pointercancel="clearPointer"
     >
       <div class="point-canvas" :style="canvasStyle">
-        <img
-          ref="imageRef"
-          :src="imageUrl"
-          alt="巡检图"
-          draggable="false"
-          @load="handleImageLoad"
-        />
+        <img ref="imageRef" :src="imageUrl" alt="巡检图" draggable="false" @load="handleImageLoad" />
         <div v-if="draftPoint" class="camera-point" :style="pointStyle" aria-hidden="true">
           <span></span>
         </div>
@@ -57,7 +51,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
-import patrolFloorPlanUrl from '@/assets/images/patrol-floor-plan.svg';
+import patrolFloorPlanUrl from '@/assets/images/BIM_plan_view.png';
 
 interface ImagePoint {
   pointX: number;
@@ -224,56 +218,48 @@ defineExpose({ openDialog });
 <style scoped lang="scss">
 .point-dialog-toolbar {
   display: flex;
+  gap: 16px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
   margin-bottom: 12px;
-
   > div:first-child {
     display: flex;
     flex-direction: column;
     gap: 4px;
   }
-
   strong {
     color: var(--el-text-color-primary);
   }
-
   span {
-    color: var(--el-text-color-secondary);
     font-size: 12px;
+    color: var(--el-text-color-secondary);
   }
 }
-
 .zoom-actions {
   display: flex;
   flex: none;
 }
-
 .point-viewport {
   position: relative;
   height: min(560px, calc(100vh - 260px));
   min-height: 360px;
   overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+  background-color: #071827;
+  background-image: linear-gradient(rgb(70 157 184 / 8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(70 157 184 / 8%) 1px, transparent 1px);
+  background-size: 24px 24px;
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
-  background-color: #071827;
-  background-image:
-    linear-gradient(rgba(70, 157, 184, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(70, 157, 184, 0.08) 1px, transparent 1px);
-  background-size: 24px 24px;
-  cursor: crosshair;
-  touch-action: none;
-  user-select: none;
 }
-
 .point-canvas {
   position: absolute;
   top: 0;
   left: 0;
   transform-origin: 0 0;
   will-change: transform;
-
   img {
     display: block;
     width: 100%;
@@ -281,84 +267,75 @@ defineExpose({ openDialog });
     pointer-events: none;
   }
 }
-
 .camera-point {
   position: absolute;
   width: 34px;
   height: 34px;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  background: #19b8c7;
-  box-shadow: 0 0 0 7px rgba(25, 184, 199, 0.28), 0 0 20px rgba(57, 235, 222, 0.9);
-  transform: translate(-50%, -50%);
   pointer-events: none;
-
+  background: #19b8c7;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 7px rgb(25 184 199 / 28%), 0 0 20px rgb(57 235 222 / 90%);
+  transform: translate(-50%, -50%);
   &::before,
   &::after {
     position: absolute;
     top: 50%;
     left: 50%;
     content: '';
-    background: #fff;
+    background: #ffffff;
     transform: translate(-50%, -50%);
   }
-
   &::before {
     width: 16px;
     height: 2px;
   }
-
   &::after {
     width: 2px;
     height: 16px;
   }
-
   span {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 6px;
     height: 6px;
-    border-radius: 50%;
     background: #072333;
+    border-radius: 50%;
     transform: translate(-50%, -50%);
   }
 }
-
 .empty-tip {
   position: absolute;
   bottom: 18px;
   left: 50%;
   padding: 8px 14px;
-  border: 1px solid rgba(96, 210, 218, 0.35);
-  border-radius: 4px;
-  color: #b7e9eb;
   font-size: 12px;
-  background: rgba(6, 31, 47, 0.88);
-  transform: translateX(-50%);
+  color: #b7e9eb;
   pointer-events: none;
+  background: rgb(6 31 47 / 88%);
+  border: 1px solid rgb(96 210 218 / 35%);
+  border-radius: 4px;
+  transform: translateX(-50%);
 }
-
 .coordinate-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 10px;
-  color: var(--el-text-color-secondary);
   font-size: 12px;
-
+  color: var(--el-text-color-secondary);
   strong {
-    color: var(--el-color-primary);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--el-color-primary);
   }
 }
 
 @media (max-width: 720px) {
   .point-dialog-toolbar {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
   }
-
   .point-viewport {
     min-height: 300px;
   }
