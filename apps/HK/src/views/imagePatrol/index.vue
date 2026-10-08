@@ -14,12 +14,12 @@
         <svg class="route-layer" :viewBox="`0 0 ${IMAGE_WIDTH} ${IMAGE_HEIGHT}`" aria-hidden="true">
           <defs>
             <linearGradient id="routeGradient" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stop-color="#23c9d7" stop-opacity="0.55" />
-              <stop offset="0.5" stop-color="#70f2d1" stop-opacity="0.95" />
-              <stop offset="1" stop-color="#38bdf8" stop-opacity="0.62" />
+              <stop offset="0" stop-color="#0d60b4" stop-opacity="0.58" />
+              <stop offset="0.5" stop-color="#007fff" stop-opacity="0.96" />
+              <stop offset="1" stop-color="#0d60b4" stop-opacity="0.7" />
             </linearGradient>
             <filter id="routeGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -1054,3 +1054,5 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+
+<style scoped lang="scss" src="./theme.scss"></style>
