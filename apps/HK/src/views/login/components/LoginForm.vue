@@ -98,7 +98,7 @@ const login = (formEl: FormInstance | undefined) => {
       router.push(HOME_URL);
       ElNotification({
         title: getTimeState(),
-        message: t('home.welcome') + t('home.sysName'),
+        message: t('home.welcome') + ' ' + t('home.sysName'),
         type: 'success',
         duration: 3000,
       });
