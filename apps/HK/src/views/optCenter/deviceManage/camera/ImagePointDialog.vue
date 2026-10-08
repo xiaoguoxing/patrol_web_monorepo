@@ -72,8 +72,8 @@ const emit = defineEmits<{
 const visible = ref(false);
 const viewportRef = ref<HTMLElement>();
 const imageRef = ref<HTMLImageElement>();
-const imageWidth = ref(1600);
-const imageHeight = ref(900);
+const imageWidth = ref(1920);
+const imageHeight = ref(1080);
 const scale = ref(1);
 const translateX = ref(0);
 const translateY = ref(0);
@@ -106,8 +106,8 @@ function openDialog(point?: ImagePoint) {
 
 function handleImageLoad() {
   if (!imageRef.value) return;
-  imageWidth.value = imageRef.value.naturalWidth || 1600;
-  imageHeight.value = imageRef.value.naturalHeight || 900;
+  imageWidth.value = imageRef.value.naturalWidth || 1920;
+  imageHeight.value = imageRef.value.naturalHeight || 1080;
   if (visible.value) nextTick(fitImage);
 }
 
