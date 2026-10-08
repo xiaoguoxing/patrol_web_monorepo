@@ -26,12 +26,7 @@ export function curveSegment(
   };
 }
 
-export function routePath(
-  points: ImagePoint[],
-  imageWidth: number,
-  imageHeight: number,
-  until = points.length - 1
-) {
+export function routePath(points: ImagePoint[], imageWidth: number, imageHeight: number, until = points.length - 1) {
   if (points.length < 2 || until < 1) return '';
   const lastSegment = Math.min(until, points.length - 1);
   const commands = [`M ${points[0].pointX} ${points[0].pointY}`];
