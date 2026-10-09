@@ -134,11 +134,17 @@ import { IMAGE_WIDTH, IMAGE_HEIGHT, usePatrolMap } from './usePatrolMap';
 import { routePath, segmentPath } from './route';
 import type { CameraPoint, ImagePoint, PatrolTarget, PatrolTask, PatrolTaskItem } from './types';
 
+/**
+ * 图片巡检展示页：后端通过 WebSocket 推送完整任务列表，执行状态和结果均以后端数据为准。
+ * 点位直接读取任务项的 imagePoint，使用原图 1920 × 1080 坐标，不额外查询摄像头详情。
+ * 地图交互、卡片定位和结果展示分别封装，便于后续按正式 UI 调整。
+ */
 const route = useRoute();
 const taskList = ref<PatrolTask[]>([]);
 const activeTaskId = ref('');
 const selectedItemId = ref('');
-const taskPanelCollapsed = ref(false);
+// 默认收起任务列表，优先展示地图；用户可手动展开查看任务进度和历史结果。
+const taskPanelCollapsed = ref(true);
 const taskPanelRef = ref<HTMLElement>();
 const resultCardRef = ref<HTMLElement>();
 const { width: panelWidth } = useElementSize(taskPanelRef, { width: 0, height: 0 }, { box: 'border-box' });
@@ -170,6 +176,7 @@ const {
 } = usePatrolMap();
 
 const activeTask = computed(() => taskList.value.find((task) => String(task.id) === activeTaskId.value));
+// 展开当前任务下的分组，并按 sortNo 排序；任务项保留各自身份，允许重复关联同一摄像头。
 const patrolItems = computed<PatrolTaskItem[]>(() =>
   (activeTask.value?.taskItemMapList || [])
     .flatMap((group) => (Array.isArray(group.taskItems) ? group.taskItems : []))
@@ -185,6 +192,7 @@ const latestFinishedItem = computed(() =>
       undefined
     )
 );
+// 优先展示手动选中的任务项，否则展示正在巡检的任务项或最近完成的结果。
 const resultItem = computed(
   () =>
     patrolItems.value.find((item) => String(item.itemId) === selectedItemId.value) ||
@@ -200,6 +208,7 @@ const taskStatusText = computed(() => {
   if (patrolItems.value.length && finishedCount.value === patrolItems.value.length) return '本轮巡检已完成';
   return '等待巡检';
 });
+// 缺少有效坐标的任务项仍保留在列表中，仅不参与地图点位和路线绘制。
 const routeTargets = computed<PatrolTarget[]>(() =>
   patrolItems.value.flatMap((item) => {
     const point = getItemPoint(item);
@@ -231,12 +240,14 @@ const activeTargetIndex = computed(() => {
 const finishedRoutePath = computed(() =>
   routePath(routeTargets.value, IMAGE_WIDTH, IMAGE_HEIGHT, activeTargetIndex.value)
 );
+// 流光仅展示在通往当前巡检点的路段上，不用于判断巡检是否完成。
 const activeSegmentPath = computed(() => {
   const index = currentTargetIndex.value;
   if (index < 1) return '';
   return segmentPath(routeTargets.value[index - 1], routeTargets.value[index], index - 1, IMAGE_WIDTH, IMAGE_HEIGHT);
 });
 
+// 地图按摄像头合并展示标记，列表和结果卡仍按任务项分别展示。
 const cameraMarkers = computed(() => {
   const markers = new Map<string, CameraPoint & { status: 'todo' | 'during' | 'finished'; itemIds: string[] }>();
   routeTargets.value.forEach((item) => {
@@ -264,6 +275,7 @@ const resultStateClass = computed(() => ({
   abnormal: resultItem.value?.inspectionResultStatus === false || resultItem.value?.isAlarm === true,
 }));
 
+// 将原图坐标转换为当前地图显示坐标；拖动、缩放和收起列表时，结果卡同步重新定位。
 const resultCardStyle = computed(() => {
   const point = resultItem.value ? getItemPoint(resultItem.value) : undefined;
   const position = getCardPosition({
@@ -304,6 +316,7 @@ function getItemPoint(item: PatrolTaskItem) {
   return normalizePoint(item.imagePoint);
 }
 
+// 每次推送都是完整快照，直接替换列表，避免将同一批任务重复追加。
 function handleSocketMessage(response: unknown) {
   const source = response as { data?: unknown };
   const data = Array.isArray(response) ? response : source?.data;
@@ -312,6 +325,7 @@ function handleSocketMessage(response: unknown) {
   syncActiveTask();
 }
 
+// 优先展示地址栏指定的任务；未指定时保留当前任务，任务消失后再选择正在执行的任务。
 function syncActiveTask() {
   if (!taskList.value.length) {
     activeTaskId.value = '';
@@ -336,7 +350,7 @@ function changeTask() {
   nextTick(() => fitMap('contain'));
 }
 
-// Reserve space for the result card when centering a camera.
+// 聚焦点位时为旁边的结果卡预留空间，尽量避免遮挡摄像头和左侧任务列表。
 function focusResultPoint(point: ImagePoint) {
   const panelRight = taskPanelCollapsed.value ? 16 : panelWidth.value + 36;
   const availableWidth = width.value - panelRight;
@@ -377,6 +391,7 @@ function padIndex(index: number) {
   return String(index).padStart(2, '0');
 }
 
+// 仅在当前巡检项变化时自动聚焦，重复快照不会反复打断用户拖动、缩放地图。
 watch(
   () => currentItem.value?.itemId,
   (itemId, previousItemId) => {
