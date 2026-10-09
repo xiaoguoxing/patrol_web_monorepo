@@ -146,7 +146,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { webSocketUrl } from '@/api/modules/appCenter/inspectionMonitor/aiInspection';
-import floorPlanUrl from '@/assets/images/BIM_plan_view.png';
+import floorPlanUrl from '@/assets/images/BIM_plan_view_theme.png';
 import { useWebSocket } from '@appCenter/hooks/useWebSocket';
 import { useBackFileUrl } from '@optCenter/hooks/use-file-utils';
 import { routePath, segmentPath } from './route';

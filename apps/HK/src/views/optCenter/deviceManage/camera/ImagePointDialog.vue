@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
-import patrolFloorPlanUrl from '@/assets/images/BIM_plan_view.png';
+import patrolFloorPlanUrl from '@/assets/images/BIM_plan_view_theme.png';
 
 interface ImagePoint {
   pointX: number;
