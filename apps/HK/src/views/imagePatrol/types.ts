@@ -45,4 +45,6 @@ export interface CameraPoint extends ImagePoint {
   cameraName?: string;
 }
 
-export type PatrolTarget = Omit<PatrolTaskItem, 'cameraId' | 'cameraName'> & CameraPoint;
+export interface PatrolTarget extends PatrolTaskItem, ImagePoint {
+  cameraId: string;
+}
