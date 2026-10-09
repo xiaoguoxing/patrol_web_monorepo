@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
-import patrolFloorPlanUrl from '@/assets/images/BIM_plan_view_theme.png';
+import patrolFloorPlanUrl from '@/assets/images/BIM_plan_view_theme_transparent.png';
 
 interface ImagePoint {
   pointX: number;
@@ -247,9 +247,9 @@ defineExpose({ openDialog });
   touch-action: none;
   cursor: crosshair;
   user-select: none;
-  background-color: #071827;
-  background-image: linear-gradient(rgb(70 157 184 / 8%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(70 157 184 / 8%) 1px, transparent 1px);
+  background-color: #f4f4f4;
+  background-image: linear-gradient(rgb(13 96 180 / 8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(13 96 180 / 8%) 1px, transparent 1px);
   background-size: 24px 24px;
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
@@ -272,10 +272,10 @@ defineExpose({ openDialog });
   width: 34px;
   height: 34px;
   pointer-events: none;
-  background: #19b8c7;
+  background: #007fff;
   border: 3px solid #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 0 7px rgb(25 184 199 / 28%), 0 0 20px rgb(57 235 222 / 90%);
+  box-shadow: 0 0 0 7px rgb(0 127 255 / 20%), 0 0 20px rgb(0 127 255 / 55%);
   transform: translate(-50%, -50%);
   &::before,
   &::after {
