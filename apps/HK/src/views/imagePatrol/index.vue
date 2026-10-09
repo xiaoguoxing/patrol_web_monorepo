@@ -131,6 +131,7 @@ import { useWebSocket } from '@appCenter/hooks/useWebSocket';
 import PatrolResultCard from './PatrolResultCard.vue';
 import { getCardPosition } from './cardPosition';
 import { IMAGE_WIDTH, IMAGE_HEIGHT, usePatrolMap } from './usePatrolMap';
+import { usePatrolResults } from './usePatrolResults';
 import { routePath, segmentPath } from './route';
 import type { CameraPoint, ImagePoint, PatrolTarget, PatrolTask, PatrolTaskItem } from './types';
 
@@ -142,7 +143,8 @@ import type { CameraPoint, ImagePoint, PatrolTarget, PatrolTask, PatrolTaskItem 
 const route = useRoute();
 const taskList = ref<PatrolTask[]>([]);
 const activeTaskId = ref('');
-const selectedItemId = ref('');
+// 完成结果独立缓存并依次展示，后续快照切换到下一巡检项时不会立即替换结果卡。
+const { resultItem, resultKey, updateSnapshot, selectResult, resetResults } = usePatrolResults();
 // 默认收起任务列表，优先展示地图；用户可手动展开查看任务进度和历史结果。
 const taskPanelCollapsed = ref(true);
 const taskPanelRef = ref<HTMLElement>();
@@ -184,21 +186,6 @@ const patrolItems = computed<PatrolTaskItem[]>(() =>
     .sort((left, right) => Number(left.sortNo || 0) - Number(right.sortNo || 0))
 );
 const currentItem = computed(() => patrolItems.value.find((item) => item.itemStatus === 'during'));
-const latestFinishedItem = computed(() =>
-  patrolItems.value
-    .filter((item) => item.itemStatus === 'finished')
-    .reduce<PatrolTaskItem | undefined>(
-      (latest, item) => (!latest || Number(item.sortNo) > Number(latest.sortNo) ? item : latest),
-      undefined
-    )
-);
-// 优先展示手动选中的任务项，否则展示正在巡检的任务项或最近完成的结果。
-const resultItem = computed(
-  () =>
-    patrolItems.value.find((item) => String(item.itemId) === selectedItemId.value) ||
-    currentItem.value ||
-    latestFinishedItem.value
-);
 const finishedCount = computed(() => patrolItems.value.filter((item) => item.itemStatus === 'finished').length);
 const progressPercent = computed(() =>
   patrolItems.value.length ? Math.round((finishedCount.value / patrolItems.value.length) * 100) : 0
@@ -323,13 +310,14 @@ function handleSocketMessage(response: unknown) {
   if (!Array.isArray(data)) return;
   taskList.value = data as PatrolTask[];
   syncActiveTask();
+  // 每次收到快照立即检测新增完成结果，避免连续推送在同一次渲染前合并而漏掉结果。
+  updateSnapshot(activeTaskId.value, patrolItems.value);
 }
 
 // 优先展示地址栏指定的任务；未指定时保留当前任务，任务消失后再选择正在执行的任务。
 function syncActiveTask() {
   if (!taskList.value.length) {
     activeTaskId.value = '';
-    selectedItemId.value = '';
     return;
   }
   const queryId = Array.isArray(route.query.id) ? route.query.id[0] : route.query.id;
@@ -346,7 +334,9 @@ function syncActiveTask() {
 const socket = useWebSocket(webSocketUrl, handleSocketMessage);
 
 function changeTask() {
-  selectedItemId.value = '';
+  // 用户主动切换任务时清空旧任务的展示队列；后台自动推进时保留已经收到的完成结果。
+  resetResults();
+  updateSnapshot(activeTaskId.value, patrolItems.value);
   nextTick(() => fitMap('contain'));
 }
 
@@ -360,7 +350,7 @@ function focusResultPoint(point: ImagePoint) {
 }
 
 function selectItem(item: PatrolTaskItem) {
-  selectedItemId.value = String(item.itemId);
+  selectResult(activeTaskId.value, item);
   const point = getItemPoint(item);
   if (point) focusResultPoint(point);
 }
@@ -391,14 +381,13 @@ function padIndex(index: number) {
   return String(index).padStart(2, '0');
 }
 
-// 仅在当前巡检项变化时自动聚焦，重复快照不会反复打断用户拖动、缩放地图。
+// 聚焦跟随实际展示的卡片；上一条结果停留期间，不会被下一巡检项抢走视角。
 watch(
-  () => currentItem.value?.itemId,
-  (itemId, previousItemId) => {
-    if (!itemId || itemId === previousItemId) return;
-    selectedItemId.value = String(itemId);
+  resultKey,
+  (key, previousKey) => {
+    if (!key || key === previousKey) return;
     nextTick(() => {
-      const point = currentItem.value ? getItemPoint(currentItem.value) : undefined;
+      const point = resultItem.value ? getItemPoint(resultItem.value) : undefined;
       if (point) focusResultPoint(point);
     });
   },
@@ -409,6 +398,8 @@ watch(
   () => route.query.id,
   () => {
     syncActiveTask();
+    resetResults();
+    updateSnapshot(activeTaskId.value, patrolItems.value);
   }
 );
 
