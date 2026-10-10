@@ -58,7 +58,7 @@
             <span class="eyebrow">PATROL TASK</span>
             <h1>{{ activeTask?.inspectionTaskName || '图片巡检' }}</h1>
           </div>
-          <span class="task-count">{{ patrolItems.length }}</span>
+          <span class="task-count">{{ totalCount }}</span>
         </div>
         <div v-if="taskList.length > 1" class="task-selector">
           <el-select v-model="activeTaskId" :teleported="false" @change="changeTask">
@@ -72,27 +72,34 @@
         </div>
         <div class="progress-card">
           <div class="progress-line">
-            <span>本轮进度</span><strong>{{ finishedCount }} / {{ patrolItems.length }}</strong>
+            <span>本轮进度</span><strong>已完成 {{ finishedCount }} / 共 {{ totalCount }} 项</strong>
           </div>
           <el-progress :percentage="progressPercent" :show-text="false" :stroke-width="6" />
           <span class="task-state">{{ activeTask?.taskStatusName || taskStatusText }}</span>
         </div>
-        <el-scrollbar v-if="patrolItems.length" class="task-items">
-          <button
-            v-for="(item, index) in patrolItems"
-            :key="item.itemId"
-            type="button"
-            class="task-item"
-            :class="[item.itemStatus, { selected: resultItem?.itemId === item.itemId }]"
-            @click="selectItem(item)"
-          >
-            <span class="item-index">{{ item.itemStatus === 'finished' ? '✓' : padIndex(index + 1) }}</span>
-            <span class="item-copy">
-              <strong>{{ item.itemName || `巡检项 ${index + 1}` }}</strong>
-              <small>{{ item.cameraName || item.cameraId || '未关联摄像头' }}</small>
-            </span>
-            <span class="item-status">{{ getItemStatusText(item) }}</span>
-          </button>
+        <el-scrollbar v-if="taskAreas.length" class="task-items">
+          <section v-for="(area, areaIndex) in taskAreas" :key="areaIndex" class="task-area">
+            <div class="area-heading">
+              <h2 :title="area.areaName">{{ area.areaName }}</h2>
+              <span>已完成 {{ area.finishNum }} / 共 {{ area.itemNum }} 项</span>
+            </div>
+            <button
+              v-for="(item, index) in area.taskItems"
+              :key="item.itemId"
+              type="button"
+              class="task-item"
+              :class="[item.itemStatus, { selected: resultItem?.itemId === item.itemId }]"
+              @click="selectItem(item)"
+            >
+              <span class="item-index">{{ item.itemStatus === 'finished' ? '✓' : padIndex(index + 1) }}</span>
+              <span class="item-copy">
+                <strong>{{ item.itemName || `巡检项 ${index + 1}` }}</strong>
+                <small>{{ item.cameraName || item.cameraId || '未关联摄像头' }}</small>
+              </span>
+              <span class="item-status">{{ getItemStatusText(item) }}</span>
+            </button>
+            <p v-if="!area.taskItems.length" class="area-empty">暂无巡检项</p>
+          </section>
         </el-scrollbar>
         <el-empty v-else class="empty-list" description="等待巡检任务推送" :image-size="60" />
       </template>
@@ -178,21 +185,41 @@ const {
 } = usePatrolMap();
 
 const activeTask = computed(() => taskList.value.find((task) => String(task.id) === activeTaskId.value));
-// 展开当前任务下的分组，并按 sortNo 排序；任务项保留各自身份，允许重复关联同一摄像头。
+// taskItemMapList 是区域列表，保留后端区域顺序；区域名称附在巡检项上，缓存结果时一并保留。
+const taskAreas = computed(() =>
+  (activeTask.value?.taskItemMapList || []).map((area) => {
+    const areaName = area.areaName || '未命名区域';
+    const taskItems: PatrolTaskItem[] = (Array.isArray(area.taskItems) ? area.taskItems : [])
+      .map((item) => ({ ...item, areaName }))
+      .sort((left, right) => Number(left.sortNo || 0) - Number(right.sortNo || 0));
+    return {
+      areaName,
+      taskItems,
+      finishNum: area.finishNum ?? taskItems.filter((item) => item.itemStatus === 'finished').length,
+      itemNum: area.itemNum ?? taskItems.length,
+    };
+  })
+);
+// 地图路线仍按所有巡检项的 sortNo 排序，允许不同巡检项重复关联同一摄像头。
 const patrolItems = computed<PatrolTaskItem[]>(() =>
-  (activeTask.value?.taskItemMapList || [])
-    .flatMap((group) => (Array.isArray(group.taskItems) ? group.taskItems : []))
-    .slice()
+  taskAreas.value
+    .flatMap((area) => area.taskItems)
     .sort((left, right) => Number(left.sortNo || 0) - Number(right.sortNo || 0))
 );
 const currentItem = computed(() => patrolItems.value.find((item) => item.itemStatus === 'during'));
-const finishedCount = computed(() => patrolItems.value.filter((item) => item.itemStatus === 'finished').length);
+// 任务和区域统计优先使用各自的后端字段；缺失时再汇总，0 也属于有效统计值。
+const finishedCount = computed(
+  () => activeTask.value?.finishNum ?? taskAreas.value.reduce((sum, area) => sum + area.finishNum, 0)
+);
+const totalCount = computed(
+  () => activeTask.value?.itemNum ?? taskAreas.value.reduce((sum, area) => sum + area.itemNum, 0)
+);
 const progressPercent = computed(() =>
-  patrolItems.value.length ? Math.round((finishedCount.value / patrolItems.value.length) * 100) : 0
+  totalCount.value ? Math.min(100, Math.max(0, Math.round((finishedCount.value / totalCount.value) * 100))) : 0
 );
 const taskStatusText = computed(() => {
   if (currentItem.value) return 'AI 巡检中';
-  if (patrolItems.value.length && finishedCount.value === patrolItems.value.length) return '本轮巡检已完成';
+  if (totalCount.value && finishedCount.value === totalCount.value) return '本轮巡检已完成';
   return '等待巡检';
 });
 // 缺少有效坐标的任务项仍保留在列表中，仅不参与地图点位和路线绘制。

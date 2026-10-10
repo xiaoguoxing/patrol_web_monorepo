@@ -10,7 +10,6 @@
       </el-tag>
     </div>
     <div class="result-device">
-      <el-tag size="small" effect="plain" :title="String(item.itemId)">{{ item.itemId }}</el-tag>
       <strong>{{ item.itemName }}</strong>
     </div>
     <div v-loading="imageLoading" class="snapshot">
@@ -26,6 +25,7 @@
       <span class="snapshot-label">AI 识别快照</span>
     </div>
     <el-descriptions class="result-fields" :column="1" :border="false">
+      <el-descriptions-item label="所属区域">{{ item.areaName }}</el-descriptions-item>
       <el-descriptions-item label="巡检结论">
         <span :class="{ abnormal: isAbnormal }">{{
           item.inspectionResult || (isRecognizing ? 'AI 识别中…' : '')
@@ -114,14 +114,6 @@ watch(
   gap: 10px;
   align-items: center;
   padding: 14px 0;
-  .el-tag {
-    flex: none;
-    max-width: 120px;
-    :deep(.el-tag__content) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
   strong {
     font-size: 14px;
     font-weight: 500;

@@ -6,6 +6,8 @@ export interface ImagePoint {
 export interface PatrolTaskItem {
   itemId: string | number;
   itemName: string;
+  // 展示层从所属区域补充，结果入队后仍可展示正确的区域名称。
+  areaName?: string;
   sortNo: number;
   itemStatus: 'todo' | 'during' | 'finished' | 'not_done' | string;
   itemStatusName?: string;
