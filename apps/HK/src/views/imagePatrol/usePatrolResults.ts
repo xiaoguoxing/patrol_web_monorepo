@@ -23,13 +23,13 @@ function copyEntry(taskId: string, item: PatrolTaskItem): ResultEntry {
 export function usePatrolResults() {
   const liveEntry = shallowRef<ResultEntry>();
   const heldEntry = shallowRef<ResultEntry>();
-  const lastEntry = shallowRef<ResultEntry>();
   const manualEntry = shallowRef<ResultEntry>();
   const queue: ResultEntry[] = [];
   const previousStatuses = new Map<string, string>();
   let previousTaskId = '';
 
-  const displayEntry = computed(() => manualEntry.value || heldEntry.value || liveEntry.value || lastEntry.value);
+  // 空任务快照会清空实时项；已收到的结果仍按队列展示，停留结束后不再回退到旧卡片。
+  const displayEntry = computed(() => manualEntry.value || heldEntry.value || liveEntry.value);
   const resultItem = computed(() => displayEntry.value?.item);
   const resultKey = computed(() => {
     const entry = displayEntry.value;
@@ -47,7 +47,6 @@ export function usePatrolResults() {
           return;
         }
       } else if (heldEntry.value) {
-        lastEntry.value = heldEntry.value;
         heldEntry.value = undefined;
       }
       showNextResult();
@@ -112,7 +111,6 @@ export function usePatrolResults() {
     liveEntry.value = undefined;
     heldEntry.value = undefined;
     manualEntry.value = undefined;
-    lastEntry.value = undefined;
   }
 
   return { resultItem, resultKey, updateSnapshot, selectResult, resetResults };
