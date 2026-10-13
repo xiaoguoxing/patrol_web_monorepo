@@ -83,7 +83,8 @@ async function init() {
     await run(initialize, '播放器已就绪');
     await setCamera(props.cameraId);
   } catch {
-    emit('err', message.value);
+    ElMessage.error(message.value);
+    emit('loading', false);
   }
 }
 
@@ -143,7 +144,7 @@ async function createPreviewSession(camera: Partial<UserApi2>): Promise<PreviewS
     deviceIdentify,
     channelId: camera.channelNum,
     rtspPort: iRtspPort,
-    proxy: import.meta.env.VITE_SYS_DIST_NAME !== 'DEV',
+    proxy: true,
     streamType: getLayoutStreamType(currentLayout),
     isPlaying: false,
   };
