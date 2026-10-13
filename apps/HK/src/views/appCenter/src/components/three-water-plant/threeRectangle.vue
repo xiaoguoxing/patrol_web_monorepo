@@ -357,8 +357,7 @@ onMounted(() => {
       const canPlaceAbove = screen.y >= cardHeight + verticalGap + paddingTop;
       const canPlaceBelow = screen.y <= height - cardHeight - verticalGap - paddingBottom;
       cardPlacement.value = !canPlaceAbove && canPlaceBelow ? 'below' : 'above';
-      const minY =
-        cardPlacement.value === 'above' ? cardHeight + verticalGap + paddingTop : paddingTop + verticalGap;
+      const minY = cardPlacement.value === 'above' ? cardHeight + verticalGap + paddingTop : paddingTop + verticalGap;
       const maxY =
         cardPlacement.value === 'above'
           ? height - paddingBottom - verticalGap
@@ -538,14 +537,12 @@ onBeforeUnmount(() => {
   background: #071a33;
   border: 1px solid rgb(0 212 255 / 35%);
   border-radius: 4px;
-
   img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
   figcaption {
     position: absolute;
     right: 0;

@@ -21,9 +21,9 @@ export const normalizeLanguages = (items: RemoteLanguage[] | undefined): Languag
 
 const setByPath = (target: MessageTree, key: string, value: string) => {
   const paths = key.split('.').filter(Boolean);
-  if (!paths.length || paths.some(path => FORBIDDEN_PATHS.has(path))) return;
+  if (!paths.length || paths.some((path) => FORBIDDEN_PATHS.has(path))) return;
   let current = target;
-  paths.slice(0, -1).forEach(path => {
+  paths.slice(0, -1).forEach((path) => {
     const next = current[path];
     if (!next || typeof next === 'string') current[path] = {};
     current = current[path] as MessageTree;

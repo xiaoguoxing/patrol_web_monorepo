@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts" name="LinkageDialog">
-import { ref, reactive, nextTick, onMounted,computed } from 'vue';
+import { ref, reactive, nextTick, onMounted, computed } from 'vue';
 import { ElMessage, FormInstance } from 'element-plus';
 import { ColumnProps } from '@patrol/ui';
 import { getObjTreeApi } from '@/api/modules/optCenter/inspectionSet/area';
