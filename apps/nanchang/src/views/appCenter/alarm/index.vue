@@ -38,6 +38,10 @@
       :operationBtn="true"
       @resetFn="resetFn"
     >
+      <template #tableHeader="{ selectedListIds }">
+        <el-button icon="Download" v-auth="'export'" @click="exportList(selectedListIds)">导出</el-button>
+        <el-button icon="" type="primary" v-auth="'yjxj'" @click="yjxjList">一键消警</el-button>
+      </template>
       <!-- 表格操作 -->
       <template #operation="{ row }">
         <el-button type="primary" link @click="toDetailPage('detail', row)">详情</el-button>
@@ -90,6 +94,8 @@ import {
   PageType,
   PageTypeTitle,
   getAlarmListApi,
+  yjxjApi,
+  exportExcel,
   Dict,
   addDefectStockToEAMApi,
 } from '@/api/modules/appCenter/alarm';
@@ -105,6 +111,8 @@ import OrgNameHeaderSearch from '@/views/appCenter/alarm/orgNameHeaderSearch.vue
 import selectHeaderSearch from '@/views/appCenter/alarm/selectHeaderSearch.vue';
 import { getTodayRange } from '@/utils/util';
 import { useDebounceFn } from '@vueuse/core';
+import { ElMessage } from 'element-plus';
+import { useDownload } from '@patrol/shared/hooks/useDownload';
 let alarm_level: Dict = [];
 let alarm_type: Dict = [];
 let alarm_status: Dict = [];
@@ -365,16 +373,18 @@ const dataCallback = (data: any) => {
 };
 let checkListCode = ref('');
 const getTableList = async (params: any) => {
-  let { pageNum, alarmTime, def, selectProp, sendQywx, ...searchData } = params;
-  searchData.page = pageNum;
-  if (alarmTime) searchData.alarmTimeStart = alarmTime[0];
-  if (alarmTime) searchData.alarmTimeEnd = alarmTime[1];
-  if (def) searchData[selectProp] = def;
-  if (checkListCode.value) searchData.orgCodes = checkListCode.value;
-  if (sendQywx) searchData.sendQywx = sendQywx;
+  const searchData = formatSearchData(params);
   return getAlarmListApi(searchData);
 };
-
+const yjxjList = async () => {
+  try {
+    const { total, ...par } = getTableSearchData();
+    await useHandleData<{ ids: string }>(yjxjApi, par, '一键消警');
+    proTable.value.getTableList();
+  } catch (e) {
+    proTable.value.getTableList();
+  }
+};
 // 弹框
 const id = ref<id | undefined>('');
 const ids = computed(() => proTable.value.tableData.map((i: AlarmListRows) => i.id));
@@ -433,6 +443,33 @@ const OrgNameHeaderSearchRef = ref<{ resetOrgData?: (is: boolean) => void }>({})
 function resetFn() {
   OrgNameHeaderSearchRef.value?.resetOrgData?.(false);
 }
+
+function exportList() {
+  const { total, ...par } = getTableSearchData();
+  if (total > 500) {
+    return ElMessage.warning(`导出最多不超过500条`);
+  } else if (total === 0) {
+    return ElMessage.warning(`当前搜索结果为0条`);
+  }
+  useDownload(exportExcel, `告警管理`, par);
+}
+function getTableSearchData() {
+  return formatSearchData({
+    ...proTable.value.searchParam,
+    ...proTable.value.pageable,
+    ...initParam,
+  });
+}
+function formatSearchData(params: any) {
+  let { pageNum, alarmTime, def, selectProp, sendQywx, ...searchData } = params;
+  searchData.page = pageNum;
+  if (alarmTime[0]) searchData.alarmTimeStart = alarmTime[0];
+  if (alarmTime[1]) searchData.alarmTimeEnd = alarmTime[1];
+  if (def) searchData[selectProp] = def;
+  if (checkListCode.value) searchData.orgCodes = checkListCode.value;
+  if (sendQywx) searchData.sendQywx = sendQywx;
+  return searchData;
+}
 </script>
 <style scoped lang="scss">
 .alarm-card-main {
@@ -484,9 +521,8 @@ function resetFn() {
     }
   }
   :deep(.kr-protable-header) {
-    margin-bottom: 0;
     .header-button-ri {
-      margin-top: calc(0px - (var(--el-component-size) + 18px));
+      /* margin-top: calc(0px - (var(--el-component-size) + 18px)); */
     }
   }
 }

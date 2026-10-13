@@ -69,3 +69,9 @@ export const getAlarmCheckApi = (params: {
 export const addDefectStockToEAMApi = (params: { id: string }) => {
   return http.post(`${PORT_INSPECT}/alarm/record/addDefectStockToEAM?id=${params.id}`);
 };
+export const exportExcel = (params: any) => {
+  return http.get<Blob>(`${PORT_INSPECT}/alarm/record/export`, params, { responseType: 'blob', timeout: 0 });
+};
+export const yjxjApi = (params: any) => {
+  return http.get(`${PORT_INSPECT}/alarm/record/batchUndoAlarm`, params);
+};
