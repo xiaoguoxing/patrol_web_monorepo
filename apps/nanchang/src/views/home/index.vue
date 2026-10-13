@@ -38,7 +38,7 @@
             </kr-card>
             <div style="display: flex; flex-basis: 50%; gap: 16px">
               <common :title="'异常概述'" :dataList="linkList2" class="card-linkage" @itemClick="goPath" />
-              <common :title="'消息推送概况'" :dataList="linkList3" class="card-linkage" @itemClick="goPath" />
+              <!--              <common :title="'消息推送概况'" :dataList="linkList3" class="card-linkage" @itemClick="goPath" />-->
             </div>
           </div>
           <div class="left-bottom">
@@ -157,6 +157,20 @@ const linkList2 = ref([
     menuName: 'abnormal',
     fromRoute: '1',
   },
+  {
+    name: '今日巡检项 (条)',
+    value: 0,
+    color: '#FA802F',
+    menuName: 'abnormal',
+    fromRoute: '1',
+  },
+  {
+    name: '异常项占比 (%)',
+    value: 0,
+    color: '#FA802F',
+    menuName: 'abnormal',
+    fromRoute: '1',
+  },
 ]);
 const linkList3 = ref([
   {
@@ -200,7 +214,9 @@ const getlinkageData = async () => {
 const getTodayCountNum = async () => {
   try {
     let res = await getTodayCount();
-    linkList2.value[0].value = res.data ?? 0;
+    linkList2.value[0].value = res.data.todayAbnormalItemCount ?? 0;
+    linkList2.value[1].value = res.data.todayTotalCount ?? 0;
+    linkList2.value[2].value = res.data.rate ?? 0;
   } catch (e) {}
 };
 const getTodayXXTSCountNum = async () => {

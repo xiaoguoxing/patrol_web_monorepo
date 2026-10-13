@@ -1,7 +1,7 @@
 <template>
   <kr-card :header="title" :border="false">
     <div class="alarm" v-for="(item, index) in dataList" :key="index" @click="$emit('itemClick', item)">
-      <img :src="item.icon" alt="" />
+      <img v-show="item.icon" :src="item.icon" alt="" />
       <div>
         <p class="name">{{ item.name }}</p>
         <p class="value" :style="{ color: item.color }">{{ item.value }}</p>
