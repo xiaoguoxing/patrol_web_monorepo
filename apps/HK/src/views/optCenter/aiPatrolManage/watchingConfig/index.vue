@@ -22,7 +22,6 @@
       title="预置位配置"
       titleBorder
       :outBorder="false"
-      colSetAble
       @resetFn="resetFn"
     >
       <!-- 表格 header 按钮 -->
